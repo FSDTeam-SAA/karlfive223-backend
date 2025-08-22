@@ -32,8 +32,40 @@ const playingLevel = catchAsycn(async (req, res) => {
   });
 });
 
+const gender = catchAsycn(async (req, res) => {
+  const result = await userServices.gender(req.user?.email, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Gender updated successfully",
+    data: result,
+  });
+});
+
+const updatedProfile = catchAsycn(async (req, res) => {
+  const file = req.file as Express.Multer.File | undefined;
+
+  // if frontend sends JSON as string in form-data
+  const formData = req.body.data ? JSON.parse(req.body.data) : req.body;
+
+  const result = await userServices.updatedProfile(
+    req.user?.email as string,
+    formData,
+    file
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Profile updated successfully",
+    data: result,
+  });
+});
+
 export const userControllers = {
   createUser,
   getUserByEmail,
   playingLevel,
+  gender,
+  updatedProfile,
 };
