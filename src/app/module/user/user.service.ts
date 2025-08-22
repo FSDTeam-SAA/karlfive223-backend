@@ -24,6 +24,30 @@ const createUser = async (payload: IUser) => {
   return result;
 };
 
+const getUserByEmail = async (email: string) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  return user;
+};
+
+const playingLevel = async (email: string, payload: Partial<IUser>) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  const { playingLevel } = payload;
+  const updatedPlayingLevel = await User.findByIdAndUpdate(
+    user.id,
+    { playingLevel },
+    { new: true }
+  );
+  return updatedPlayingLevel;
+};
+
 export const userServices = {
   createUser,
+  getUserByEmail,
+  playingLevel,
 };

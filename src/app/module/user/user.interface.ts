@@ -9,4 +9,9 @@ export interface IUser {
   gender: "Male" | "Female" | "Other";
   otp?: string;
   otpExpiry?: Date;
+  playingLevel: "Beginner"|"Intermediate"|"Intermediate high"|"Advance"|"Pro";
+  clubAffiliation?: string;
+  birthday?: Date;
 }
+
+

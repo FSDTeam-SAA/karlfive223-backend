@@ -15,12 +15,15 @@ declare global {
 const auth = (...request: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const token = req.headers.authorization?.split(" ")[1];
+      const token = req.headers.authorization;
       if (!token) {
         throw new AppError(401, "Please provide token");
       }
 
-      const decoded = jwtHelper.verifyToken(token, config.jwt.secret as Secret);
+      const decoded = jwtHelper.verifyToken(
+        token,
+        config.jwt.access_secret as Secret
+      );
       if (!request.includes(decoded.role)) {
         throw new AppError(401, "You are not authorized");
       }
