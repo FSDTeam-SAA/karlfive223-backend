@@ -10,5 +10,13 @@ router.patch(
   auth(userrole.admin),
   adminController.updatedRoleByUser
 );
+router.delete(
+  "/delete-user/:id",
+  auth(userrole.admin),
+  adminController.deletedUser
+);
+
+// vanue
+router.post("/create-vanue", auth(userrole.admin), adminController.createVanue);
 
 export const adminRouter = router;

@@ -2,6 +2,8 @@ import AppError from "../../error/appError";
 import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
 import User from "../user/user.model";
+import { IVanue } from "./admin.interface";
+import Vanue from "./admin.model";
 
 const getAllUsers = async (params: any, options: Partial<IOption>) => {
   const { page, limit, skip, sortBy, sortOrder } = pagenation(options);
@@ -58,7 +60,35 @@ const updatedRoleByUser = async (id: string, role: string) => {
   return updatedUser;
 };
 
+const deletedUser = async (id: string) => {
+  const user = await User.findById(id);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  const result = await User.findByIdAndDelete(user.id);
+  if (!result) {
+    throw new AppError(500, "Something went wrong");
+  }
+  return result;
+};
+
+// vanue
+const createVanue = async (email: string, payload: IVanue) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  const result = await Vanue.create({ ...payload, user: user.id });
+  if (!result) {
+    throw new AppError(400, "Something went wrong not create vanue");
+  }
+  return result;
+};
+
 export const adminService = {
   getAllUsers,
   updatedRoleByUser,
+  createVanue,
+  deletedUser
 };
