@@ -18,5 +18,11 @@ router.delete(
 
 // vanue
 router.post("/create-vanue", auth(userrole.admin), adminController.createVanue);
+router.get("/all-vanue", auth(userrole.admin), adminController.getAllVanues);
+router.delete(
+  "/delete-vanue/:id",
+  auth(userrole.admin),
+  adminController.deletedVanue
+);
 
 export const adminRouter = router;

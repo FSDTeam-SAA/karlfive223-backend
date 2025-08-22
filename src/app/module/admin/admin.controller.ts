@@ -57,9 +57,32 @@ const createVanue = catchAsycn(async (req, res) => {
   });
 });
 
+const getAllVanues = catchAsycn(async (req, res) => {
+  const result = await adminService.getAllVanues();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Users retrieved successfully",
+    data: result,
+  });
+});
+
+const deletedVanue = catchAsycn(async (req, res) => {
+  const { id } = req.params;
+  const result = await adminService.deletedVanue(id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User deleted successfully",
+    data: result,
+  });
+});
+
 export const adminController = {
   getAllUsers,
   updatedRoleByUser,
   createVanue,
-  deletedUser
+  deletedUser,
+  getAllVanues,
+  deletedVanue,
 };

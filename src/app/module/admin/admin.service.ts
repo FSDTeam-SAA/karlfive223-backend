@@ -86,9 +86,28 @@ const createVanue = async (email: string, payload: IVanue) => {
   return result;
 };
 
+const getAllVanues = async () => {
+  const result = await Vanue.find().populate("user", "name email role");
+  return result;
+};
+
+const deletedVanue = async (id: string) => {
+  const vanue = await Vanue.findById(id);
+  if (!vanue) {
+    throw new AppError(404, "Vanue not found");
+  }
+  const result = await Vanue.findByIdAndDelete(vanue.id);
+  if (!result) {
+    throw new AppError(500, "Something went wrong");
+  }
+  return result;
+};
+
 export const adminService = {
   getAllUsers,
   updatedRoleByUser,
   createVanue,
-  deletedUser
+  deletedUser,
+  getAllVanues,
+  deletedVanue,
 };
