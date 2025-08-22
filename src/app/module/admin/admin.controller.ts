@@ -23,6 +23,19 @@ const getAllUsers = catchAsycn(async (req, res) => {
   });
 });
 
+const updatedRoleByUser = catchAsycn(async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+  const result = await adminService.updatedRoleByUser(id, role);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User role updated successfully",
+    data: result,
+  });
+});
+
 export const adminController = {
   getAllUsers,
+  updatedRoleByUser,
 };

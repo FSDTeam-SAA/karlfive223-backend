@@ -1,3 +1,4 @@
+import AppError from "../../error/appError";
 import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
 import User from "../user/user.model";
@@ -7,7 +8,13 @@ const getAllUsers = async (params: any, options: Partial<IOption>) => {
   const { searchTerm, ...filterData } = params;
 
   const andCondition: any[] = [];
-  const userSearchableFields = ["name", "email", "role", "phoneNumber","playingLevel"];
+  const userSearchableFields = [
+    "name",
+    "email",
+    "role",
+    "phoneNumber",
+    "playingLevel",
+  ];
 
   if (searchTerm) {
     andCondition.push({
@@ -38,6 +45,20 @@ const getAllUsers = async (params: any, options: Partial<IOption>) => {
   return { data: result, meta: { total, page, limit } };
 };
 
+const updatedRoleByUser = async (id: string, role: string) => {
+  const user = await User.findById(id);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  const result = await User.findByIdAndUpdate(user.id, { role }, { new: true });
+  if (!result) {
+    throw new AppError(500, "Something went wrong");
+  }
+  const { password, ...updatedUser } = result.toObject();
+  return updatedUser;
+};
+
 export const adminService = {
   getAllUsers,
+  updatedRoleByUser,
 };
