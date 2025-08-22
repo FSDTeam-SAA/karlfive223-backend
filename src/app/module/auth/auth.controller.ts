@@ -7,7 +7,7 @@ const loginUser = catchAsycn(async (req, res) => {
   const result = await authService.loginUser(req.body);
   res.cookie("refreshToken", result.refreshToken, {
     httpOnly: true,
-    secure: config.env !== "developer",
+    secure: config.env !== "development",
   });
   sendResponse(res, {
     statusCode: 200,
@@ -20,6 +20,52 @@ const loginUser = catchAsycn(async (req, res) => {
   });
 });
 
+const refreshToken = catchAsycn(async (req, res) => {
+  const { refreshToken } = req.cookies;
+  const result = await authService.refreshToken(refreshToken);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Access token generated successfully",
+    data: result,
+  });
+});
+
+const sendResetOtp = catchAsycn(async (req, res) => {
+  const { email } = req.body;
+  const result = await authService.sendResetOtp(email);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "OTP sent successfully",
+    data: result,
+  });
+});
+const verifyOtp = catchAsycn(async (req, res) => {
+  const { email, otp } = req.body;
+  const result = await authService.verifyOtp(email, otp);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "OTP verified successfully",
+    data: result,
+  });
+});
+const resetPassword = catchAsycn(async (req, res) => {
+  const { email, newPassword } = req.body;
+  const result = await authService.resetPassword(email, newPassword);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Password reset successfully",
+    data: result,
+  });
+});
+
 export const authController = {
   loginUser,
+  refreshToken,
+  sendResetOtp,
+  verifyOtp,
+  resetPassword,
 };

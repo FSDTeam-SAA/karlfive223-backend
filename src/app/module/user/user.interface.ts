@@ -7,4 +7,6 @@ export interface IUser {
   isVerified: boolean;
   phoneNumber: string;
   gender: "Male" | "Female" | "Other";
+  otp?: string;
+  otpExpiry?: Date;
 }
