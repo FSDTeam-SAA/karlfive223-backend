@@ -11,14 +11,18 @@ const userSchema = new mongoose.Schema<IUser>(
       required: [true, "Email is required"],
       unique: true,
     },
-    password: { type: String, required: [true, "Password is required"] },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      trim: true,
+    },
     profileImage: { type: String, default: null },
     role: {
       type: String,
       enum: ["player", "manager", "admin"],
       default: "player",
     },
-    phoneNumber: { type: String, required: true, unique: true },
+    phoneNumber: { type: String, required: true },
     gender: { type: String, enum: ["Male", "Female", "Other"] },
     isVerified: { type: Boolean, default: false },
     otp: { type: String, default: null },
@@ -52,10 +56,10 @@ userSchema.pre("save", async function (next) {
 });
 
 // remove password from response after saving
-userSchema.post("save", function (doc, next) {
-  doc.password = "";
-  next();
-});
+// userSchema.post("save", function (doc, next) {
+//   // doc.password = "";
+//   next();
+// });
 
 const User = mongoose.model<IUser>("User", userSchema);
 export default User;

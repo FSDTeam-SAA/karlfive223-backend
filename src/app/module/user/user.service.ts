@@ -4,24 +4,27 @@ import { sendMailer } from "../../helper/sendMailer";
 import { IUser } from "./user.interface";
 import User from "./user.model";
 
-const createUser = async (payload: IUser) => {
-  const user = await User.findOne({ email: payload.email });
-  if (user) {
+const createUser = async (payload: Partial<IUser>) => {
+  const existingUser = await User.findOne({ email: payload.email });
+  if (existingUser) {
     throw new AppError(400, "User already exists");
   }
+  const newUser = await User.create(payload);
 
-  const { name, email, phoneNumber, password } = payload;
-  const result = await User.create({ name, email, phoneNumber, password });
-
-  await sendMailer(
-    result.email,
-    "Welcome to our platform",
-    `Hello ${result.name}, welcome to our platform. Your account has been created successfully.`
-  );
-
-  if (!result) {
+  if (!newUser) {
     throw new AppError(400, "User creation failed");
   }
+  await sendMailer(
+    newUser.email,
+    "Welcome to our platform",
+    `Hello ${newUser.name}, welcome to our platform.`
+  );
+  newUser.isVerified = true;
+  await newUser.save();
+
+  // Remove password before returning
+  const { password: _, ...result } = newUser.toObject();
+
   return result;
 };
 
@@ -61,38 +64,36 @@ const gender = async (email: string, payload: Partial<IUser>) => {
   return updatedGender;
 };
 
-const updatedProfile =  async (
-    userEmail: string,
-    payload: Partial<IUser>,
-    file?: Express.Multer.File
-  ) => {
-    const user = await User.findOne({ email: userEmail });
-    if (!user) {
-      throw new AppError(404, "User not found");
-    }
-  
-    // Handle image upload if file is provided
-    if (file) {
-      const uploadedImage = await fileUploader.uploadToCloudinary(file);
-      payload.profileImage = uploadedImage.secure_url;
-    }
-  
-    // Update allowed fields
-    const updatedUser = await User.findByIdAndUpdate(
-      user.id,
-      {
-        name: payload.name,
-        profileImage: payload.profileImage,
-        phoneNumber: payload.phoneNumber,
-        clubAffiliation: payload.clubAffiliation,
-        playingLevel: payload.playingLevel,
-        birthday: payload.birthday,
-      },
-      { new: true }
-    ).select("-password"); // don't return password
-  
-    return updatedUser;
-  };
+const updatedProfile = async (
+  userEmail: string,
+  payload: Partial<IUser>,
+  file?: Express.Multer.File
+) => {
+  const user = await User.findOne({ email: userEmail });
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  // Handle image upload if file is provided
+  if (file) {
+    const uploadedImage = await fileUploader.uploadToCloudinary(file);
+    payload.profileImage = uploadedImage.secure_url;
+  }
+  // Update allowed fields
+  const updatedUser = await User.findByIdAndUpdate(
+    user.id,
+    {
+      name: payload.name,
+      profileImage: payload.profileImage,
+      phoneNumber: payload.phoneNumber,
+      clubAffiliation: payload.clubAffiliation,
+      playingLevel: payload.playingLevel,
+      birthday: payload.birthday,
+    },
+    { new: true }
+  ).select("-password"); // don't return password
+
+  return updatedUser;
+};
 
 export const userServices = {
   createUser,
