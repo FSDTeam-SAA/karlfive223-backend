@@ -3,15 +3,18 @@ export interface IUser {
   email: string;
   password: string;
   profileImage?: string;
-  role: "player" | "manager" | "admin";
+  role: "player" | "manager" | "admin" | "referee";
   isVerified: boolean;
   phoneNumber: string;
   gender: "Male" | "Female" | "Other";
   otp?: string;
   otpExpiry?: Date;
-  playingLevel: "Beginner"|"Intermediate"|"Intermediate high"|"Advance"|"Pro";
+  playingLevel:
+    | "Beginner"
+    | "Intermediate"
+    | "Intermediate high"
+    | "Advance"
+    | "Pro";
   clubAffiliation?: string;
   birthday?: Date;
 }
-
-

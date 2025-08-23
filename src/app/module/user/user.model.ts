@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema<IUser>(
     profileImage: { type: String, default: null },
     role: {
       type: String,
-      enum: ["player", "manager", "admin"],
+      enum: ["player", "manager", "admin","referee"],
       default: "player",
     },
     phoneNumber: { type: String, required: true },
