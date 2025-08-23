@@ -24,8 +24,45 @@ const createLeague = async (
   return result;
 };
 
+const getAllLeagues = async () => {
+  const result = await League.find();
+  if (!result) throw new AppError(404, "No leagues found");
+  return result;
+};
 
+const getLeagueById = async (id: string) => {
+  const result = await League.findById(id);
+  if (!result) throw new AppError(404, "No league found");
+  return result;
+};
+
+const updateLeague = async (
+  id: string,
+  payload: ILeague,
+  file?: Express.Multer.File
+) => {
+  if (file) {
+    const uploadLogo = await fileUploader.uploadToCloudinary(file);
+    if (!uploadLogo.secure_url)
+      throw new AppError(400, "Failed to upload logo");
+    payload.leagueLogo = uploadLogo.secure_url;
+  }
+  const result = await League.findByIdAndUpdate(id, payload, { new: true });
+
+  if (!result) throw new AppError(404, "No league found");
+  return result;
+};
+
+const deleteLeague = async (id: string) => {
+  const result = await League.findByIdAndDelete(id);
+  if (!result) throw new AppError(404, "No league found");
+  return result;
+};
 
 export const leagueService = {
   createLeague,
+  getAllLeagues,
+  getLeagueById,
+  updateLeague,
+  deleteLeague,
 };

@@ -12,4 +12,12 @@ router.post(
   leagueController.createLeague
 );
 
+router.get(
+  "/all-league",
+  auth(userrole.manager),
+  leagueController.getAllLeagues
+);
+
+router.get("/:id", auth(userrole.manager), leagueController.getLeagueById);
+
 export const leagueRouter = router;
