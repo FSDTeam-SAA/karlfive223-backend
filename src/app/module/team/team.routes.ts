@@ -12,4 +12,14 @@ router.post(
   teamController.createTeam
 );
 
+router.get("/all-team", auth(userrole.player), teamController.getAllTeams);
+router.get("/:id", auth(userrole.player), teamController.getSingleTeam);
+router.patch(
+  "/:id",
+  auth(userrole.player),
+  fileUploader.upload.single("logo"),
+  teamController.updateTeam
+);
+router.delete("/:id", auth(userrole.player), teamController.deleteTeam);
+
 export const teamRouter = router;

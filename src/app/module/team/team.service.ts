@@ -1,5 +1,7 @@
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
+import pagenation from "../../helper/pagenation";
+import { IOption } from "../../interface";
 import User from "../user/user.model";
 import { ITeam } from "./team.interface";
 import Team from "./team.model";
@@ -24,11 +26,83 @@ const createTeam = async (
   return result;
 };
 
+const getAllTeams = async (params: any, options: IOption) => {
+  const { page, limit, skip, sortBy, sortOrder } = pagenation(options);
+  const { searchTerm, ...filterData } = params;
 
-const getAllTeams = async () => {};
-const getSingleTeam = async (id: string) => {};
-const updateTeam = async (id: string, payload: Partial<ITeam>) => {};
-const deleteTeam = async (id: string) => {};
+  const andCondition: any[] = [];
+  const userSearchableFields = [
+    "teamName",
+    "captainName",
+    "partnerName",
+    "playerLevels",
+    "email",
+    "contactNumber",
+    "applicationStatus",
+  ];
+
+  if (searchTerm) {
+    andCondition.push({
+      $or: userSearchableFields.map((field) => ({
+        [field]: { $regex: searchTerm, $options: "i" },
+      })),
+    });
+  }
+
+  if (Object.keys(filterData).length) {
+    andCondition.push({
+      $and: Object.entries(filterData).map(([field, value]) => ({
+        [field]: value,
+      })),
+    });
+  }
+
+  const whereCondition = andCondition.length > 0 ? { $and: andCondition } : {};
+  const result = await Team.find(whereCondition)
+    .sort({ [sortBy]: sortOrder } as any)
+    .skip(skip)
+    .limit(limit)
+    .populate("user", "name email role")
+    .populate("league", "leagueName leagueLogo location");
+
+  const total = await Team.countDocuments(whereCondition);
+  return {
+    data: result,
+    meta: {
+      page,
+      limit,
+      total,
+    },
+  };
+};
+
+const getSingleTeam = async (id: string) => {
+  const result = await Team.findById(id)
+    .populate("user", "name email role")
+    .populate("league", "leagueName leagueLogo location");
+  if (!result) throw new AppError(404, "Team not found");
+  return result;
+};
+const updateTeam = async (
+  id: string,
+  payload: Partial<ITeam>,
+  file?: Express.Multer.File
+) => {
+  if (file) {
+    const uploadLogo = await fileUploader.uploadToCloudinary(file);
+    if (!uploadLogo?.secure_url)
+      throw new AppError(400, "Failed to upload logo");
+    payload.logoPhotoUrl = uploadLogo.secure_url;
+  }
+  const result = await Team.findByIdAndUpdate(id, payload, { new: true });
+  if (!result) throw new AppError(404, "Team not found");
+  return result;
+};
+const deleteTeam = async (id: string) => {
+    const result = await Team.findByIdAndDelete(id);
+    if (!result) throw new AppError(404, "Team not found");
+    return result;
+};
 
 export const TeamService = {
   createTeam,
