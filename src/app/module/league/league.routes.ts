@@ -19,5 +19,12 @@ router.get(
 );
 
 router.get("/:id", auth(userrole.manager), leagueController.getLeagueById);
+router.patch(
+  "/:id",
+  auth(userrole.manager),
+  fileUploader.upload.single("logo"),
+  leagueController.updateLeague
+);
+router.delete("/:id", auth(userrole.manager), leagueController.deleteLeague);
 
 export const leagueRouter = router;

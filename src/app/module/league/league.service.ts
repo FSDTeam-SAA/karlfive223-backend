@@ -1,5 +1,7 @@
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
+import pagenation from "../../helper/pagenation";
+import { IOption } from "../../interface";
 import User from "../user/user.model";
 import { ILeague } from "./league.interface";
 import League from "./league.model";
@@ -24,10 +26,50 @@ const createLeague = async (
   return result;
 };
 
-const getAllLeagues = async () => {
-  const result = await League.find();
-  if (!result) throw new AppError(404, "No leagues found");
-  return result;
+const getAllLeagues = async (params: any, options: IOption) => {
+  const { page, limit, skip, sortBy, sortOrder } = pagenation(options);
+  const { searchTerm, ...filterData } = params;
+
+  const andCondition: any[] = [];
+  const userSearchableFields = [
+    "leagueName",
+    "location",
+    "type",
+    "description",
+  ];
+
+  if (searchTerm) {
+    andCondition.push({
+      $or: userSearchableFields.map((field) => ({
+        [field]: { $regex: searchTerm, $options: "i" },
+      })),
+    });
+  }
+
+  if (Object.keys(filterData).length) {
+    const filterConditions: any[] = [];
+
+    for (const [field, value] of Object.entries(filterData)) {
+      if ((field === "startDate" || field === "endDate") && value) {
+        filterConditions.push({ [field]: { $gte: new Date(value as string) } });
+      } else {
+        filterConditions.push({ [field]: value });
+      }
+    }
+
+    andCondition.push({ $and: filterConditions });
+  }
+
+  const whereCondition = andCondition.length > 0 ? { $and: andCondition } : {};
+
+  const result = await League.find(whereCondition)
+    .sort({ [sortBy]: sortOrder } as any)
+    .skip(skip)
+    .limit(limit);
+
+  const total = await League.countDocuments(whereCondition);
+
+  return { data: result, meta: { total, page, limit } };
 };
 
 const getLeagueById = async (id: string) => {
