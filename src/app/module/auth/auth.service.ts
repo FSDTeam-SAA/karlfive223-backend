@@ -27,6 +27,12 @@ const loginUser = async (payload: { email: string; password: string }) => {
     config.jwt.refresh_expires_in
   );
 
+  await User.findByIdAndUpdate(
+    user._id,
+    { $set: { refreshToken } },
+    { new: true }
+  );
+
   return {
     accessToken,
     refreshToken,

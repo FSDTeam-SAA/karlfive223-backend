@@ -17,4 +17,5 @@ export interface IUser {
     | "Pro";
   clubAffiliation?: string;
   birthday?: Date;
+  refreshToken?: string;
 }

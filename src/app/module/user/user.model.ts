@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema<IUser>(
     profileImage: { type: String, default: null },
     role: {
       type: String,
-      enum: ["player", "manager", "admin","referee"],
+      enum: ["player", "manager", "admin", "referee"],
       default: "player",
     },
     phoneNumber: { type: String, required: true },
@@ -42,6 +42,7 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     clubAffiliation: { type: String },
     birthday: { type: Date },
+    refreshToken: { type: String, default: null },
   },
   { timestamps: true }
 );
