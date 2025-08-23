@@ -91,6 +91,11 @@ const getAllVanues = async () => {
   return result;
 };
 
+const getSingleVanue = async (id: string) => {
+  const result = await Vanue.findById(id).populate("user", "name email role");
+  return result;
+};
+
 const deletedVanue = async (id: string) => {
   const vanue = await Vanue.findById(id);
   if (!vanue) {
@@ -110,4 +115,5 @@ export const adminService = {
   deletedUser,
   getAllVanues,
   deletedVanue,
+  getSingleVanue,
 };

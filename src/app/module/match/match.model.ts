@@ -19,7 +19,7 @@ const matchSchema = new Schema<IMatch>(
     },
     matchVenue: {
       type: Schema.Types.ObjectId,
-      ref: "Venue",
+      ref: "Vanue",
       required: true,
     },
     league: {

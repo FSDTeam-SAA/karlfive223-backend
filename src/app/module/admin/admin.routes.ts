@@ -24,5 +24,10 @@ router.delete(
   auth(userrole.admin),
   adminController.deletedVanue
 );
+router.get(
+  "/single-vanue/:id",
+  auth(userrole.admin),
+  adminController.getSingleVanue
+);
 
 export const adminRouter = router;

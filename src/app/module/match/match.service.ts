@@ -1,9 +1,43 @@
+import AppError from "../../error/appError";
 import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
+import Team from "../team/team.model";
+import { IMatch } from "./match.interface";
 import Match from "./match.model";
 
-const createMatch = async (payload: any) => {
-  return Match.create(payload);
+const createMatch = async (payload: IMatch) => {
+  // 1. Prevent same team playing against itself
+  if (payload?.teamOne.toString() === payload?.teamTwo.toString()) {
+    throw new AppError(400, "Team One and Team Two cannot be the same.");
+  }
+
+  // 2. Fetch teams from DB
+  const teamOne = await Team.findById(payload.teamOne);
+  const teamTwo = await Team.findById(payload.teamTwo);
+
+  if (!teamOne || !teamTwo) {
+    throw new AppError(404, "One or both teams not found.");
+  }
+
+  // 3. Ensure both teams belong to the same league
+  if (teamOne.league.toString() !== teamTwo.league.toString()) {
+    throw new AppError(400, "Both teams must belong to the same league.");
+  }
+
+  // 4. (Optional) Ensure match league matches teams' league
+  if (
+    payload.league &&
+    payload.league.toString() !== teamOne.league.toString()
+  ) {
+    throw new AppError(
+      400,
+      "Match league must be the same as the teams' league."
+    );
+  }
+
+  // 5. Create match
+  const result = await Match.create(payload);
+  return result;
 };
 
 const getAllMatches = async (params: any, options: IOption) => {

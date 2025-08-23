@@ -11,4 +11,4 @@ router.get("/:id", matchController.getSingleMatch);
 router.patch("/:id", auth(userrole.manager), matchController.updateMatch);
 router.delete("/:id", auth(userrole.manager), matchController.deleteMatch);
 
-export default router;
+export const matchRouter = router;

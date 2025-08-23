@@ -67,6 +67,17 @@ const getAllVanues = catchAsycn(async (req, res) => {
   });
 });
 
+const getSingleVanue = catchAsycn(async (req, res) => {
+  const { id } = req.params;
+  const result = await adminService.getSingleVanue(id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Users retrieved successfully",
+    data: result,
+  });
+});
+
 const deletedVanue = catchAsycn(async (req, res) => {
   const { id } = req.params;
   const result = await adminService.deletedVanue(id);
@@ -85,4 +96,5 @@ export const adminController = {
   deletedUser,
   getAllVanues,
   deletedVanue,
+  getSingleVanue
 };

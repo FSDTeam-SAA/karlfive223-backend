@@ -4,6 +4,7 @@ import { authRouter } from "../module/auth/auth.routes";
 import { adminRouter } from "../module/admin/admin.routes";
 import { leagueRouter } from "../module/league/league.routes";
 import { teamRouter } from "../module/team/team.routes";
+import { matchRouter } from "../module/match/match.routes";
 const router = express.Router();
 
 const allRouter = [
@@ -12,6 +13,7 @@ const allRouter = [
   { path: "/admin", name: adminRouter },
   { path: "/league", name: leagueRouter },
   { path: "/team", name: teamRouter },
+  { path: "/match", name: matchRouter },
 ];
 
 allRouter.forEach((route) => {
