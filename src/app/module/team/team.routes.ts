@@ -13,6 +13,14 @@ router.post(
 );
 
 router.get("/all-team", auth(userrole.player), teamController.getAllTeams);
+
+router.patch(
+  "/update-status/:id",
+  auth(userrole.manager),
+  teamController.updatedStatus
+);
+
+
 router.get("/:id", auth(userrole.player), teamController.getSingleTeam);
 router.patch(
   "/:id",
@@ -21,5 +29,7 @@ router.patch(
   teamController.updateTeam
 );
 router.delete("/:id", auth(userrole.player), teamController.deleteTeam);
+
+
 
 export const teamRouter = router;

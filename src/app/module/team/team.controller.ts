@@ -67,10 +67,22 @@ const deleteTeam = catchAsycn(async (req, res) => {
   });
 });
 
+const updatedStatus = catchAsycn(async (req, res) => {
+  const id = req.params.id;
+  const result = await TeamService.updatedStatus(id, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Team status updated successfully",
+    data: result,
+  });
+});
+
 export const teamController = {
   createTeam,
   getAllTeams,
   getSingleTeam,
   updateTeam,
   deleteTeam,
+  updatedStatus,
 };

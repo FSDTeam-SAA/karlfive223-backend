@@ -99,9 +99,20 @@ const updateTeam = async (
   return result;
 };
 const deleteTeam = async (id: string) => {
-    const result = await Team.findByIdAndDelete(id);
-    if (!result) throw new AppError(404, "Team not found");
-    return result;
+  const result = await Team.findByIdAndDelete(id);
+  if (!result) throw new AppError(404, "Team not found");
+  return result;
+};
+
+const updatedStatus = async (idL: string, payload: Partial<ITeam>) => {
+  const { applicationStatus } = payload;
+  const result = await Team.findByIdAndUpdate(
+    idL,
+    { applicationStatus },
+    { new: true }
+  );
+  if (!result) throw new AppError(404, "Team not found");
+  return result;
 };
 
 export const TeamService = {
@@ -110,4 +121,5 @@ export const TeamService = {
   getSingleTeam,
   updateTeam,
   deleteTeam,
+  updatedStatus,
 };
