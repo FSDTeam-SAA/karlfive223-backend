@@ -1,6 +1,6 @@
-import { ObjectId } from "mongoose";
+import { Document, ObjectId } from "mongoose";
 
-export interface ITeam {
+export interface ITeam extends Document {
   user: ObjectId;
   teamName: string;
   captainName: string;

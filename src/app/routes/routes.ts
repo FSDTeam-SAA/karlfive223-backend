@@ -7,6 +7,7 @@ import { teamRouter } from "../module/team/team.routes";
 import { matchRouter } from "../module/match/match.routes";
 import { contactRouter } from "../module/contact/contact.routes";
 import { reportRouter } from "../module/report/report.routes";
+import { standingRouter } from "../module/standing/standing.routes";
 const router = express.Router();
 
 const allRouter = [
@@ -18,6 +19,7 @@ const allRouter = [
   { path: "/match", name: matchRouter },
   { path: "/contact", name: contactRouter },
   { path: "/report", name: reportRouter },
+  { path: "/standing", name: standingRouter },
 ];
 
 allRouter.forEach((route) => {

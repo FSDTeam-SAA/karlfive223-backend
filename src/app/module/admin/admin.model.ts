@@ -12,10 +12,10 @@ const vanueSchema = new mongoose.Schema<IVanue>(
       type: String,
       required: [true, "Vanue name is required"],
     },
-    teameName: {
-      type: String,
-      required: [true, "Team name is required"],
-    },
+    // teameName: {
+    //   type: String,
+    //   required: [true, "Team name is required"],
+    // },
     courtName: {
       type: String,
       required: [true, "Court name is required"],
