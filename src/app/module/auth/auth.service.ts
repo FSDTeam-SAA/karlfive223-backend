@@ -58,8 +58,10 @@ const refreshToken = async (token: string) => {
 
   const { email } = verifiedToken;
   const user = await User.findOne({ email });
-  if (!user) throw new AppError(400, "User not found");
-
+  if (!user || user.refreshToken !== token) {
+    throw new AppError(403, "Refresh token not valid or expired");
+  }
+  
   const newAccessToken = jwtHelper.generateToken(
     { email: user.email, role: user.role },
     config.jwt.access_secret as Secret,
