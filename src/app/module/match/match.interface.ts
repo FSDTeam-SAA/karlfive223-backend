@@ -16,4 +16,5 @@ export interface IMatch extends Document {
       teamTwoGames: number;
     }>;
   };
+  standingsApplied: boolean;
 }

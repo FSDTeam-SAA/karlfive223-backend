@@ -3,7 +3,7 @@ import { IStanding } from "./standing.interface";
 
 const standingSchema = new Schema<IStanding>(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User" }, // optional
+    user: { type: Schema.Types.ObjectId, ref: "User" },
     team: { type: Schema.Types.ObjectId, ref: "Team", required: true },
     league: { type: Schema.Types.ObjectId, ref: "League", required: true },
     position: { type: Number, default: 0 },
