@@ -9,8 +9,8 @@ export interface ILeague {
   startDate: Date;
   endDate: Date;
   location: string;
-  addTeams?: ObjectId[];   // ✅ array instead of single
-  totalGameWeeks: number;  // ✅ added
+  addTeams?: ObjectId[]; 
+  totalGameWeeks: number;  
   type: "Singles" | "Doubles";
   matchFormat: "Best of 3 sets" | "Best of 5 sets";
   tiebreakOption: "Standard 7-point" | "No tiebreak";

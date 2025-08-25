@@ -4,7 +4,6 @@ import sendResponse from "../../utils/sendRespopnse";
 import { leagueService } from "./league.service";
 
 const createLeague = catchAsycn(async (req, res) => {
-  // parse JSON data from form-data
   const formData = req.body.data ? JSON.parse(req.body.data) : req.body;
 
   const files = {
@@ -52,7 +51,6 @@ const createLeague = catchAsycn(async (req, res) => {
 // });
 
 const getAllLeagues = catchAsycn(async (req, res) => {
-  // 🎯 Extract allowed filters from query
   const filters = pick(req.query, [
     "searchTerm",
     "startDate",
@@ -60,16 +58,13 @@ const getAllLeagues = catchAsycn(async (req, res) => {
     "leagueName",
     "location",
     "type",
-    "totalGameWeeks", // ✅ added so it works
+    "totalGameWeeks",
   ]);
 
-  // 📄 Extract pagination + sorting options
   const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
 
-  // 🚀 Call service
   const result = await leagueService.getAllLeagues(filters, options);
 
-  // 📤 Send response
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -78,7 +73,6 @@ const getAllLeagues = catchAsycn(async (req, res) => {
     data: result.data,
   });
 });
-
 
 const getLeagueById = catchAsycn(async (req, res) => {
   const result = await leagueService.getLeagueById(req.params.id);
