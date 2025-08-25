@@ -1,0 +1,2085 @@
+{
+	"info": {
+		"_postman_id": "7dc8913c-ddf8-4d64-9be3-0922c58803d7",
+		"name": "karlfive_223",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47772245"
+	},
+	"item": [
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/user/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "playing-level",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"playingLevel\": \"Intermediate\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/playing-level",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"playing-level"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "gender",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"gender\": \"Male\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/gender",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"gender"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updated profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/saura/Downloads/player img.jpg"
+								},
+								{
+									"key": "data",
+									"value": "{\n    \"name\": \"saurav sarkar\",\n    \"email\": \"sarkarsaurav100@gmail.com\",\n    \"phoneNumber\": \"01518643073\",\n    \"clubAffiliation\": \"fc barcelona\"\n}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/update-profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"user",
+								"update-profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "create user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"saurav\",\r\n    \"email\": \"saurav.bdcalling@gmail.com\",\r\n    \"password\": \"123456\",\r\n    \"phoneNumber\": \"01518643073\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/v1/user/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"create"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "create user",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"saurav\",\r\n    \"email\": \"saurav.bdcalling@gmail.com\",\r\n    \"password\": \"123456\",\r\n    \"phoneNumber\": \"01518643073\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:5000/api/v1/user/create",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5000",
+									"path": [
+										"api",
+										"v1",
+										"user",
+										"create"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "365"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"16d-sxf3Hg2+QTWWOP4rt32OH24L4fQ\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 24 Aug 2025 04:26:47 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"User created successfully\",\n    \"data\": {\n        \"name\": \"saurav\",\n        \"email\": \"saurav.bdcalling@gmail.com\",\n        \"profileImage\": null,\n        \"role\": \"player\",\n        \"phoneNumber\": \"01518643073\",\n        \"isVerified\": true,\n        \"otp\": null,\n        \"otpExpiry\": null,\n        \"refreshToken\": null,\n        \"_id\": \"68aa94801e4038c91c2e1df1\",\n        \"createdAt\": \"2025-08-24T04:26:40.845Z\",\n        \"updatedAt\": \"2025-08-24T04:26:46.993Z\",\n        \"__v\": 0\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "login user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"saurav.bdcalling@gmail.com\",\r\n    \"password\": \"654321\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/v1/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "login user",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"saurav.bdcalling@gmail.com\",\r\n    \"password\": \"654321\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:5000/api/v1/auth/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5000",
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "604"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"25c-kyuWg/T+EMK3HHPiOF6SZLB7HcY\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 24 Aug 2025 04:48:18 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"User logged in successfully\",\n    \"data\": {\n        \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhdXJhdi5iZGNhbGxpbmdAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU2MDEwODk4LCJleHAiOjE3NTY2MTU2OTh9.S2NaXY4L-9R7BUM_tGLEmWrSMN1hNrNbOg0RNVPflVs\",\n        \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhdXJhdi5iZGNhbGxpbmdAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU2MDEwODk4LCJleHAiOjE3NjM3ODY4OTh9.jxGlWsr6KCUZX3wIxJ1sRpWI2ZGO3jtz2-KEmwlmwRA\",\n        \"user\": {\n            \"_id\": \"68aa94801e4038c91c2e1df1\",\n            \"name\": \"saurav\",\n            \"email\": \"saurav.bdcalling@gmail.com\",\n            \"role\": \"admin\"\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "refresh-token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhdXJhdi5iZGNhbGxpbmdAZ21haWwuY29tIiwicm9sZSI6InBsYXllciIsImlhdCI6MTc1NjAwOTY0NiwiZXhwIjoxNzYzNzg1NjQ2fQ.5L419gkrvVUm2ssIaa-jNzu5M5fyOiaC5eMTal0bo5k\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/v1/auth/refresh-token",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh-token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "send-reset-otp",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"saurav.bdcalling@gmail.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/v1/auth/send-reset-otp",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"send-reset-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "verify-otp",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"saurav.bdcalling@gmail.com\",\r\n    \"otp\": \"597193\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/v1/auth/verify-otp",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"verify-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reset-password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"saurav.bdcalling@gmail.com\",\r\n    \"newPassword\": \"654321\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/v1/auth/reset-password",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "admin",
+			"item": [
+				{
+					"name": "all user",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/alluser",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"alluser"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "admin",
+									"disabled": true
+								},
+								{
+									"key": "name",
+									"value": "user",
+									"disabled": true
+								},
+								{
+									"key": "role",
+									"value": "manager",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "name",
+									"disabled": true
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updated by user role",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"role\": \"referee\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/updated-role/68a98001664cab51716b8bb7",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"updated-role",
+								"68a98001664cab51716b8bb7"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleted user by id",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/updated-role/68a84cb87efe53265dab209f",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"updated-role",
+								"68a84cb87efe53265dab209f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create vanue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Uttara Sports Dome\",\r\n    \"teameName\": \"Uttara United\",\r\n    \"courtName\": \"Court C\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/create-vanue",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"create-vanue"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "all vanue",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/all-vanue",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"all-vanue"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "dalated vanue by id",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/delete-vanue/68a856fffc2d510fd82a5502",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"delete-vanue",
+								"68a856fffc2d510fd82a5502"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get vanue by id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{userAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/single-vanue/68a856d2fc2d510fd82a54fc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"single-vanue",
+								"68a856d2fc2d510fd82a54fc"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "league",
+			"item": [
+				{
+					"name": "create league",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "logo",
+									"type": "file",
+									"src": "/C:/Users/saura/Downloads/hand-drawn-soccer-logo-template/kogo.jpg"
+								},
+								{
+									"key": "data",
+									"value": "{\n  \"leagueName\": \"Winter Shuttlecock Showdown\",\n  \"description\": \"Stay active this winter with our competitive indoor badminton league. Matches are held every Tuesday and Thursday evening.\",\n  \"startDate\": \"2026-01-12T00:00:00.000Z\",\n  \"endDate\": \"2026-03-05T23:59:59.000Z\",\n  \"location\": \"Downtown Athletic Center\",\n  \"addTeam\": \"Shuttle Masters\",\n  \"type\": \"Singles\",\n  \"matchFormat\": \"Best of 3 sets\",\n  \"tiebreakOption\": \"No tiebreak\",\n  \"allowSubstitutes\": false\n}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/league/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"league",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all league",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/league/all-league?leagueName=Winter Shuttlecock Showdown",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"league",
+								"all-league"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "Innovate",
+									"disabled": true
+								},
+								{
+									"key": "startDate",
+									"value": "2026-01-12",
+									"disabled": true
+								},
+								{
+									"key": "endDate",
+									"value": "2025-08-15T23:59:59.000Z",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "startDate",
+									"disabled": true
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc",
+									"disabled": true
+								},
+								{
+									"key": "leagueName",
+									"value": "Winter Shuttlecock Showdown"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get league by id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/league/68a93f98945c86132f699e5d",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"league",
+								"68a93f98945c86132f699e5d"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleted league by id",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/league/68a93f98945c86132f699e5d",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"league",
+								"68a93f98945c86132f699e5d"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updated by league id",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "logo",
+									"type": "file",
+									"src": "/C:/Users/saura/Downloads/hand-drawn-soccer-logo-template/kogo.jpg"
+								},
+								{
+									"key": "data",
+									"value": "{\n    \"leagueName\": \"Innovate Corp Pickleball Championshipss\"\n}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/league/68a93f98945c86132f699e5d",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"league",
+								"68a93f98945c86132f699e5d"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "team",
+			"item": [
+				{
+					"name": "create  team",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{playerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "logo",
+									"type": "file",
+									"src": "/C:/Users/saura/Downloads/team.jpg"
+								},
+								{
+									"key": "data",
+									"value": "{\n    \"teamName\": \"Smash Bros\",\n    \"captainName\": \"Frank Miller\",\n    \"partnerName\": \"Grace Hopper\",\n    \"playerLevels\": \"Advanced 4.5+\",\n    \"email\": \"frank.m@example.com\",\n    \"contactNumber\": \"555-0105\",\n    \"league\": \"68a93fedd9159d4637e5ec5b\",\n    \"agreedToRules\": true,\n    \"confirmedAvailability\": true\n}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/team/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"team",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all team",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{playerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/team/all-team",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"team",
+								"all-team"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "Jesters",
+									"disabled": true
+								},
+								{
+									"key": "teamName",
+									"value": "Net Dominators",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "captainName",
+									"disabled": true
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get team by id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{playerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/team/68a960ff32db92498187f4a4",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"team",
+								"68a960ff32db92498187f4a4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleted team by id",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{playerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/team/68a960ff32db92498187f4a4",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"team",
+								"68a960ff32db92498187f4a4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updated team by id",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{playerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "logo",
+									"type": "file",
+									"src": "/C:/Users/saura/Downloads/team.jpg"
+								},
+								{
+									"key": "data",
+									"value": "{\n    \"captainName\": \"Alice Johnson\"\n}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/team/68a960ff32db92498187f4a4",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"team",
+								"68a960ff32db92498187f4a4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updated team status by id",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"applicationStatus\":\"approved\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/team/update-status/68a960ff32db92498187f4a4",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"team",
+								"update-status",
+								"68a960ff32db92498187f4a4"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "match",
+			"item": [
+				{
+					"name": "create match",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"teamOne\": \"68a98ca1e286d8211f0b2caa\",\r\n  \"teamTwo\": \"68a972af8cbd734147749e72\",\r\n  \"matchDateTime\": \"2025-08-25T16:30:00.000Z\",\r\n  \"matchVenue\": \"68a856d2fc2d510fd82a54fc\",\r\n  \"league\": \"68a93fedd9159d4637e5ec5b\",\r\n  \"matchStatus\": \"completed\",\r\n  \"winnerTeam\": \"68a98ca1e286d8211f0b2caa\",\r\n  \"referee\": \"68a98001664cab51716b8bb7\",\r\n  \"matchScore\": {\r\n    \"sets\": [\r\n      { \"teamOneGames\": 2, \"teamTwoGames\": 1 },\r\n      { \"teamOneGames\": 3, \"teamTwoGames\": 0 }\r\n    ]\r\n  },\r\n  \"standingsApplied\": false\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/match/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"match",
+								"create"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "create match",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{managerAccessToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"teamOne\": \"68a98ca1e286d8211f0b2caa\",\r\n  \"teamTwo\": \"68a972af8cbd734147749e72\",\r\n  \"matchDateTime\": \"2025-08-25T16:30:00.000Z\",\r\n  \"matchVenue\": \"68a856d2fc2d510fd82a54fc\",\r\n  \"league\": \"68a93fedd9159d4637e5ec5b\",\r\n  \"matchStatus\": \"completed\",\r\n  \"winnerTeam\": \"68a98ca1e286d8211f0b2caa\",\r\n  \"referee\": \"68a98001664cab51716b8bb7\",\r\n  \"matchScore\": {\r\n    \"sets\": [\r\n      { \"teamOneGames\": 2, \"teamTwoGames\": 1 },\r\n      { \"teamOneGames\": 3, \"teamTwoGames\": 0 }\r\n    ]\r\n  },\r\n  \"standingsApplied\": false\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/match/create",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"match",
+										"create"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "3465"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"d89-uveKoQ5mhvSRz+ah3S+tUDar67E\""
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 25 Aug 2025 04:29:35 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Match created successfully\",\n    \"data\": {\n        \"teamOne\": {\n            \"_id\": \"68a98ca1e286d8211f0b2caa\",\n            \"user\": \"68a84cb87efe53265dab209f\",\n            \"teamName\": \"The Volley Vipers\",\n            \"captainName\": \"Heidi Klum\",\n            \"partnerName\": \"Ivan Drago\",\n            \"playerLevels\": \"Intermediate 4.0\",\n            \"email\": \"heidi.k@example.com\",\n            \"contactNumber\": \"555-0106\",\n            \"logoPhotoUrl\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755930879/karlfive223/team.jpg.jpg\",\n            \"league\": \"68a93fedd9159d4637e5ec5b\",\n            \"agreedToRules\": true,\n            \"confirmedAvailability\": true,\n            \"applicationStatus\": \"pending\",\n            \"createdAt\": \"2025-08-23T09:40:49.175Z\",\n            \"updatedAt\": \"2025-08-23T09:40:49.175Z\",\n            \"__v\": 0\n        },\n        \"teamTwo\": {\n            \"_id\": \"68a972af8cbd734147749e72\",\n            \"user\": \"68a84cb87efe53265dab209f\",\n            \"teamName\": \"Net Dominators\",\n            \"captainName\": \"Charlie Brown\",\n            \"partnerName\": \"Diana Prince\",\n            \"playerLevels\": \"Intermediate 3.5-4.0\",\n            \"email\": \"charlie.brown@example.com\",\n            \"contactNumber\": \"555-0103\",\n            \"logoPhotoUrl\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755930879/karlfive223/team.jpg.jpg\",\n            \"league\": \"68a93fedd9159d4637e5ec5b\",\n            \"agreedToRules\": true,\n            \"confirmedAvailability\": true,\n            \"applicationStatus\": \"pending\",\n            \"createdAt\": \"2025-08-23T07:50:07.682Z\",\n            \"updatedAt\": \"2025-08-23T07:50:07.682Z\",\n            \"__v\": 0\n        },\n        \"matchDateTime\": \"2025-08-25T16:30:00.000Z\",\n        \"matchVenue\": {\n            \"_id\": \"68a856d2fc2d510fd82a54fc\",\n            \"user\": \"68a84c57ff5b9a7051a02ba8\",\n            \"name\": \"Gulshan Sports Complex\",\n            \"teameName\": \"Gulshan Titans\",\n            \"courtName\": \"Main Arena\",\n            \"createdAt\": \"2025-08-22T11:38:58.768Z\",\n            \"updatedAt\": \"2025-08-22T11:38:58.768Z\",\n            \"__v\": 0\n        },\n        \"league\": {\n            \"_id\": \"68a93fedd9159d4637e5ec5b\",\n            \"user\": \"68a9310b60a8cc4db5a8b6cf\",\n            \"leagueName\": \"Winter Shuttlecock Showdown\",\n            \"description\": \"Stay active this winter with our competitive indoor badminton league. Matches are held every Tuesday and Thursday evening.\",\n            \"leagueLogo\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755921844/karlfive223/kogo.jpg.jpg\",\n            \"startDate\": \"2026-01-12T00:00:00.000Z\",\n            \"endDate\": \"2026-03-05T23:59:59.000Z\",\n            \"location\": \"Downtown Athletic Center\",\n            \"addTeam\": \"Shuttle Masters\",\n            \"type\": \"Singles\",\n            \"matchFormat\": \"Best of 3 sets\",\n            \"tiebreakOption\": \"No tiebreak\",\n            \"allowSubstitutes\": false,\n            \"createdAt\": \"2025-08-23T04:13:33.671Z\",\n            \"updatedAt\": \"2025-08-23T04:13:33.671Z\",\n            \"__v\": 0\n        },\n        \"matchStatus\": \"completed\",\n        \"winnerTeam\": {\n            \"_id\": \"68a98ca1e286d8211f0b2caa\",\n            \"user\": \"68a84cb87efe53265dab209f\",\n            \"teamName\": \"The Volley Vipers\",\n            \"captainName\": \"Heidi Klum\",\n            \"partnerName\": \"Ivan Drago\",\n            \"playerLevels\": \"Intermediate 4.0\",\n            \"email\": \"heidi.k@example.com\",\n            \"contactNumber\": \"555-0106\",\n            \"logoPhotoUrl\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755930879/karlfive223/team.jpg.jpg\",\n            \"league\": \"68a93fedd9159d4637e5ec5b\",\n            \"agreedToRules\": true,\n            \"confirmedAvailability\": true,\n            \"applicationStatus\": \"pending\",\n            \"createdAt\": \"2025-08-23T09:40:49.175Z\",\n            \"updatedAt\": \"2025-08-23T09:40:49.175Z\",\n            \"__v\": 0\n        },\n        \"referee\": {\n            \"refreshToken\": null,\n            \"_id\": \"68a98001664cab51716b8bb7\",\n            \"name\": \"referee\",\n            \"email\": \"referee@gmail.com\",\n            \"password\": \"$2b$10$xbzTvU7AXE7eGPG7Ya/tmeaB3GX6leKvBTkrsJ3NsLs.eSTB5XDQu\",\n            \"profileImage\": null,\n            \"role\": \"referee\",\n            \"phoneNumber\": \"01518643073\",\n            \"isVerified\": true,\n            \"otp\": null,\n            \"otpExpiry\": null,\n            \"createdAt\": \"2025-08-23T08:46:57.672Z\",\n            \"updatedAt\": \"2025-08-23T08:48:59.197Z\",\n            \"__v\": 0\n        },\n        \"matchScore\": {\n            \"sets\": [\n                {\n                    \"teamOneGames\": 2,\n                    \"teamTwoGames\": 1,\n                    \"_id\": \"68abe6ac534a0af2d5686989\"\n                },\n                {\n                    \"teamOneGames\": 3,\n                    \"teamTwoGames\": 0,\n                    \"_id\": \"68abe6ac534a0af2d568698a\"\n                }\n            ]\n        },\n        \"standingsApplied\": true,\n        \"_id\": \"68abe6ac534a0af2d5686988\",\n        \"createdAt\": \"2025-08-25T04:29:32.752Z\",\n        \"updatedAt\": \"2025-08-25T04:29:33.978Z\",\n        \"__v\": 0\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "get all match",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/match/all-match",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"match",
+								"all-match"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "get all match",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/match/all-match",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"match",
+										"all-match"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "5555"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"15b3-uyLPuTmZK/oZmiQeTDoXjvKB0oU\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 24 Aug 2025 11:35:43 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Matches fetched successfully\",\n    \"meta\": {\n        \"total\": 2,\n        \"page\": 1,\n        \"limit\": 10\n    },\n    \"data\": [\n        {\n            \"matchScore\": {\n                \"sets\": [\n                    {\n                        \"teamOneGames\": 6,\n                        \"teamTwoGames\": 4,\n                        \"_id\": \"68aaaf83065587ee865dc8ba\"\n                    }\n                ]\n            },\n            \"_id\": \"68aaaf83065587ee865dc8b9\",\n            \"teamOne\": {\n                \"_id\": \"68a98e5be286d8211f0b2cba\",\n                \"user\": \"68a84cb87efe53265dab209f\",\n                \"teamName\": \"Smash Bros\",\n                \"captainName\": \"Frank Miller\",\n                \"partnerName\": \"Grace Hopper\",\n                \"playerLevels\": \"Advanced 4.5+\",\n                \"email\": \"frank.m@example.com\",\n                \"contactNumber\": \"555-0105\",\n                \"logoPhotoUrl\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755930879/karlfive223/team.jpg.jpg\",\n                \"league\": \"68a93fedd9159d4637e5ec5b\",\n                \"agreedToRules\": true,\n                \"confirmedAvailability\": true,\n                \"applicationStatus\": \"pending\",\n                \"createdAt\": \"2025-08-23T09:48:11.340Z\",\n                \"updatedAt\": \"2025-08-23T09:48:11.340Z\",\n                \"__v\": 0\n            },\n            \"teamTwo\": {\n                \"_id\": \"68a98ca1e286d8211f0b2caa\",\n                \"user\": \"68a84cb87efe53265dab209f\",\n                \"teamName\": \"The Volley Vipers\",\n                \"captainName\": \"Heidi Klum\",\n                \"partnerName\": \"Ivan Drago\",\n                \"playerLevels\": \"Intermediate 4.0\",\n                \"email\": \"heidi.k@example.com\",\n                \"contactNumber\": \"555-0106\",\n                \"logoPhotoUrl\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755930879/karlfive223/team.jpg.jpg\",\n                \"league\": \"68a93fedd9159d4637e5ec5b\",\n                \"agreedToRules\": true,\n                \"confirmedAvailability\": true,\n                \"applicationStatus\": \"pending\",\n                \"createdAt\": \"2025-08-23T09:40:49.175Z\",\n                \"updatedAt\": \"2025-08-23T09:40:49.175Z\",\n                \"__v\": 0\n            },\n            \"matchDateTime\": \"2025-09-15T15:30:00.000Z\",\n            \"matchVenue\": {\n                \"_id\": \"68a856d2fc2d510fd82a54fc\",\n                \"user\": \"68a84c57ff5b9a7051a02ba8\",\n                \"name\": \"Gulshan Sports Complex\",\n                \"teameName\": \"Gulshan Titans\",\n                \"courtName\": \"Main Arena\",\n                \"createdAt\": \"2025-08-22T11:38:58.768Z\",\n                \"updatedAt\": \"2025-08-22T11:38:58.768Z\",\n                \"__v\": 0\n            },\n            \"league\": {\n                \"_id\": \"68a93fedd9159d4637e5ec5b\",\n                \"user\": \"68a9310b60a8cc4db5a8b6cf\",\n                \"leagueName\": \"Winter Shuttlecock Showdown\",\n                \"description\": \"Stay active this winter with our competitive indoor badminton league. Matches are held every Tuesday and Thursday evening.\",\n                \"leagueLogo\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755921844/karlfive223/kogo.jpg.jpg\",\n                \"startDate\": \"2026-01-12T00:00:00.000Z\",\n                \"endDate\": \"2026-03-05T23:59:59.000Z\",\n                \"location\": \"Downtown Athletic Center\",\n                \"addTeam\": \"Shuttle Masters\",\n                \"type\": \"Singles\",\n                \"matchFormat\": \"Best of 3 sets\",\n                \"tiebreakOption\": \"No tiebreak\",\n                \"allowSubstitutes\": false,\n                \"createdAt\": \"2025-08-23T04:13:33.671Z\",\n                \"updatedAt\": \"2025-08-23T04:13:33.671Z\",\n                \"__v\": 0\n            },\n            \"matchStatus\": \"upcoming\",\n            \"referee\": {\n                \"refreshToken\": null,\n                \"_id\": \"68a98001664cab51716b8bb7\",\n                \"name\": \"referee\",\n                \"email\": \"referee@gmail.com\",\n                \"password\": \"$2b$10$xbzTvU7AXE7eGPG7Ya/tmeaB3GX6leKvBTkrsJ3NsLs.eSTB5XDQu\",\n                \"profileImage\": null,\n                \"role\": \"referee\",\n                \"phoneNumber\": \"01518643073\",\n                \"isVerified\": true,\n                \"otp\": null,\n                \"otpExpiry\": null,\n                \"createdAt\": \"2025-08-23T08:46:57.672Z\",\n                \"updatedAt\": \"2025-08-23T08:48:59.197Z\",\n                \"__v\": 0\n            },\n            \"createdAt\": \"2025-08-24T06:21:55.537Z\",\n            \"updatedAt\": \"2025-08-24T06:21:55.537Z\",\n            \"__v\": 0\n        },\n        {\n            \"matchScore\": {\n                \"sets\": [\n                    {\n                        \"teamOneGames\": 6,\n                        \"teamTwoGames\": 4,\n                        \"_id\": \"68a992f3c05bcbf59eb2f725\"\n                    }\n                ]\n            },\n            \"_id\": \"68a992f3c05bcbf59eb2f724\",\n            \"teamOne\": {\n                \"_id\": \"68a98e5be286d8211f0b2cba\",\n                \"user\": \"68a84cb87efe53265dab209f\",\n                \"teamName\": \"Smash Bros\",\n                \"captainName\": \"Frank Miller\",\n                \"partnerName\": \"Grace Hopper\",\n                \"playerLevels\": \"Advanced 4.5+\",\n                \"email\": \"frank.m@example.com\",\n                \"contactNumber\": \"555-0105\",\n                \"logoPhotoUrl\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755930879/karlfive223/team.jpg.jpg\",\n                \"league\": \"68a93fedd9159d4637e5ec5b\",\n                \"agreedToRules\": true,\n                \"confirmedAvailability\": true,\n                \"applicationStatus\": \"pending\",\n                \"createdAt\": \"2025-08-23T09:48:11.340Z\",\n                \"updatedAt\": \"2025-08-23T09:48:11.340Z\",\n                \"__v\": 0\n            },\n            \"teamTwo\": {\n                \"_id\": \"68a98ca1e286d8211f0b2caa\",\n                \"user\": \"68a84cb87efe53265dab209f\",\n                \"teamName\": \"The Volley Vipers\",\n                \"captainName\": \"Heidi Klum\",\n                \"partnerName\": \"Ivan Drago\",\n                \"playerLevels\": \"Intermediate 4.0\",\n                \"email\": \"heidi.k@example.com\",\n                \"contactNumber\": \"555-0106\",\n                \"logoPhotoUrl\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755930879/karlfive223/team.jpg.jpg\",\n                \"league\": \"68a93fedd9159d4637e5ec5b\",\n                \"agreedToRules\": true,\n                \"confirmedAvailability\": true,\n                \"applicationStatus\": \"pending\",\n                \"createdAt\": \"2025-08-23T09:40:49.175Z\",\n                \"updatedAt\": \"2025-08-23T09:40:49.175Z\",\n                \"__v\": 0\n            },\n            \"matchDateTime\": \"2025-09-15T15:30:00.000Z\",\n            \"matchVenue\": {\n                \"_id\": \"68a856d2fc2d510fd82a54fc\",\n                \"user\": \"68a84c57ff5b9a7051a02ba8\",\n                \"name\": \"Gulshan Sports Complex\",\n                \"teameName\": \"Gulshan Titans\",\n                \"courtName\": \"Main Arena\",\n                \"createdAt\": \"2025-08-22T11:38:58.768Z\",\n                \"updatedAt\": \"2025-08-22T11:38:58.768Z\",\n                \"__v\": 0\n            },\n            \"league\": {\n                \"_id\": \"68a93fedd9159d4637e5ec5b\",\n                \"user\": \"68a9310b60a8cc4db5a8b6cf\",\n                \"leagueName\": \"Winter Shuttlecock Showdown\",\n                \"description\": \"Stay active this winter with our competitive indoor badminton league. Matches are held every Tuesday and Thursday evening.\",\n                \"leagueLogo\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755921844/karlfive223/kogo.jpg.jpg\",\n                \"startDate\": \"2026-01-12T00:00:00.000Z\",\n                \"endDate\": \"2026-03-05T23:59:59.000Z\",\n                \"location\": \"Downtown Athletic Center\",\n                \"addTeam\": \"Shuttle Masters\",\n                \"type\": \"Singles\",\n                \"matchFormat\": \"Best of 3 sets\",\n                \"tiebreakOption\": \"No tiebreak\",\n                \"allowSubstitutes\": false,\n                \"createdAt\": \"2025-08-23T04:13:33.671Z\",\n                \"updatedAt\": \"2025-08-23T04:13:33.671Z\",\n                \"__v\": 0\n            },\n            \"matchStatus\": \"live\",\n            \"referee\": {\n                \"refreshToken\": null,\n                \"_id\": \"68a98001664cab51716b8bb7\",\n                \"name\": \"referee\",\n                \"email\": \"referee@gmail.com\",\n                \"password\": \"$2b$10$xbzTvU7AXE7eGPG7Ya/tmeaB3GX6leKvBTkrsJ3NsLs.eSTB5XDQu\",\n                \"profileImage\": null,\n                \"role\": \"referee\",\n                \"phoneNumber\": \"01518643073\",\n                \"isVerified\": true,\n                \"otp\": null,\n                \"otpExpiry\": null,\n                \"createdAt\": \"2025-08-23T08:46:57.672Z\",\n                \"updatedAt\": \"2025-08-23T08:48:59.197Z\",\n                \"__v\": 0\n            },\n            \"createdAt\": \"2025-08-23T10:07:47.199Z\",\n            \"updatedAt\": \"2025-08-23T10:12:53.052Z\",\n            \"__v\": 0\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "get single match",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/match/68abe1d213c112efbca9b40a",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"match",
+								"68abe1d213c112efbca9b40a"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updated match by id",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"matchStatus\": \"live\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/match/68a992f3c05bcbf59eb2f724",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"match",
+								"68a992f3c05bcbf59eb2f724"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleted match by id",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"matchStatus\": \"live\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/match/68a992f3c05bcbf59eb2f724",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"match",
+								"68a992f3c05bcbf59eb2f724"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "contact",
+			"item": [
+				{
+					"name": "create contact",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{playerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstName\": \"Ayesha\",\r\n    \"lastName\": \"Rahman\",\r\n    \"address\": \"123 Gulshan Avenue, Dhaka\",\r\n    \"phoneNumber\": \"+8801712345678\",\r\n    \"subject\": \"Business Inquiry\",\r\n    \"yourCompony\": \"TechNova Ltd.\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/contact/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contact",
+								"create"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "create contact",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{playerAccessToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"firstName\": \"Ayesha\",\r\n    \"lastName\": \"Rahman\",\r\n    \"address\": \"123 Gulshan Avenue, Dhaka\",\r\n    \"phoneNumber\": \"+8801712345678\",\r\n    \"subject\": \"Business Inquiry\",\r\n    \"yourCompony\": \"TechNova Ltd.\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/contact/create",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"contact",
+										"create"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "388"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"184-hUxqGVPwVvD0dFVOdMUZkWrnUxk\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 24 Aug 2025 04:41:54 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Contact created successfully\",\n    \"data\": {\n        \"user\": \"68a84cb87efe53265dab209f\",\n        \"firstName\": \"Ayesha\",\n        \"lastName\": \"Rahman\",\n        \"address\": \"123 Gulshan Avenue, Dhaka\",\n        \"phoneNumber\": \"+8801712345678\",\n        \"subject\": \"Business Inquiry\",\n        \"yourCompony\": \"TechNova Ltd.\",\n        \"_id\": \"68aa9812eddd9d4e9663df97\",\n        \"createdAt\": \"2025-08-24T04:41:54.398Z\",\n        \"updatedAt\": \"2025-08-24T04:41:54.398Z\",\n        \"__v\": 0\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "get all",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{adminAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contact/all-contact",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contact",
+								"all-contact"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "get all",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{adminAccessToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/contact/all-contact",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"contact",
+										"all-contact"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "464"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1d0-2kc0HdLh0Y0U/C6eLu4jJHUgQC4\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 24 Aug 2025 04:49:59 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Contact fetched successfully\",\n    \"data\": [\n        {\n            \"_id\": \"68aa9812eddd9d4e9663df97\",\n            \"user\": {\n                \"_id\": \"68a84cb87efe53265dab209f\",\n                \"name\": \"user\",\n                \"email\": \"sarkarsaurav100@gmail.com\",\n                \"role\": \"player\"\n            },\n            \"firstName\": \"Ayesha\",\n            \"lastName\": \"Rahman\",\n            \"address\": \"123 Gulshan Avenue, Dhaka\",\n            \"phoneNumber\": \"+8801712345678\",\n            \"subject\": \"Business Inquiry\",\n            \"yourCompony\": \"TechNova Ltd.\",\n            \"createdAt\": \"2025-08-24T04:41:54.398Z\",\n            \"updatedAt\": \"2025-08-24T04:41:54.398Z\",\n            \"__v\": 0\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "get id by user",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{adminAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/contact/68aa9812eddd9d4e9663df97",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contact",
+								"68aa9812eddd9d4e9663df97"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updated id by user",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{adminAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstName\": \"Ayeshadsfdfg\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/contact/68aa9812eddd9d4e9663df97",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contact",
+								"68aa9812eddd9d4e9663df97"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleted id by user",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{adminAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstName\": \"Ayeshadsfdfg\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/contact/68aa9812eddd9d4e9663df97",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"contact",
+								"68aa9812eddd9d4e9663df97"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "report",
+			"item": [
+				{
+					"name": "create report",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{playerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/saura/Downloads/report.jpg"
+								},
+								{
+									"key": "data",
+									"value": "{\n    \"even\": \"Match Dispute\",\n    \"description\": \"The referee made a wrong call during the final minutes of the game.\"\n}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/report/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"report",
+								"create"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "New Request",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{playerAccessToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/C:/Users/saura/Downloads/report.jpg"
+										},
+										{
+											"key": "data",
+											"value": "{\n    \"even\": \"Match Dispute\",\n    \"description\": \"The referee made a wrong call during the final minutes of the game.\"\n}",
+											"type": "text"
+										}
+									],
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/report/create",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"report",
+										"create"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "369"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"171-Dj3zfdmEDtALFGW0z0HgprOspVI\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 24 Aug 2025 05:47:16 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Report created successfully\",\n    \"data\": {\n        \"user\": \"68a84cb87efe53265dab209f\",\n        \"even\": \"Match Dispute\",\n        \"description\": \"The referee made a wrong call during the final minutes of the game.\",\n        \"reportImage\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1756014436/karlfive223/report.jpg.jpg\",\n        \"_id\": \"68aaa764f1a6e273d1abff9e\",\n        \"__v\": 0\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "get all report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{adminAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/report/all-report",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"report",
+								"all-report"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "New Request",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{adminAccessToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/report/all-report",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"report",
+										"all-report"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "448"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"1c0-kV14+VMWwXOGOjF6jSQWRDsjTSI\""
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 24 Aug 2025 05:49:14 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Reports retrieved successfully\",\n    \"data\": [\n        {\n            \"_id\": \"68aaa764f1a6e273d1abff9e\",\n            \"user\": {\n                \"_id\": \"68a84cb87efe53265dab209f\",\n                \"name\": \"user\",\n                \"email\": \"sarkarsaurav100@gmail.com\",\n                \"role\": \"player\"\n            },\n            \"even\": \"Match Dispute\",\n            \"description\": \"The referee made a wrong call during the final minutes of the game.\",\n            \"reportImage\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1756014436/karlfive223/report.jpg.jpg\",\n            \"__v\": 0\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "get single report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{adminAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/report/68aaa764f1a6e273d1abff9e",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"report",
+								"68aaa764f1a6e273d1abff9e"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "updated single report",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{adminAccessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"even\": \"Match Dispute dd\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/report/68aaa764f1a6e273d1abff9e",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"report",
+								"68aaa764f1a6e273d1abff9e"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleted single report",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{adminAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/report/68aaa764f1a6e273d1abff9e",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"report",
+								"68aaa764f1a6e273d1abff9e"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "standing",
+			"item": [
+				{
+					"name": "get all standing",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{managerAccessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/standing/all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"standing",
+								"all"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api/v1"
+		},
+		{
+			"key": "adminAccessToken",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhdXJhdi5iZGNhbGxpbmdAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzU2MDEwODk4LCJleHAiOjE3NTY2MTU2OTh9.S2NaXY4L-9R7BUM_tGLEmWrSMN1hNrNbOg0RNVPflVs"
+		},
+		{
+			"key": "managerAccessToken",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhdXJhdnNhcmthci5kZXZlbG9wZXJAZ21haWwuY29tIiwicm9sZSI6Im1hbmFnZXIiLCJpYXQiOjE3NTU5MTg3MjUsImV4cCI6MTc1NjUyMzUyNX0.GGFNcEBxyhqceIYL2yPKQpep516VKuok5rowltu6aYk"
+		},
+		{
+			"key": "playerAccessToken",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhcmthcnNhdXJhdjEwMEBnbWFpbC5jb20iLCJyb2xlIjoicGxheWVyIiwiaWF0IjoxNzU1OTMwMjkyLCJleHAiOjE3NTY1MzUwOTJ9.ZoCIxN1lzU30kYiovJdLvlDou39n4emSOMozmpL_enI"
+		}
+	]
+}
