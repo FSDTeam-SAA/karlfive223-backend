@@ -29,9 +29,10 @@ const matchSchema = new Schema<IMatch>(
     },
     matchStatus: {
       type: String,
-      enum: ["upcoming", "live", "completed", "postponed"],
+      enum: ["upcoming", "live", "completed", "postponed","drow"],
       default: "upcoming",
     },
+
     winnerTeam: {
       type: Schema.Types.ObjectId,
       ref: "Team",

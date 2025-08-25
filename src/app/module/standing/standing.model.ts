@@ -3,22 +3,10 @@ import { IStanding } from "./standing.interface";
 
 const standingSchema = new Schema<IStanding>(
   {
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    team: {
-      type: Schema.Types.ObjectId,
-      ref: "Team",
-      required: true,
-    },
-    league: {
-      type: Schema.Types.ObjectId,
-      ref: "League",
-      required: true,
-    },
-    position: { type: Number, required: true },
+    user: { type: Schema.Types.ObjectId, ref: "User" }, // optional
+    team: { type: Schema.Types.ObjectId, ref: "Team", required: true },
+    league: { type: Schema.Types.ObjectId, ref: "League", required: true },
+    position: { type: Number, default: 0 },
     played: { type: Number, default: 0 },
     won: { type: Number, default: 0 },
     drawn: { type: Number, default: 0 },
