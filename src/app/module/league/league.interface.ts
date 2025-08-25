@@ -5,10 +5,12 @@ export interface ILeague {
   leagueName: string;
   description: string;
   leagueLogo?: string;
+  bannerImage?: string;
   startDate: Date;
   endDate: Date;
   location: string;
-  addTeam?: string;
+  addTeams?: ObjectId[];   // ✅ array instead of single
+  totalGameWeeks: number;  // ✅ added
   type: "Singles" | "Doubles";
   matchFormat: "Best of 3 sets" | "Best of 5 sets";
   tiebreakOption: "Standard 7-point" | "No tiebreak";

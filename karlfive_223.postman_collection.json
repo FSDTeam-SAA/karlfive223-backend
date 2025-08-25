@@ -740,11 +740,16 @@
 								{
 									"key": "logo",
 									"type": "file",
-									"src": "/C:/Users/saura/Downloads/hand-drawn-soccer-logo-template/kogo.jpg"
+									"src": "/C:/Users/saura/Downloads/Create league.png"
+								},
+								{
+									"key": "banner",
+									"type": "file",
+									"src": "/C:/Users/saura/Downloads/banner.jpg"
 								},
 								{
 									"key": "data",
-									"value": "{\n  \"leagueName\": \"Winter Shuttlecock Showdown\",\n  \"description\": \"Stay active this winter with our competitive indoor badminton league. Matches are held every Tuesday and Thursday evening.\",\n  \"startDate\": \"2026-01-12T00:00:00.000Z\",\n  \"endDate\": \"2026-03-05T23:59:59.000Z\",\n  \"location\": \"Downtown Athletic Center\",\n  \"addTeam\": \"Shuttle Masters\",\n  \"type\": \"Singles\",\n  \"matchFormat\": \"Best of 3 sets\",\n  \"tiebreakOption\": \"No tiebreak\",\n  \"allowSubstitutes\": false\n}",
+									"value": "{\n  \"leagueName\": \"Lagiga\",\n  \"description\": \"A fun but competitive winter season league with 8 teams.\",\n  \"startDate\": \"2025-11-01T00:00:00.000Z\",\n  \"location\": \"Dhaka Indoor Stadium\",\n  \"totalGameWeeks\": 14,\n  \"type\": \"Doubles\",\n  \"matchFormat\": \"Best of 3 sets\",\n  \"tiebreakOption\": \"Standard 7-point\",\n  \"allowSubstitutes\": true\n}\n",
 									"type": "text"
 								}
 							]
@@ -760,7 +765,99 @@
 							]
 						}
 					},
-					"response": []
+					"response": [
+						{
+							"name": "create league",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{managerAccessToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "logo",
+											"type": "file",
+											"src": "/C:/Users/saura/Downloads/Create league.png"
+										},
+										{
+											"key": "banner",
+											"type": "file",
+											"src": "/C:/Users/saura/Downloads/banner.jpg"
+										},
+										{
+											"key": "data",
+											"value": "{\n  \"leagueName\": \"Lagiga\",\n  \"description\": \"A fun but competitive winter season league with 8 teams.\",\n  \"startDate\": \"2025-11-01T00:00:00.000Z\",\n  \"location\": \"Dhaka Indoor Stadium\",\n  \"totalGameWeeks\": 14,\n  \"type\": \"Doubles\",\n  \"matchFormat\": \"Best of 3 sets\",\n  \"tiebreakOption\": \"Standard 7-point\",\n  \"allowSubstitutes\": true\n}\n",
+											"type": "text"
+										}
+									],
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/league/create",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"league",
+										"create"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "744"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"2e8-vWIk/caRYSlYmdm8fxvYiqFAHa0\""
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 25 Aug 2025 05:50:43 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"League created successfully\",\n    \"data\": {\n        \"user\": \"68a9310b60a8cc4db5a8b6cf\",\n        \"leagueName\": \"Lagiga\",\n        \"description\": \"A fun but competitive winter season league with 8 teams.\",\n        \"leagueLogo\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1756100732/karlfive223/Create_league.png.png\",\n        \"bannerImage\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1756100733/karlfive223/banner.jpg.jpg\",\n        \"startDate\": \"2025-11-01T00:00:00.000Z\",\n        \"location\": \"Dhaka Indoor Stadium\",\n        \"addTeams\": [],\n        \"totalGameWeeks\": 14,\n        \"type\": \"Doubles\",\n        \"matchFormat\": \"Best of 3 sets\",\n        \"tiebreakOption\": \"Standard 7-point\",\n        \"allowSubstitutes\": true,\n        \"_id\": \"68abf9b2df4fd5323d35907e\",\n        \"createdAt\": \"2025-08-25T05:50:42.948Z\",\n        \"updatedAt\": \"2025-08-25T05:50:42.948Z\",\n        \"__v\": 0\n    }\n}"
+						}
+					]
 				},
 				{
 					"name": "get all league",
@@ -774,7 +871,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/league/all-league?leagueName=Winter Shuttlecock Showdown",
+							"raw": "{{baseUrl}}/league/all-league",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -820,12 +917,132 @@
 								},
 								{
 									"key": "leagueName",
-									"value": "Winter Shuttlecock Showdown"
+									"value": "Winter Shuttlecock Showdown",
+									"disabled": true
+								},
+								{
+									"key": "totalGameWeeks",
+									"value": "14",
+									"disabled": true
 								}
 							]
 						}
 					},
-					"response": []
+					"response": [
+						{
+							"name": "get all league",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{managerAccessToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/league/all-league",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"league",
+										"all-league"
+									],
+									"query": [
+										{
+											"key": "searchTerm",
+											"value": "Innovate",
+											"disabled": true
+										},
+										{
+											"key": "startDate",
+											"value": "2026-01-12",
+											"disabled": true
+										},
+										{
+											"key": "endDate",
+											"value": "2025-08-15T23:59:59.000Z",
+											"disabled": true
+										},
+										{
+											"key": "page",
+											"value": "2",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "2",
+											"disabled": true
+										},
+										{
+											"key": "sortBy",
+											"value": "startDate",
+											"disabled": true
+										},
+										{
+											"key": "sortOrder",
+											"value": "asc",
+											"disabled": true
+										},
+										{
+											"key": "leagueName",
+											"value": "Winter Shuttlecock Showdown",
+											"disabled": true
+										},
+										{
+											"key": "totalGameWeeks",
+											"value": "14",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Access-Control-Allow-Credentials",
+									"value": "true"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "872"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"368-wcULj16tYT2KIePir66BIgwTv0A\""
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 25 Aug 2025 05:50:30 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "Keep-Alive",
+									"value": "timeout=5"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Leagues fetched successfully\",\n    \"meta\": {\n        \"total\": 1,\n        \"page\": 1,\n        \"limit\": 10\n    },\n    \"data\": [\n        {\n            \"addTeams\": [],\n            \"_id\": \"68a93fedd9159d4637e5ec5b\",\n            \"user\": {\n                \"_id\": \"68a9310b60a8cc4db5a8b6cf\",\n                \"name\": \"manager\",\n                \"email\": \"sauravsarkar.developer@gmail.com\"\n            },\n            \"leagueName\": \"Winter Shuttlecock Showdown\",\n            \"description\": \"Stay active this winter with our competitive indoor badminton league. Matches are held every Tuesday and Thursday evening.\",\n            \"leagueLogo\": \"https://res.cloudinary.com/dw5wizivl/image/upload/v1755921844/karlfive223/kogo.jpg.jpg\",\n            \"startDate\": \"2026-01-12T00:00:00.000Z\",\n            \"endDate\": \"2026-03-05T23:59:59.000Z\",\n            \"location\": \"Downtown Athletic Center\",\n            \"addTeam\": \"Shuttle Masters\",\n            \"type\": \"Singles\",\n            \"matchFormat\": \"Best of 3 sets\",\n            \"tiebreakOption\": \"No tiebreak\",\n            \"allowSubstitutes\": false,\n            \"createdAt\": \"2025-08-23T04:13:33.671Z\",\n            \"updatedAt\": \"2025-08-23T04:13:33.671Z\",\n            \"__v\": 0\n        }\n    ]\n}"
+						}
+					]
 				},
 				{
 					"name": "get league by id",

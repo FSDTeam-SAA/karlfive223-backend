@@ -4,16 +4,22 @@ import sendResponse from "../../utils/sendRespopnse";
 import { leagueService } from "./league.service";
 
 const createLeague = catchAsycn(async (req, res) => {
-  const file = req.file as Express.Multer.File | undefined;
-  if (!file) {
-    throw new Error("No file uploaded");
-  }
-  // if frontend sends JSON as string in form-data
+  // parse JSON data from form-data
   const formData = req.body.data ? JSON.parse(req.body.data) : req.body;
+
+  const files = {
+    logo:
+      req.files && !Array.isArray(req.files) ? req.files.logo?.[0] : undefined,
+    banner:
+      req.files && !Array.isArray(req.files)
+        ? req.files.banner?.[0]
+        : undefined,
+  };
+
   const result = await leagueService.createLeague(
     req.user?.email,
     formData,
-    file
+    files
   );
 
   sendResponse(res, {
@@ -24,7 +30,29 @@ const createLeague = catchAsycn(async (req, res) => {
   });
 });
 
+// const getAllLeagues = catchAsycn(async (req, res) => {
+//   const filters = pick(req.query, [
+//     "searchTerm",
+//     "startDate",
+//     "endDate",
+//     "leagueName",
+//     "location",
+//     "type",
+//   ]);
+//   const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+//   const result = await leagueService.getAllLeagues(filters, options);
+
+//   sendResponse(res, {
+//     statusCode: 200,
+//     success: true,
+//     message: "Leagues fetched successfully",
+//     meta: result.meta,
+//     data: result.data,
+//   });
+// });
+
 const getAllLeagues = catchAsycn(async (req, res) => {
+  // 🎯 Extract allowed filters from query
   const filters = pick(req.query, [
     "searchTerm",
     "startDate",
@@ -32,10 +60,16 @@ const getAllLeagues = catchAsycn(async (req, res) => {
     "leagueName",
     "location",
     "type",
+    "totalGameWeeks", // ✅ added so it works
   ]);
+
+  // 📄 Extract pagination + sorting options
   const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+
+  // 🚀 Call service
   const result = await leagueService.getAllLeagues(filters, options);
 
+  // 📤 Send response
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -44,6 +78,7 @@ const getAllLeagues = catchAsycn(async (req, res) => {
     data: result.data,
   });
 });
+
 
 const getLeagueById = catchAsycn(async (req, res) => {
   const result = await leagueService.getLeagueById(req.params.id);
@@ -57,14 +92,23 @@ const getLeagueById = catchAsycn(async (req, res) => {
 });
 
 const updateLeague = catchAsycn(async (req, res) => {
-  const file = req?.file as Express.Multer.File | undefined;
-  const fromData = req.body.data ? JSON.parse(req.body.data) : req.body;
-  let result: any;
-  if (file) {
-    await leagueService.updateLeague(req.params.id, fromData, file);
-  } else {
-    result = await leagueService.updateLeague(req.params.id, fromData);
-  }
+  const formData = req.body.data ? JSON.parse(req.body.data) : req.body;
+
+  const files = {
+    logo:
+      req.files && !Array.isArray(req.files) ? req.files.logo?.[0] : undefined,
+    banner:
+      req.files && !Array.isArray(req.files)
+        ? req.files.banner?.[0]
+        : undefined,
+  };
+
+  const result = await leagueService.updateLeague(
+    req.params.id,
+    formData,
+    files
+  );
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
