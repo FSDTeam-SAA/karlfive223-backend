@@ -15,7 +15,8 @@ declare global {
 const auth = (...request: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const token = req.headers.authorization;
+      // const token = req.headers.authorization;
+      const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
         throw new AppError(401, "Please provide token");
       }
