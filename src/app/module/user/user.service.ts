@@ -79,18 +79,9 @@ const updatedProfile = async (
     payload.profileImage = uploadedImage.secure_url;
   }
   // Update allowed fields
-  const updatedUser = await User.findByIdAndUpdate(
-    user.id,
-    {
-      name: payload.name,
-      profileImage: payload.profileImage,
-      phoneNumber: payload.phoneNumber,
-      clubAffiliation: payload.clubAffiliation,
-      playingLevel: payload.playingLevel,
-      birthday: payload.birthday,
-    },
-    { new: true }
-  ).select("-password"); // don't return password
+  const updatedUser = await User.findByIdAndUpdate(user.id, payload, {
+    new: true,
+  }).select("-password"); // don't return password
 
   return updatedUser;
 };
