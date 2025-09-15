@@ -14,13 +14,13 @@ const createUser = async (payload: Partial<IUser>) => {
   if (!newUser) {
     throw new AppError(400, "User creation failed");
   }
-  await sendMailer(
-    newUser.email,
-    "Welcome to our platform",
-    `Hello ${newUser.name}, welcome to our platform.`
-  );
-  newUser.isVerified = true;
-  await newUser.save();
+  // await sendMailer(
+  //   newUser.email,
+  //   "Welcome to our platform",
+  //   `Hello ${newUser.name}, welcome to our platform.`
+  // );
+  // newUser.isVerified = true;
+  // await newUser.save();
 
   // Remove password before returning
   const { password: _, ...result } = newUser.toObject();
