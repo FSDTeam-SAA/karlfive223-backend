@@ -2,6 +2,7 @@ import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
 import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
+import League from "../league/league.model";
 import User from "../user/user.model";
 import { ITeam } from "./team.interface";
 import Team from "./team.model";
@@ -23,6 +24,9 @@ const createTeam = async (
 
   const result = await Team.create({ ...payload, user: user._id });
   if (!result) throw new AppError(400, "Failed to create team");
+  const league = await League.findByIdAndUpdate(payload.league ,{addTeams : {$push: result._id}})
+
+
   return result;
 };
 
