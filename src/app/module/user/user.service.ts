@@ -14,13 +14,13 @@ const createUser = async (payload: Partial<IUser>) => {
   if (!newUser) {
     throw new AppError(400, "User creation failed");
   }
-  await sendMailer(
-    newUser.email,
-    "Welcome to our platform",
-    `Hello ${newUser.name}, welcome to our platform.`
-  );
-  newUser.isVerified = true;
-  await newUser.save();
+  // await sendMailer(
+  //   newUser.email,
+  //   "Welcome to our platform",
+  //   `Hello ${newUser.name}, welcome to our platform.`
+  // );
+  // newUser.isVerified = true;
+  // await newUser.save();
 
   // Remove password before returning
   const { password: _, ...result } = newUser.toObject();
@@ -79,18 +79,9 @@ const updatedProfile = async (
     payload.profileImage = uploadedImage.secure_url;
   }
   // Update allowed fields
-  const updatedUser = await User.findByIdAndUpdate(
-    user.id,
-    {
-      name: payload.name,
-      profileImage: payload.profileImage,
-      phoneNumber: payload.phoneNumber,
-      clubAffiliation: payload.clubAffiliation,
-      playingLevel: payload.playingLevel,
-      birthday: payload.birthday,
-    },
-    { new: true }
-  ).select("-password"); // don't return password
+  const updatedUser = await User.findByIdAndUpdate(user.id, payload, {
+    new: true,
+  }).select("-password"); // don't return password
 
   return updatedUser;
 };
