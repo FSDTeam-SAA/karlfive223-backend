@@ -22,11 +22,11 @@ const createTeam = async (
       throw new AppError(400, "Failed to upload logo");
     payload.logoPhotoUrl = uploadLogo.secure_url;
   }
-  const {...restBody, league} = payload
+  const {league,...rest} = payload
 
-  const result = await Team.create({ ...restBody, user: user._id, league: new mongoose.Types.ObjectId( league)});
+  const result = await Team.create({ ...rest, user: user._id, league: new mongoose.Types.ObjectId( league)});
   if (!result) throw new AppError(400, "Failed to create team");
-  const league = await League.findByIdAndUpdate(payload.league ,{addTeams : {$push: result._id}})
+  const league1 = await League.findByIdAndUpdate(league ,{$addToSet:{addTeams :  result._id}})
 
 
   return result;
