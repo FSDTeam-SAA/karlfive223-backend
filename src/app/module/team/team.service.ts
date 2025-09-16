@@ -23,8 +23,10 @@ const createTeam = async (
     payload.logoPhotoUrl = uploadLogo.secure_url;
   }
   const {league,...rest} = payload
+  const league2 =
+  typeof league === "string" ? new mongoose.Types.ObjectId(league) : league;
 
-  const result = await Team.create({ ...rest, user: user._id, league: new mongoose.Types.ObjectId( league)});
+  const result = await Team.create({ ...rest, user: user._id, league:league2 });
   if (!result) throw new AppError(400, "Failed to create team");
   const league1 = await League.findByIdAndUpdate(league ,{$addToSet:{addTeams :  result._id}})
 
