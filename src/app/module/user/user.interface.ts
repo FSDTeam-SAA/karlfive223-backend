@@ -9,6 +9,8 @@ export interface IUser {
   gender: "Male" | "Female" | "Other";
   otp?: string;
   otpExpiry?: Date;
+  reset_otp?: string;
+  reset_otpExpiry?: Date;
   playingLevel:
     | "Beginner"
     | "Intermediate"

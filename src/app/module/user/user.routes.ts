@@ -5,7 +5,6 @@ import { userrole } from "./user.constent";
 import { fileUploader } from "../../helper/fileUploded";
 const router = express.Router();
 
-router.post("/create", userControllers.createUser);
 router.get(
   "/profile",
   auth(userrole.admin, userrole.manager, userrole.player),

@@ -46,7 +46,7 @@ const updatedProfile = catchAsycn(async (req, res) => {
   const file = req.file as Express.Multer.File | undefined;
 
   // if frontend sends JSON as string in form-data
-  const formData = req.body.data ? JSON.parse(req.body.data) : req.body;
+  const formData = req.body ? JSON.parse(req.body) : req.body;
 
   const result = await userServices.updatedProfile(
     req.user?.email as string,

@@ -5,6 +5,7 @@ import { adminController } from "./admin.controller";
 const router = express.Router();
 
 router.get("/allUser", auth(userrole.admin), adminController.getAllUsers);
+router.post("/add-manager",adminController.AddManager)
 router.patch(
   "/updated-role/:id",
   auth(userrole.admin),

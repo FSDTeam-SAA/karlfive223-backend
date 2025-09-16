@@ -4,7 +4,7 @@ import sendResponse from "../../utils/sendRespopnse";
 import { leagueService } from "./league.service";
 
 const createLeague = catchAsycn(async (req, res) => {
-  const formData = req.body.data ? JSON.parse(req.body.data) : req.body;
+  const formData = req.body ? JSON.parse(req.body) : req.body;
 
   const files = {
     logo:
@@ -86,7 +86,7 @@ const getLeagueById = catchAsycn(async (req, res) => {
 });
 
 const updateLeague = catchAsycn(async (req, res) => {
-  const formData = req.body.data ? JSON.parse(req.body.data) : req.body;
+  const formData = req.body ? JSON.parse(req.body) : req.body;
 
   const files = {
     logo:

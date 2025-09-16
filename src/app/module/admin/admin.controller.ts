@@ -1,6 +1,8 @@
+import AppError from "../../error/appError";
 import pick from "../../helper/pike";
 import catchAsycn from "../../utils/catchAsycn";
 import sendResponse from "../../utils/sendRespopnse";
+import User from "../user/user.model";
 import { adminService } from "./admin.service";
 
 const getAllUsers = catchAsycn(async (req, res) => {
@@ -89,6 +91,22 @@ const deletedVanue = catchAsycn(async (req, res) => {
   });
 });
 
+const AddManager = catchAsycn(async(req,res)=>{
+  const {name, email, password, role = "manager", gender, phoneNumber} = req.body;
+   const existingUser = await User.findOne({ email: email });
+  if (existingUser) {
+    throw new AppError(400, "User already exists");
+  }
+  const newUser = await User.create({name, email, password, role, gender, phoneNumber, isVerified: true});
+
+  sendResponse(res,{
+    statusCode: 200,
+    success: true,
+    message: "Manager Added Successfully",
+    data: newUser
+  })
+})
+
 export const adminController = {
   getAllUsers,
   updatedRoleByUser,
@@ -96,5 +114,9 @@ export const adminController = {
   deletedUser,
   getAllVanues,
   deletedVanue,
-  getSingleVanue
+  getSingleVanue,
+  AddManager
 };
+
+
+

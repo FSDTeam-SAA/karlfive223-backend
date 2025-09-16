@@ -118,10 +118,20 @@ const verifyOtp = catchAsycn(async (req, res) => {
     data: result,
   });
 });
+const verifyResetOtp = catchAsycn(async (req, res) => {
+  const { email, otp } = req.body;
+  const result = await authService.verifyResetOtp(email, otp);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "OTP verified successfully",
+    data: result,
+  });
+});
 
 const resetPassword = catchAsycn(async (req, res) => {
-  const { email, newPassword } = req.body;
-  const result = await authService.resetPassword(email, newPassword);
+  const { email, newPassword,otp } = req.body;
+  const result = await authService.resetPassword(email, newPassword,otp);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -135,6 +145,7 @@ export const authController = {
   refreshToken,
   sendResetOtp,
   verifyOtp,
+  verifyResetOtp,
   resetPassword,
 };
 

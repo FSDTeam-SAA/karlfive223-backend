@@ -27,6 +27,8 @@ const userSchema = new mongoose.Schema<IUser>(
     isVerified: { type: Boolean, default: false },
     otp: { type: String, default: null },
     otpExpiry: { type: Date, default: null },
+    reset_otp: { type: String, default: null },
+    reset_otpExpiry: { type: Date, default: null },
     playingLevel: {
       type: String,
       enum: {

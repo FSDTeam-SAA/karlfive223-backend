@@ -3,7 +3,7 @@ import { reportService } from "./report.service";
 
 const createReport = catchAsycn(async (req, res) => {
   const file = req.file as Express.Multer.File;
-  const fromData = req.body.data ? JSON.parse(req.body.data) : req.body;
+  const fromData = req.body ? JSON.parse(req.body) : req.body;
   const result = await reportService.createReport(
     req.user?.email,
     fromData,
@@ -37,7 +37,7 @@ const getReport = catchAsycn(async (req, res) => {
 });
 const updateReport = catchAsycn(async (req, res) => {
   const file = req.file as Express.Multer.File;
-  const fromData = req.body.data ? JSON.parse(req.body.data) : req.body;
+  const fromData = req.body ? JSON.parse(req.body) : req.body;
 
   const result = await reportService.updateReport(
     req.params.id,
