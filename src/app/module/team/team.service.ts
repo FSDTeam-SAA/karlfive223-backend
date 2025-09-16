@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
 import pagenation from "../../helper/pagenation";
@@ -21,8 +22,9 @@ const createTeam = async (
       throw new AppError(400, "Failed to upload logo");
     payload.logoPhotoUrl = uploadLogo.secure_url;
   }
+  const {...restBody, league} = payload
 
-  const result = await Team.create({ ...payload, user: user._id });
+  const result = await Team.create({ ...restBody, user: user._id, league: new mongoose.Types.ObjectId( league)});
   if (!result) throw new AppError(400, "Failed to create team");
   const league = await League.findByIdAndUpdate(payload.league ,{addTeams : {$push: result._id}})
 
