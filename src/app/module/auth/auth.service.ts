@@ -293,6 +293,7 @@ const verifyOtp = async (email: string, otp: string) => {
 
   user.otp = undefined;
   user.otpExpiry = undefined;
+  user.isVerified = true
   await user.save();
 
   return { message: "OTP verified" };
