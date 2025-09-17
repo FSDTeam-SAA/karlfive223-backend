@@ -77,7 +77,7 @@ const getAllLeagues = async (params: any, options: IOption) => {
   // ✅ Query DB
   const result = await League.find(whereCondition)
     .populate("addTeams")
-    .populate("user", "name email")
+    .populate("user", "-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp")
     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 } as any)
     .skip(skip)
     .limit(limit);

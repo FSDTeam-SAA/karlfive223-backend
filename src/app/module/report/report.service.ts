@@ -24,12 +24,12 @@ const createReport = async (
 };
 
 const getAllReports = async () => {
-  const result = await Report.find().populate("user", "name email role");
+  const result = await Report.find().populate("user", "-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp")
   if (!result) throw new AppError(500, "Failed to get reports");
   return result;
 };
 const getReport = async (id: string) => {
-  const result = await Report.findById(id).populate("user", "name email role");
+  const result = await Report.findById(id).populate("user", "-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp")
   if (!result) throw new AppError(500, "Failed to get report");
   return result;
 };
