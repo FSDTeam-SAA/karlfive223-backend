@@ -15,9 +15,9 @@ const router = express.Router();
 router.get("/league/:leagueId", getLeagueStandings);
 
 // Admin/manager utilities
-router.get("/all", auth(userrole.manager), getAllStandings);
-router.get("/:id", auth(userrole.manager), getSingleStanding);
-router.patch("/:id", auth(userrole.manager), updateStanding);
-router.delete("/:id", auth(userrole.manager), removeStanding);
+router.get("/all",  , getAllStandings);
+router.get("/:id",  , getSingleStanding);
+router.patch("/:id",  , updateStanding);
+router.delete("/:id",  , removeStanding);
 
 export const standingRouter = router;

@@ -9,7 +9,6 @@ const router = express.Router();
 // CREATE league (with logo + banner)
 router.post(
   "/create",
-  auth(userrole.manager),
   fileUploader.upload.fields([
     { name: "logo", maxCount: 1 },
     { name: "banner", maxCount: 1 },
@@ -18,15 +17,14 @@ router.post(
 );
 
 // GET all leagues
-router.get("/all-league", auth(userrole.manager), leagueController.getAllLeagues);
+router.get("/all-league"  , leagueController.getAllLeagues);
 
 // GET league by id
-router.get("/:id", auth(userrole.manager), leagueController.getLeagueById);
+router.get("/:id",   leagueController.getLeagueById);
 
 // UPDATE league (with logo + banner)
 router.patch(
   "/:id",
-  auth(userrole.manager),
   fileUploader.upload.fields([
     { name: "logo", maxCount: 1 },
     { name: "banner", maxCount: 1 },
@@ -35,6 +33,6 @@ router.patch(
 );
 
 // DELETE league
-router.delete("/:id", auth(userrole.manager), leagueController.deleteLeague);
+router.delete("/:id",  leagueController.deleteLeague);
 
 export const leagueRouter = router;

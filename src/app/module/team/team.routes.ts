@@ -16,7 +16,6 @@ router.get("/all-team", auth(userrole.player), teamController.getAllTeams);
 
 router.patch(
   "/update-status/:id",
-  auth(userrole.manager),
   teamController.updatedStatus
 );
 
