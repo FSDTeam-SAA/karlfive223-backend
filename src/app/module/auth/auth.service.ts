@@ -269,11 +269,11 @@ const verifyOtp = async (email: string, otp: string) => {
   const user = await User.findOne({ email });
   if (!user) throw new AppError(401, "User not found");
 
-  if (user.reset_otp !== otp) throw new AppError(401, "Invalid OTP");
+  if (user.otp !== otp) throw new AppError(401, "Invalid OTP");
   if (user.otpExpiry && user.otpExpiry < new Date())
     throw new AppError(401, "OTP expired");
 
-  user.reset_otp = undefined;
+  user.otp = undefined;
   user.otpExpiry = undefined;
   await user.save();
 
