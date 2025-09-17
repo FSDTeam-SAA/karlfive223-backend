@@ -257,8 +257,15 @@ const refreshToken = async (token: string) => {
     config.jwt.access_secret as Secret,
     config.jwt.access_expires_in
   );
+    const refreshToken = jwtHelper.generateToken(
+    { email: user.email, role: user.role },
+    config.jwt.refresh_secret as Secret,
+    config.jwt.refresh_expires_in
+  );
+  user.refreshToken = refreshToken;
+  await user.save();
 
-  return { accessToken: newAccessToken };
+  return { accessToken: newAccessToken , refreshToken};
 };
 
 // reset password otp
