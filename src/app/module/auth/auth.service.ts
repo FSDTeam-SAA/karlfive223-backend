@@ -191,6 +191,24 @@ const loginUser = async (payload: { email: string; password: string }) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new AppError(400, "Incorrect password");
 
+  if (!user.isVerified) {
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    user.otp = otp;
+    user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 5 mins
+    await user.save();
+
+    await sendMailer({
+      to: user.email,
+      subject: "Verify Your Mail",
+      text: `Your OTP is ${otp}. It will expire in 5 minutes.`, // fallback for non-HTML clients
+      html: createOtpTemplate(otp, user.email, "Pixel Central"),
+    });
+
+    throw new AppError(400, "Your Mail Not Verified Please Verify it")
+
+  }
+
   const accessToken = jwtHelper.generateToken(
     { email: user.email, role: user.role },
     config.jwt.access_secret as Secret,
@@ -249,7 +267,7 @@ const sendResetOtp = async (email: string) => {
   const user = await User.findOne({ email });
   if (!user) throw new AppError(401, "User not found");
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
   user.reset_otp = otp;
   user.reset_otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 mins

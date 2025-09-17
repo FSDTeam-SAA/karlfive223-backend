@@ -1,6 +1,7 @@
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
 import { sendMailer } from "../../helper/sendMailer";
+import createOtpTemplate from "../../utils/createOtpTemplate";
 import { IUser } from "./user.interface";
 import User from "./user.model";
 
@@ -14,6 +15,21 @@ const createUser = async (payload: Partial<IUser>) => {
   if (!newUser) {
     throw new AppError(400, "User creation failed");
   }
+
+  const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+  newUser.otp = otp;
+  newUser.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 5 mins
+  await newUser.save();
+
+  await sendMailer({
+    to: newUser.email,
+    subject: "Verify Your Mail",
+    text: `Your OTP is ${otp}. It will expire in 5 minutes.`, // fallback for non-HTML clients
+    html: createOtpTemplate(otp, newUser.email, "Pixel Central"),
+  });
+
+
   // await sendMailer(
   //   newUser.email,
   //   "Welcome to our platform",
