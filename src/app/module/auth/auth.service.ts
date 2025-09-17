@@ -287,18 +287,17 @@ const verifyResetOtp = async (email: string, otp: string) => {
   if (user.reset_otpExpiry && user.reset_otpExpiry < new Date())
     throw new AppError(401, "OTP expired");
 
-  // ✅ clear the reset OTP fields, not the normal OTP
-  user.reset_otp = undefined;
-  user.reset_otpExpiry = undefined;
-  await user.save();
+  // user.reset_otp = undefined;
+  // user.reset_otpExpiry = undefined;
+  // await user.save();
 
   return { message: "OTP verified" };
 };
 
-const resetPassword = async (email: string, newPassword: string) => {
+const resetPassword = async (email: string, newPassword: string, otp: string) => {
   const user = await User.findOne({ email });
   if (!user) throw new AppError(404, "User not found");
-  // if (user.reset_otp !== otp) throw new AppError(401, "Invalid OTP");
+  if (user.reset_otp !== otp) throw new AppError(401, "Invalid OTP");
   if (user.reset_otpExpiry && user.reset_otpExpiry < new Date())
     throw new AppError(401, "OTP expired");
 
