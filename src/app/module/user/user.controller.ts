@@ -21,6 +21,15 @@ const getUserByEmail = catchAsycn(async (req, res) => {
     data: result,
   });
 });
+const getUserById = catchAsycn(async (req, res) => {
+  const result = await userServices.getUserById(req.params.id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User found successfully",
+    data: result,
+  });
+});
 
 const playingLevel = catchAsycn(async (req, res) => {
   const result = await userServices.playingLevel(req.user?.email, req.body);
@@ -68,4 +77,5 @@ export const userControllers = {
   playingLevel,
   gender,
   updatedProfile,
+  getUserById
 };

@@ -51,6 +51,13 @@ const getUserByEmail = async (email: string) => {
   }
   return user;
 };
+const getUserById = async (email: string) => {
+  const user = await User.findById(email).select("-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp");
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  return user;
+};
 
 const playingLevel = async (email: string, payload: Partial<IUser>) => {
   const user = await User.findOne({ email });
@@ -108,4 +115,5 @@ export const userServices = {
   playingLevel,
   gender,
   updatedProfile,
+  getUserById
 };

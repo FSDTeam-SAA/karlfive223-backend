@@ -10,6 +10,10 @@ router.get(
   auth(userrole.admin, userrole.manager, userrole.player),
   userControllers.getUserByEmail
 );
+router.get(
+  "/profile/:id",
+  userControllers.getUserById
+);
 router.patch(
   "/playing-level",
   auth(userrole.admin, userrole.manager, userrole.player),
