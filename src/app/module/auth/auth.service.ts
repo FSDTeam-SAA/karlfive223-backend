@@ -202,17 +202,8 @@ const loginUser = async (payload: { email: string; password: string }) => {
     config.jwt.refresh_secret as Secret,
     config.jwt.refresh_expires_in
   );
-  // const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  // user.otp = otp;
-  // user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
-  // user.refreshToken = refreshToken;
-  // await user.save();
-
-  // await sendMailer(
-  //   user.email,
-  //   "Verify OTP",
-  //   createOtpTemplate(otp, user.email, "Pixel Central")
-  // );
+  user.refreshToken = refreshToken;
+  await user.save();
 
   return {
     accessToken,
@@ -251,7 +242,6 @@ const refreshToken = async (token: string) => {
 
   return { accessToken: newAccessToken };
 };
-
 
 // reset password otp
 
@@ -305,11 +295,7 @@ const verifyResetOtp = async (email: string, otp: string) => {
   return { message: "OTP verified" };
 };
 
-const resetPassword = async (
-  email: string,
-  newPassword: string,
- 
-) => {
+const resetPassword = async (email: string, newPassword: string) => {
   const user = await User.findOne({ email });
   if (!user) throw new AppError(404, "User not found");
   // if (user.reset_otp !== otp) throw new AppError(401, "Invalid OTP");
