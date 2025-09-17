@@ -1,32 +1,31 @@
 import nodemailer from "nodemailer";
 import config from "../config";
 
-export const sendMailer = async (
-  email: string,
-  subject?: string,
-  text?: string,
-  html?: string
-) => {
-  // Create a test account or replace with real credentials.
+type MailOptions = {
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
+};
+
+export const sendMailer = async ({ to, subject, text, html }: MailOptions) => {
   const transporter = nodemailer.createTransport({
     host: config.sendMail.host,
     port: Number(config.sendMail.email_port),
-    secure: false, // true for 465, false for other ports
+    secure: Number(config.sendMail.email_port) === 465, // true for 465 (SSL), false otherwise
     auth: {
       user: config.sendMail.email,
       pass: config.sendMail.password,
     },
   });
 
-  // Wrap in an async IIFE so we can use await.
-
   const info = await transporter.sendMail({
-    from: `"Padel leagues" ${config.sendMail.email_from}`,
-    to: email,
+    from: `"Padel Leagues" <${config.sendMail.email_from}>`,
+    to,
     subject,
     text,
     html,
   });
 
-  console.log("Message sent:", info.messageId);
+  console.log("✅ Message sent:", info.messageId);
 };
