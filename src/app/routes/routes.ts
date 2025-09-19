@@ -8,6 +8,7 @@ import { matchRouter } from "../module/match/match.routes";
 import { contactRouter } from "../module/contact/contact.routes";
 import { reportRouter } from "../module/report/report.routes";
 import { standingRouter } from "../module/standing/standing.routes";
+import { paymentRouter } from "../module/payment/payment.route";
 const router = express.Router();
 
 const allRouter = [
@@ -20,6 +21,7 @@ const allRouter = [
   { path: "/contact", name: contactRouter },
   { path: "/report", name: reportRouter },
   { path: "/standing", name: standingRouter },
+  { path: "/payment", name: paymentRouter },
 ];
 
 allRouter.forEach((route) => {

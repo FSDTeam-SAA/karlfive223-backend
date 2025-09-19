@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "node dist/server.js",
+    "start": "node dist/server.js",
     "start:dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
     "build": "tsc",
     "build-and-start": "npm run build && npm start"
@@ -16,6 +16,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@types/stripe": "^8.0.416",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",
@@ -27,6 +28,7 @@
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
+    "stripe": "^18.5.0",
     "ts-node-dev": "^2.0.0",
     "zod": "^4.1.4"
   },
