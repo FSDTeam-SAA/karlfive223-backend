@@ -102,7 +102,7 @@ const updatedProfile = async (
     payload.profileImage = uploadedImage.secure_url;
   }
   // Update allowed fields
-  const updatedUser = await User.findByIdAndUpdate(user.id, payload, {
+  const updatedUser = await User.findByIdAndUpdate(user._id, payload, {
     new: true,
   }).select("-password"); // don't return password
 

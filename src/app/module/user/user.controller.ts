@@ -57,6 +57,8 @@ const updatedProfile = catchAsycn(async (req, res) => {
   // if frontend sends JSON as string in form-data
   const formData = req.body 
 
+  console.log("user update form data ; ", formData);
+
   const result = await userServices.updatedProfile(
     req.user?.email as string,
     formData,
