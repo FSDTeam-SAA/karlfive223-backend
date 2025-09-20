@@ -1,5 +1,8 @@
+import { Secret } from "jsonwebtoken";
+import config from "../../config";
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
+import { jwtHelper } from "../../helper/jwtHelper";
 import { sendMailer } from "../../helper/sendMailer";
 import createOtpTemplate from "../../utils/createOtpTemplate";
 import { IUser } from "./user.interface";
@@ -29,6 +32,20 @@ const createUser = async (payload: Partial<IUser>) => {
     html: createOtpTemplate(otp, newUser.email, "Pixel Central"),
   });
 
+    const accessToken = jwtHelper.generateToken(
+      { email: newUser.email, role: newUser.role },
+      config.jwt.access_secret as Secret,
+      config.jwt.access_expires_in
+    );
+  
+    const refreshToken = jwtHelper.generateToken(
+      { email: newUser.email, role: newUser.role },
+      config.jwt.refresh_secret as Secret,
+      config.jwt.refresh_expires_in
+    );
+    newUser.refreshToken = refreshToken;
+    await newUser.save();
+
 
   // await sendMailer(
   //   newUser.email,
@@ -41,7 +58,7 @@ const createUser = async (payload: Partial<IUser>) => {
   // Remove password before returning
   const { password: _, ...result } = newUser.toObject();
 
-  return result;
+  return {result,accessToken,refreshToken};
 };
 
 const getUserByEmail = async (email: string) => {

@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema<IUser>(
       default: "player",
     },
     phoneNumber: { type: String, required: true },
-    gender: { type: String, enum: ["Male", "Female", "Other"] },
+    gender: { type: String ,default: null},
     isVerified: { type: Boolean, default: false },
     otp: { type: String, default: null },
     otpExpiry: { type: Date, default: null },
@@ -31,16 +31,18 @@ const userSchema = new mongoose.Schema<IUser>(
     reset_otpExpiry: { type: Date, default: null },
     playingLevel: {
       type: String,
-      enum: {
-        values: [
-          "Beginner",
-          "Intermediate",
-          "Intermediate high",
-          "Advance",
-          "Pro",
-        ],
-        message: "Invalid playing level",
-      },
+      // enum: {
+      //   values: [
+      //     "Beginner",
+      //     "Intermediate",
+      //     "Intermediate high",
+      //     "Advance",
+      //     "Pro",
+      //   ],
+      //   message: "Invalid playing level",
+      // },
+      default: null
+
     },
     clubAffiliation: { type: String },
     birthday: { type: Date },
