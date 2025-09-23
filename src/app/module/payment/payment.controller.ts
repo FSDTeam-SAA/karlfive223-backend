@@ -6,7 +6,7 @@ import sendResponse from '../../utils/sendRespopnse';
 
 
 //  console.log()
-const stripe = new Stripe("sk_test_51RXwQACcgOOj8cVfCixSy9pfAyrHdCLGqfRqvWXIqOlyBWmrkWfCPpnyASDt6s7u2yNZqmKtmT8toAfUFPyVcZQ000yUGyMCVx" as string, {
+const stripe = new Stripe("sk_test_51S6pMbRZVOYD6qjBs3XxcUpw32E2k2j6b2AW2YH8WFIgjMbQi6MYMNRtWSkalY9uXVidPA0JSeMEJpQfSpoE8v6400VdeWSwFn" as string, {
   apiVersion: '2025-08-27.basil',
 })
 
