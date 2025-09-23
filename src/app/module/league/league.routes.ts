@@ -9,6 +9,7 @@ const router = express.Router();
 // CREATE league (with logo + banner)
 router.post(
   "/create",
+  auth(userrole.manager,userrole.player),
   fileUploader.upload.fields([
     { name: "logo", maxCount: 1 },
     { name: "banner", maxCount: 1 },
