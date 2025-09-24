@@ -1,20 +1,74 @@
 import mongoose from "mongoose";
 import app from "./app";
 import config from "./app/config";
+import cron from "node-cron";
+import League from "./app/module/league/league.model";
+import Match from "./app/module/match/match.model";
 
 const port = config.port || 5000;
 
 const server = async () => {
   try {
-    const connectmongodb = await mongoose.connect(
-      config.database_url as string
-    );
-    console.log(`Database is connected ${connectmongodb.connection.host}`);
+    const connectmongodb = await mongoose.connect(config.database_url as string);
+    console.log(`✅ Database is connected: ${connectmongodb.connection.host}`);
+
     app.listen(port, () => {
-      console.log(`server is running on port http://localhost:${port}`);
+      console.log(`🚀 Server running on http://localhost:${port}`);
     });
-  } catch (error:any) {
-    console.log(error.messqage);
+
+    // ===========================
+    // 🔹 CRON JOB: Auto-generate matches 3 days before league start
+    // Runs every day at 12 AM
+    // ===========================
+    cron.schedule("0 0 * * *", async () => {
+      console.log("🔄 Cron job started: checking leagues...");
+
+      try {
+        const today = new Date();
+        const threeDaysLater = new Date(today);
+        threeDaysLater.setDate(today.getDate() + 3);
+
+        const leagues = await League.find({
+          startDate: {
+            $gte: new Date(threeDaysLater.setHours(0, 0, 0, 0)),
+            $lte: new Date(threeDaysLater.setHours(23, 59, 59, 999)),
+          },
+        }).populate("addTeams");
+
+        for (const league of leagues) {
+          const existingMatches = await Match.find({ league: league._id });
+          if (existingMatches.length > 0) {
+            console.log(`⚠️ Matches already exist for ${league.leagueName}`);
+            continue;
+          }
+
+          const teams = league.addTeams as mongoose.Types.ObjectId[];
+          const matches = [];
+
+          for (let i = 0; i < teams.length; i++) {
+            for (let j = i + 1; j < teams.length; j++) {
+              matches.push({
+                teamOne: teams[i],
+                teamTwo: teams[j],
+                matchDateTime: league.startDate,
+                matchVenue: null,
+                league: league._id,
+                matchStatus: "upcoming",
+              });
+            }
+          }
+
+          if (matches.length > 0) {
+            await Match.insertMany(matches);
+            console.log(`🎯 ${matches.length} matches created for ${league.leagueName}`);
+          }
+        }
+      } catch (err) {
+        console.error("❌ Error in cron job:", err);
+      }
+    });
+  } catch (error: any) {
+    console.error("❌ MongoDB connection error:", error.message);
     process.exit(1);
   }
 };

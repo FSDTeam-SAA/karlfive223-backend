@@ -1,10 +1,11 @@
 import express from "express";
-import matchController from "./match.controller";
+import matchController, { generateMatchesForLeague } from "./match.controller";
 import auth from "../../middlewares/Auth";
 import { userrole } from "../user/user.constent";
 
 const router = express.Router();
 
+router.post("/generate-match", generateMatchesForLeague)
 router.post("/create" , matchController.createMatch);
 router.get("/all-match", matchController.getAllMatches);
 router.get("/:id", matchController.getSingleMatch);

@@ -3,6 +3,49 @@ import matchService from "./match.service";
 import catchAsycn from "../../utils/catchAsycn";
 import pick from "../../helper/pike";
 import sendResponse from "../../utils/sendRespopnse";
+import League from "../league/league.model";
+import AppError from "../../error/appError";
+import Match from "./match.model";
+import mongoose from "mongoose";
+
+
+export const generateMatchesForLeague = catchAsycn(async (req: Request, res: Response) => {
+  const { leagueId } = req.params;
+
+  const league = await League.findById(leagueId).populate("addTeams");
+  if (!league) throw new AppError(404, "League not found");
+
+  const existingMatches = await Match.find({ league: league._id });
+  if (existingMatches.length > 0) {
+    throw new AppError(400, "Matches already created for this league");
+  }
+
+  const teams = league.addTeams as mongoose.Types.ObjectId[];
+  const matches = [];
+
+  for (let i = 0; i < teams.length; i++) {
+    for (let j = i + 1; j < teams.length; j++) {
+      matches.push({
+        teamOne: teams[i],
+        teamTwo: teams[j],
+        matchDateTime: league.startDate,
+        matchVenue: null,
+        league: league._id,
+        matchStatus: "upcoming",
+      });
+    }
+  }
+
+  await Match.insertMany(matches);
+
+  return sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: `Matches generated for league: ${league.leagueName}`,
+    data: matches,
+  });
+});
+
 
 const createMatch = catchAsycn(async (req: Request, res: Response) => {
   const result = await matchService.createMatch(req.body);
