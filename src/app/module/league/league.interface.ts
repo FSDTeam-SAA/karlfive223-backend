@@ -4,6 +4,7 @@ export interface ILeague {
   user: ObjectId;
   leagueName: string;
   description: string;
+  price: string;
   leagueLogo?: string;
   bannerImage?: string;
   startDate: Date;

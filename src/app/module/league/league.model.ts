@@ -83,7 +83,7 @@ const leagueSchema = new mongoose.Schema<ILeague>(
     startDate: { type: Date, required: true },
     endDate: { type: Date},
     location: { type: String, required: true },
-
+    price: { type: String, required: true },
     addTeams: [
       { type: mongoose.Schema.Types.ObjectId, ref: "Team" } // ✅ multiple teams
     ],

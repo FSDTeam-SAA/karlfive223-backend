@@ -7,12 +7,12 @@ const router = express.Router();
 
 router.post(
   "/create",
-  auth(userrole.player),
+  auth(userrole.player,userrole.manager, userrole.admin),
   fileUploader.upload.single("logo"),
   teamController.createTeam
 );
 
-router.get("/all-team", auth(userrole.player), teamController.getAllTeams);
+router.get("/all-team", auth(userrole.player,userrole.manager, userrole.admin), teamController.getAllTeams);
 
 router.patch(
   "/update-status/:id",
@@ -20,14 +20,14 @@ router.patch(
 );
 
 
-router.get("/:id", auth(userrole.player), teamController.getSingleTeam);
+router.get("/:id", auth(userrole.player,userrole.manager, userrole.admin), teamController.getSingleTeam);
 router.patch(
   "/:id",
-  auth(userrole.player),
+  auth(userrole.player,userrole.manager, userrole.admin),
   fileUploader.upload.single("logo"),
   teamController.updateTeam
 );
-router.delete("/:id", auth(userrole.player), teamController.deleteTeam);
+router.delete("/:id", auth(userrole.player,userrole.manager, userrole.admin), teamController.deleteTeam);
 
 
 
