@@ -5,7 +5,7 @@ import config from "../../config";
 
 const userSchema = new mongoose.Schema<IUser>(
   {
-    name: { type: String, required: [true, "Name is required"] },
+    name: { type: String },
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema<IUser>(
       enum: ["player", "manager", "admin", "referee"],
       default: "player",
     },
-    phoneNumber: { type: String, required: true },
+    phoneNumber: { type: String },
     gender: { type: String ,default: null},
     isVerified: { type: Boolean, default: false },
     otp: { type: String, default: null },
