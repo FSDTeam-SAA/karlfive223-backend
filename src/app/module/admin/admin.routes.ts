@@ -18,16 +18,16 @@ router.delete(
 );
 
 // vanue
-router.post("/create-vanue", auth(userrole.admin), adminController.createVanue);
-router.get("/all-vanue", auth(userrole.admin), adminController.getAllVanues);
+router.post("/create-vanue", auth(userrole.admin, userrole.manager), adminController.createVanue);
+router.get("/all-vanue", auth(userrole.admin, userrole.manager), adminController.getAllVanues);
 router.delete(
   "/delete-vanue/:id",
-  auth(userrole.admin),
+  auth(userrole.admin, userrole.manager),
   adminController.deletedVanue
 );
 router.get(
   "/single-vanue/:id",
-  auth(userrole.admin),
+  auth(userrole.admin, userrole.manager),
   adminController.getSingleVanue
 );
 
