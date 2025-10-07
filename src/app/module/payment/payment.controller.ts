@@ -105,3 +105,15 @@ export const confirmPayment = catchAsycn(async (req, res) => {
   }
 })
 
+
+
+export const allPayment = catchAsycn(async(req,res)=>{
+  const payment = await Payment.find()
+  sendResponse(res,{
+    statusCode: 200,
+    success: true,
+    message: "All Payment",
+    data: payment
+  })
+})
+

@@ -79,6 +79,16 @@ const getSingleVanue = catchAsycn(async (req, res) => {
     data: result,
   });
 });
+const updateSingleVanue = catchAsycn(async (req, res) => {
+  const { id } = req.params;
+  const result = await adminService.updateSingleVanue(id,req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Venue update successfully",
+    data: result,
+  });
+});
 
 const deletedVanue = catchAsycn(async (req, res) => {
   const { id } = req.params;
@@ -115,7 +125,8 @@ export const adminController = {
   getAllVanues,
   deletedVanue,
   getSingleVanue,
-  AddManager
+  AddManager,
+  updateSingleVanue
 };
 
 

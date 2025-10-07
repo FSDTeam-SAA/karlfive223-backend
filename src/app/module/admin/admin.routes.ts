@@ -30,5 +30,10 @@ router.get(
   auth(userrole.admin, userrole.manager),
   adminController.getSingleVanue
 );
+router.patch(
+  "/update-vanue/:id",
+  auth(userrole.admin, userrole.manager),
+  adminController.updateSingleVanue
+);
 
 export const adminRouter = router;
