@@ -4,5 +4,6 @@ export interface IReport {
   user: ObjectId;
   even: string;
   description: string;
+  feedback: string;
   reportImage: string;
 }

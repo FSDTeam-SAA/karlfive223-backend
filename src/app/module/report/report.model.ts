@@ -15,6 +15,9 @@ const reportSchema = new mongoose.Schema<IReport>({
     type: String,
     required: true,
   },
+  feedback: {
+    type: String,
+  },
   reportImage: {
     type: String,
     default: null,
