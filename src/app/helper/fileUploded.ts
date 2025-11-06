@@ -129,7 +129,7 @@ const uploadToCloudinary = async (
     resource_type: "image",
   });
 
-  return result as ICloudinaryResponse | any;
+  return result as ICloudinaryResponse | any;     
 };
 
 export const fileUploader = {
