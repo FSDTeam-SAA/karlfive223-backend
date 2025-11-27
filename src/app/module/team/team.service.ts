@@ -10,7 +10,7 @@ import Team from "./team.model";
 
 const createTeam = async (
   email: string,
-  payload: ITeam,
+  payload: any,
   file: Express.Multer.File
 ) => {
   const user = await User.findOne({ email: email });
@@ -22,9 +22,18 @@ const createTeam = async (
       throw new AppError(400, "Failed to upload logo");
     payload.logoPhotoUrl = uploadLogo.secure_url;
   }
-  const {league,...rest} = payload
-  const league2 =
+  const {league,leagueCode,...rest} = payload
+  let league2 =
   typeof league === "string" ? new mongoose.Types.ObjectId(league) : league;
+
+  if(!league2){
+    if(leagueCode){
+      const a = await League.findOne({leagueCode})
+      if(a){
+        league2 = a._id
+      }
+    }
+  }
 
   const result = await Team.create({ ...rest, user: user._id, league:league2 });
   if (!result) throw new AppError(400, "Failed to create team");

@@ -16,6 +16,7 @@ const createLeague = catchAsycn(async (req, res) => {
   };
 
   const result = await leagueService.createLeague(
+    req.user?.role,
     req.user?.email,
     formData,
     files

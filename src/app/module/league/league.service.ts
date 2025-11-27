@@ -3,11 +3,27 @@ import { fileUploader } from "../../helper/fileUploded";
 import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
 import Match from "../match/match.model";
+import Team from "../team/team.model";
 import User from "../user/user.model";
 import { ILeague } from "./league.interface";
 import League from "./league.model";
+import * as crypto from "crypto";
+
+
+async function generateUniqueLeagueCode() {
+  let code;
+  let exists: boolean|null = true;
+
+  while (exists) {
+    code = crypto.randomBytes(4).toString("hex"); // 6-char code
+    exists = await League.findOne({ leagueCode: code });
+  }
+
+  return code;
+}
 
 const createLeague = async (
+  role: string,
   email: string,
   payload: ILeague,
   files: { logo?: Express.Multer.File; banner?: Express.Multer.File }
@@ -29,8 +45,11 @@ const createLeague = async (
     payload.bannerImage = uploadBanner.secure_url;
   }
 
+  let leagueType = user.role === "player" ? "private" : "public"
+  let leagueCode = crypto.randomBytes(4).toString("hex");
+
   // Save League
-  const league = await League.create({ ...payload, user: user._id });
+  const league = await League.create({ ...payload, user: user._id, leagueType, leagueCode  });
   if (!league) throw new AppError(400, "Failed to create league");
 
   return league;
@@ -142,6 +161,11 @@ const deleteLeague = async (id: string) => {
   const result = await League.findByIdAndDelete(id);
   return result;
 };
+
+
+const getPrivateLeague = async (id:string)=>{
+  const teams = await Team.find()
+}
 
 export const leagueService = {
   createLeague,
