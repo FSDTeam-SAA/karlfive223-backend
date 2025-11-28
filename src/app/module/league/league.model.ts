@@ -91,7 +91,7 @@ const leagueSchema = new mongoose.Schema<ILeague>(
 
     totalGameWeeks: { type: Number, required: true }, // ✅ added for fixtures
     type: { type: String, enum: ["Singles", "Doubles"], required: true },
-    leagueType: { type: String, enum: ["private", "public"], required: true },
+    leagueType: { type: String, enum: ["private", "public"], required: true, default:"public" },
     matchFormat: {
       type: String,
       enum: ["Best of 3 sets", "Best of 5 sets"],

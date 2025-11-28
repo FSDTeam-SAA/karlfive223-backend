@@ -55,9 +55,9 @@ const createLeague = async (
   return league;
 };
 
-const getAllLeagues = async (params: any, options: IOption) => {
+const getAllLeagues = async (params: any, options: IOption , userId: any) => {
   const { page, limit, skip, sortBy, sortOrder } = pagenation(options);
-  const { searchTerm, startDate, endDate, ...filterData } = params;
+  const { searchTerm, startDate, endDate,leagueType, ...filterData } = params;
 
   const andCondition: any[] = [];
   const userSearchableFields = ["leagueName", "location", "type", "description"];
@@ -79,6 +79,19 @@ const getAllLeagues = async (params: any, options: IOption) => {
 
     andCondition.push({ startDate: dateFilter });
   }
+if (leagueType === "private") {
+  // 1. Find all teams that belong to current user
+  const teams = await Team.find({ user: userId }).select("_id");
+
+  // Extract team IDs
+  const teamIds = teams.map(team => team._id);
+
+  // 2. Add conditions
+  andCondition.push({ leagueType: "private" });
+  andCondition.push({ team: { $in: teamIds } }); 
+}
+
+  console.log(andCondition)
 
   // 🎯 Exact match filters (leagueName, totalGameWeeks, etc.)
   if (Object.keys(filterData).length) {
