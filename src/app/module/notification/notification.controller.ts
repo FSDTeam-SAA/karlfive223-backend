@@ -25,3 +25,21 @@ export const getAllNotification = catchAsycn(async(req,res)=>{
         data: allNotifications
         })
 })
+/*********************************
+ * GET ALL NOTIFICATIONS BY USER *
+ *********************************/
+export const getUserNotifications = catchAsycn(
+  async (req, res) => {
+    const { userId } = req.params
+
+    const notifications = await Notification.find({ to: userId }).sort({
+      createdAt: -1,
+    })
+
+    res.status(200).json({
+      success: true,
+      message: 'Notifications fetched successfully',
+      data: notifications,
+    })
+  }
+)

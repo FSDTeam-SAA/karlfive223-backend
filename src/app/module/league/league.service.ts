@@ -88,7 +88,7 @@ if (leagueType === "private") {
 
   // 2. Add conditions
   andCondition.push({ leagueType: "private" });
-  andCondition.push({ team: { $in: teamIds } }); 
+  andCondition.push({ addTeams: { $in: teamIds } }); 
 }
 
   console.log(andCondition)
