@@ -6,6 +6,7 @@ import { TeamService } from "./team.service";
 const createTeam = catchAsycn(async (req, res) => {
   const file = req.file as Express.Multer.File;
   const fromData = req.body
+  console.log("Request body:", file);
   const result = await TeamService.createTeam(req.user?.email, fromData, file);
   res.status(200).json({
     success: true,

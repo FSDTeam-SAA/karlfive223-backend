@@ -121,6 +121,7 @@ const upload = multer({
 const uploadToCloudinary = async (
   file: Express.Multer.File
 ): Promise<ICloudinaryResponse> => {
+  console.log("Uploading file to Cloudinary:", file.originalname);
   const base64Image = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
 
   const result = await cloudinary.uploader.upload(base64Image, {
