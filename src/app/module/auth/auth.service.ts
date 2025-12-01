@@ -210,13 +210,13 @@ const loginUser = async (payload: { email: string; password: string }) => {
   }
 
   const accessToken = jwtHelper.generateToken(
-    { email: user.email, role: user.role },
+    { email: user.email, role: user.role, _id: user._id },
     config.jwt.access_secret as Secret,
     config.jwt.access_expires_in
   );
 
   const refreshToken = jwtHelper.generateToken(
-    { email: user.email, role: user.role },
+    { email: user.email, role: user.role, _id: user._id },
     config.jwt.refresh_secret as Secret,
     config.jwt.refresh_expires_in
   );

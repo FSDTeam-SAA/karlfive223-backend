@@ -18,7 +18,7 @@ router.post(
 );
 
 // GET all leagues
-router.get("/all-league"  , leagueController.getAllLeagues);
+router.get("/all-league"  ,  auth(userrole.manager,userrole.player,userrole.admin), leagueController.getAllLeagues);
 
 // GET league by id
 router.get("/:id",   leagueController.getLeagueById);

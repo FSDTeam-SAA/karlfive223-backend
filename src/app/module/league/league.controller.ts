@@ -16,6 +16,7 @@ const createLeague = catchAsycn(async (req, res) => {
   };
 
   const result = await leagueService.createLeague(
+    req.user?.role,
     req.user?.email,
     formData,
     files
@@ -58,12 +59,14 @@ const getAllLeagues = catchAsycn(async (req, res) => {
     "leagueName",
     "location",
     "type",
+    "leagueType",
     "totalGameWeeks",
   ]);
+  const userId = req.user._id
 
   const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
 
-  const result = await leagueService.getAllLeagues(filters, options);
+  const result = await leagueService.getAllLeagues(filters, options,userId);
 
   sendResponse(res, {
     statusCode: 200,
