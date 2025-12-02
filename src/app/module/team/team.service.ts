@@ -17,10 +17,12 @@ const createTeam = async (
   if (!user) throw new AppError(404, "User not found");
 
   if (file) {
+    console.log("File received for team logo:", file.originalname);
     const uploadLogo = await fileUploader.uploadToCloudinary(file);
     if (!uploadLogo?.secure_url)
       throw new AppError(400, "Failed to upload logo");
     payload.logoPhotoUrl = uploadLogo.secure_url;
+    console.log(uploadLogo);
   }
   const {league,leagueCode,...rest} = payload
   let league2 =
