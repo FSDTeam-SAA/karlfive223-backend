@@ -90,6 +90,9 @@ if (leagueType === "private") {
   andCondition.push({ leagueType: "private" });
   andCondition.push({ addTeams: { $in: teamIds } }); 
 }
+if (leagueType === "me") {
+  andCondition.push({ user: userId }); 
+}
 
   console.log(andCondition)
 
