@@ -116,7 +116,7 @@ export const deleteMessage = catchAsycn(async (req, res) => {
   const chat = await Chat.findById(chatId);
   if (!chat) throw new AppError(404, "Chat not found");
 
-  const message = chat.messages.id(messageId);
+  const message = chat.messages.id(messageId) as any;
   if (!message) throw new AppError(404, "Message not found");
 
   // Optional: check if current user is the sender
