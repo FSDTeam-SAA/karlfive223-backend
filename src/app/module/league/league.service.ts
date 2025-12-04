@@ -94,6 +94,9 @@ if (leagueType === "me") {
   andCondition.push({ user: userId }); 
   andCondition.push({ leagueType: "private" });
 }
+if (leagueType === "public") {
+  andCondition.push({ leagueType: "public" });
+}
 
   console.log(andCondition)
 
