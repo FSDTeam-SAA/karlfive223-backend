@@ -9,10 +9,9 @@ import { ILeague } from "./league.interface";
 import League from "./league.model";
 import * as crypto from "crypto";
 
-
 async function generateUniqueLeagueCode() {
   let code;
-  let exists: boolean|null = true;
+  let exists: boolean | null = true;
 
   while (exists) {
     code = crypto.randomBytes(4).toString("hex"); // 6-char code
@@ -34,33 +33,45 @@ const createLeague = async (
   // ✅ Upload Logo
   if (files.logo) {
     const uploadLogo = await fileUploader.uploadToCloudinary(files.logo);
-    if (!uploadLogo.secure_url) throw new AppError(400, "Failed to upload logo");
+    if (!uploadLogo.secure_url)
+      throw new AppError(400, "Failed to upload logo");
     payload.leagueLogo = uploadLogo.secure_url;
   }
 
   // ✅ Upload Banner
   if (files.banner) {
     const uploadBanner = await fileUploader.uploadToCloudinary(files.banner);
-    if (!uploadBanner.secure_url) throw new AppError(400, "Failed to upload banner");
+    if (!uploadBanner.secure_url)
+      throw new AppError(400, "Failed to upload banner");
     payload.bannerImage = uploadBanner.secure_url;
   }
 
-  let leagueType = user.role === "player" ? "private" : "public"
+  let leagueType = user.role === "player" ? "private" : "public";
   let leagueCode = crypto.randomBytes(4).toString("hex");
 
   // Save League
-  const league = await League.create({ ...payload, user: user._id, leagueType, leagueCode  });
+  const league = await League.create({
+    ...payload,
+    user: user._id,
+    leagueType,
+    leagueCode,
+  });
   if (!league) throw new AppError(400, "Failed to create league");
 
   return league;
 };
 
-const getAllLeagues = async (params: any, options: IOption , userId: any) => {
+const getAllLeagues = async (params: any, options: IOption, userId: any) => {
   const { page, limit, skip, sortBy, sortOrder } = pagenation(options);
-  const { searchTerm, startDate, endDate,leagueType, ...filterData } = params;
+  const { searchTerm, startDate, endDate, leagueType, ...filterData } = params;
 
   const andCondition: any[] = [];
-  const userSearchableFields = ["leagueName", "location", "type", "description"];
+  const userSearchableFields = [
+    "leagueName",
+    "location",
+    "type",
+    "description",
+  ];
 
   // 🔍 Search filter
   if (searchTerm) {
@@ -79,26 +90,27 @@ const getAllLeagues = async (params: any, options: IOption , userId: any) => {
 
     andCondition.push({ startDate: dateFilter });
   }
-if (leagueType === "private") {
-  // 1. Find all teams that belong to current user
-  const teams = await Team.find({ user: userId }).select("_id");
+  if (leagueType === "private") {
+    // 1. Find all teams that belong to current user
+    const teams = await Team.find({
+      $or: [{ user: userId }, { "players.user": userId }],
+    }).select("_id");
+    // Extract team IDs
+    const teamIds = teams.map((team) => team._id);
 
-  // Extract team IDs
-  const teamIds = teams.map(team => team._id);
+    // 2. Add conditions
+    andCondition.push({ leagueType: "private" });
+    andCondition.push({ addTeams: { $in: teamIds } });
+  }
+  if (leagueType === "me") {
+    andCondition.push({ user: userId });
+    andCondition.push({ leagueType: "private" });
+  }
+  if (leagueType === "public") {
+    andCondition.push({ leagueType: "public" });
+  }
 
-  // 2. Add conditions
-  andCondition.push({ leagueType: "private" });
-  andCondition.push({ addTeams: { $in: teamIds } }); 
-}
-if (leagueType === "me") {
-  andCondition.push({ user: userId }); 
-  andCondition.push({ leagueType: "private" });
-}
-if (leagueType === "public") {
-  andCondition.push({ leagueType: "public" });
-}
-
-  console.log(andCondition)
+  console.log(andCondition);
 
   // 🎯 Exact match filters (leagueName, totalGameWeeks, etc.)
   if (Object.keys(filterData).length) {
@@ -123,12 +135,11 @@ if (leagueType === "public") {
 
   const total = await League.countDocuments(whereCondition);
 
-  return { 
-    data: result, 
-    meta: { total, page, limit } 
+  return {
+    data: result,
+    meta: { total, page, limit },
   };
 };
-
 
 const getLeagueById = async (id: string) => {
   const result = await League.findById(id);
@@ -147,14 +158,16 @@ const updateLeague = async (
   // ✅ Upload new logo if provided
   if (files?.logo) {
     const uploadLogo = await fileUploader.uploadToCloudinary(files.logo);
-    if (!uploadLogo.secure_url) throw new AppError(400, "Failed to upload logo");
+    if (!uploadLogo.secure_url)
+      throw new AppError(400, "Failed to upload logo");
     payload.leagueLogo = uploadLogo.secure_url;
   }
 
   // ✅ Upload new banner if provided
   if (files?.banner) {
     const uploadBanner = await fileUploader.uploadToCloudinary(files.banner);
-    if (!uploadBanner.secure_url) throw new AppError(400, "Failed to upload banner");
+    if (!uploadBanner.secure_url)
+      throw new AppError(400, "Failed to upload banner");
     payload.bannerImage = uploadBanner.secure_url;
   }
 
@@ -165,7 +178,9 @@ const updateLeague = async (
     }
   });
 
-  const result = await League.findByIdAndUpdate(id, payload, { new: true }).populate("addTeams");
+  const result = await League.findByIdAndUpdate(id, payload, {
+    new: true,
+  }).populate("addTeams");
   if (!result) throw new AppError(404, "Failed to update league");
 
   return result;
@@ -182,10 +197,9 @@ const deleteLeague = async (id: string) => {
   return result;
 };
 
-
-const getPrivateLeague = async (id:string)=>{
-  const teams = await Team.find()
-}
+const getPrivateLeague = async (id: string) => {
+  const teams = await Team.find();
+};
 
 export const leagueService = {
   createLeague,

@@ -2,6 +2,7 @@ import { Document, ObjectId } from "mongoose";
 
 export interface ITeam extends Document {
   user: ObjectId;
+  player: ObjectId;
   teamName: string;
   captainName: string;
   partnerName: string;

@@ -14,7 +14,10 @@ const createTeam = async (
   file: Express.Multer.File
 ) => {
   const user = await User.findOne({ email: email });
+  const player = await User.findOne({ email: payload.playerEmail });
   if (!user) throw new AppError(404, "User not found");
+
+  if (!player) throw new AppError(404, "Player not found");
 
   if (file) {
     console.log("File received for team logo:", file.originalname);
@@ -24,23 +27,29 @@ const createTeam = async (
     payload.logoPhotoUrl = uploadLogo.secure_url;
     console.log(uploadLogo);
   }
-  const {league,leagueCode,...rest} = payload
+  const { league, leagueCode, ...rest } = payload;
   let league2 =
-  typeof league === "string" ? new mongoose.Types.ObjectId(league) : league;
+    typeof league === "string" ? new mongoose.Types.ObjectId(league) : league;
 
-  if(!league2){
-    if(leagueCode){
-      const a = await League.findOne({leagueCode})
-      if(a){
-        league2 = a._id
+  if (!league2) {
+    if (leagueCode) {
+      const a = await League.findOne({ leagueCode });
+      if (a) {
+        league2 = a._id;
       }
     }
   }
 
-  const result = await Team.create({ ...rest, user: user._id, league:league2 });
+  const result = await Team.create({
+    ...rest,
+    user: user._id,
+    player: user._id,
+    league: league2,
+  });
   if (!result) throw new AppError(400, "Failed to create team");
-  const league1 = await League.findByIdAndUpdate(league ,{$addToSet:{addTeams :  result._id}})
-
+  const league1 = await League.findByIdAndUpdate(league, {
+    $addToSet: { addTeams: result._id },
+  });
 
   return result;
 };
@@ -133,7 +142,6 @@ const updatedStatus = async (idL: string, payload: Partial<ITeam>) => {
   if (!result) throw new AppError(404, "Team not found");
   return result;
 };
-
 
 export const TeamService = {
   createTeam,
