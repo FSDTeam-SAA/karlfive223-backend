@@ -23,6 +23,7 @@ const createUser = async (payload: Partial<IUser>) => {
 
   newUser.otp = otp;
   newUser.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 5 mins
+  newUser.isVerified = true;
   await newUser.save();
 
   await sendMailer({
