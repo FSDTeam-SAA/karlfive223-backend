@@ -5,15 +5,18 @@ import { TeamService } from "./team.service";
 
 const createTeam = catchAsycn(async (req, res) => {
   const file = req.file as Express.Multer.File;
-  const fromData = req.body
-  console.log("Request body:", file);
+
+  const fromData = req.body;
+
   const result = await TeamService.createTeam(req.user?.email, fromData, file);
+
   res.status(200).json({
     success: true,
     message: "Team created successfully",
     data: result,
   });
 });
+
 const getAllTeams = catchAsycn(async (req, res) => {
   const filters = pick(req.query, [
     "searchTerm",
@@ -48,7 +51,7 @@ const getSingleTeam = catchAsycn(async (req, res) => {
 const updateTeam = catchAsycn(async (req, res) => {
   const id = req.params.id;
   const file = req.file as Express.Multer.File;
-  const fromData = req.body 
+  const fromData = req.body;
   const result = await TeamService.updateTeam(id, fromData, file);
   sendResponse(res, {
     statusCode: 200,

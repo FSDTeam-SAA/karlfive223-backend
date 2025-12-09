@@ -10,6 +10,11 @@ const teamSchema = new Schema<ITeam>(
       ref: "User",
       required: true,
     },
+    player: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     teamName: {
       type: String,
       required: [true, "Team Name is required."],
