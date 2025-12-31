@@ -6,7 +6,7 @@ const matchSchema = new Schema<IMatch>(
     teamOne: { type: Schema.Types.ObjectId, ref: "Team", required: true },
     teamTwo: { type: Schema.Types.ObjectId, ref: "Team", required: true },
     matchDateTime: { type: Date, required: [true, "Match date and time are required."] },
-    matchVenue: { type: Schema.Types.ObjectId, ref: "Vanue", required: true },
+    matchVenue: { type: Schema.Types.ObjectId, ref: "Vanue" },
     league: { type: Schema.Types.ObjectId, ref: "League", required: true },
     matchStatus: {
       type: String,

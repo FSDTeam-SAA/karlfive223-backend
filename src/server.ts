@@ -20,13 +20,13 @@ const server = async () => {
     // 🔹 CRON JOB: Auto-generate matches 3 days before league start
     // Runs every day at 12 AM
     // ===========================
-    cron.schedule("0 0 * * *", async () => {
+    cron.schedule("* * * * *", async () => {
       console.log("🔄 Cron job started: checking leagues...");
 
       try {
         const today = new Date();
         const threeDaysLater = new Date(today);
-        threeDaysLater.setDate(today.getDate() + 3);
+        threeDaysLater.setDate(today.getDate());
 
         const leagues = await League.find({
           startDate: {
@@ -41,6 +41,7 @@ const server = async () => {
             console.log(`⚠️ Matches already exist for ${league.leagueName}`);
             continue;
           }
+          console.log(`📝 Generating matches for league: ${league.leagueName}`);
 
           const teams = league.addTeams as mongoose.Types.ObjectId[];
           const matches = [];
