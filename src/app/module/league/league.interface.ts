@@ -6,7 +6,7 @@ export interface ILeague {
   leagueCode: string;
   description: string;
   price: string;
-  matchPlay: number;
+  matchPlay: string;
   leagueLogo?: string;
   bannerImage?: string;
   startDate: Date;

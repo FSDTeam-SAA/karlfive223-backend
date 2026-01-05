@@ -43,7 +43,18 @@ const server = async () => {
             console.log(`⚠️ Matches already exist for ${league.leagueName}`);
             continue;
           }
-          const play = league.matchPlay || 1;
+          let play = 1
+          if(league.matchPlay  === "Once"){
+
+             play = 1;
+          }
+          if(league.matchPlay  === "Twice"){
+             play = 2;
+          }
+          if(league.matchPlay  === "Thrice"){
+
+             play = 3;
+          }
           console.log(`📝 Generating matches for league: ${league.leagueName}`);
 
           const teams = league.addTeams as mongoose.Types.ObjectId[];
