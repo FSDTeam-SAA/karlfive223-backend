@@ -35,27 +35,32 @@ const server = async () => {
           },
         }).populate("addTeams");
 
+
+
         for (const league of leagues) {
           const existingMatches = await Match.find({ league: league._id });
           if (existingMatches.length > 0) {
             console.log(`⚠️ Matches already exist for ${league.leagueName}`);
             continue;
           }
+          const play = league.matchPlay || 1;
           console.log(`📝 Generating matches for league: ${league.leagueName}`);
 
           const teams = league.addTeams as mongoose.Types.ObjectId[];
           const matches = [];
 
           for (let i = 0; i < teams.length; i++) {
-            for (let j = i + 1; j < teams.length; j++) {
-              matches.push({
-                teamOne: teams[i],
-                teamTwo: teams[j],
-                matchDateTime: league.startDate,
-                matchVenue: null,
-                league: league._id,
-                matchStatus: "upcoming",
-              });
+            for (let i = 0; i < play; i++) {
+              for (let j = i + 1; j < teams.length; j++) {
+                matches.push({
+                  teamOne: teams[i],
+                  teamTwo: teams[j],
+                  // matchDateTime: league.startDate,
+                  matchVenue: null,
+                  league: league._id,
+                  matchStatus: "upcoming",
+                });
+              }
             }
           }
 

@@ -80,6 +80,7 @@ const leagueSchema = new mongoose.Schema<ILeague>(
     description: { type: String, required: true },
     leagueLogo: { type: String },
     leagueCode: { type: String },
+    matchPlay: { type: Number, default: 1 }, // ✅ new field
     bannerImage: { type: String }, // ✅ now handled
     startDate: { type: Date, required: true },
     endDate: { type: Date},
