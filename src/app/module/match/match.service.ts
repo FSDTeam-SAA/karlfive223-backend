@@ -1,10 +1,10 @@
 import AppError from "../../error/appError";
 import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
-import Team from "../team/team.model";
-import Match from "./match.model";
-import { IMatch } from "./match.interface";
 import { applyCompletedMatchToStandings } from "../standing/standing.service";
+import Team from "../team/team.model";
+import { IMatch } from "./match.interface";
+import Match from "./match.model";
 
 // --- Create match ---
 const createMatch = async (payload: IMatch) => {
@@ -59,7 +59,7 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
   await match.save();
 
   // Only apply once
-  if (match.matchStatus === "completed" && !match.standingsApplied) {
+  if (match.matchStatus === "completed") {
     if (!match.winnerTeam && match.matchScore) {
       // If no explicit winner, infer by total games
       const t1Goals = match.matchScore.sets.reduce((a, s) => a + (s.teamOneGames || 0), 0);
