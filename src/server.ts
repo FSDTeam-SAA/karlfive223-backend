@@ -4,6 +4,7 @@ import config from "./app/config";
 import cron from "node-cron";
 import League from "./app/module/league/league.model";
 import Match from "./app/module/match/match.model";
+import Standing from "./app/module/standing/standing.model";
 
 const port = config.port || 5000;
 
@@ -61,7 +62,11 @@ const server = async () => {
           const matches = [];
 
           for (let i = 0; i < teams.length; i++) {
-            for (let i = 0; i < play; i++) {
+            await Standing.create({
+              team: teams[i],
+              league: league._id,
+            })
+            for (let k = 0; k< play; k++) {
               for (let j = i + 1; j < teams.length; j++) {
                 matches.push({
                   teamOne: teams[i],
