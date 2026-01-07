@@ -35,28 +35,32 @@ const server = async () => {
             $lte: new Date(threeDaysLater.setHours(23, 59, 59, 999)),
           },
         }).populate("addTeams");
+        console.log(`🔍 Found ${leagues} leagues starting in 3 days.`);
 
 
 
         for (const league of leagues) {
+          // console.log(league)
+          // console.log(`🔍 Processing league: ${league.addTeams?.length}`) ;
           const existingMatches = await Match.find({ league: league._id });
           if (existingMatches.length > 0) {
             console.log(`⚠️ Matches already exist for ${league.leagueName}`);
             continue;
           }
           let play = 1
-          if(league.matchPlay  === "Once"){
+          if(league.matchPlay  === "once" || league.matchPlay === "Once"){
 
              play = 1;
           }
-          if(league.matchPlay  === "Twice"){
+          if(league.matchPlay  === "twice" || league.matchPlay === "Twice"){
              play = 2;
           }
-          if(league.matchPlay  === "Thrice"){
+          if(league.matchPlay  === "thrice" || league.matchPlay === "Thrice"){
 
              play = 3;
           }
-          console.log(`📝 Generating matches for league: ${league.leagueName}`);
+          // console.log(`📝 Generating matches for league: ${league.leagueName}`);
+          console.log(`📝 Number of teams: ${play}`);
 
           const teams = league.addTeams as mongoose.Types.ObjectId[];
           const matches = [];
@@ -66,7 +70,7 @@ const server = async () => {
               team: teams[i],
               league: league._id,
             })
-            for (let k = 0; k< play; k++) {
+            for (let k = 0; k < play; k++) {
               for (let j = i + 1; j < teams.length; j++) {
                 matches.push({
                   teamOne: teams[i],
