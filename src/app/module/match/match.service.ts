@@ -1,6 +1,7 @@
 import AppError from "../../error/appError";
 import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
+import { Notification } from "../notification/notification.model";
 import { applyCompletedMatchToStandings } from "../standing/standing.service";
 import Team from "../team/team.model";
 import { IMatch } from "./match.interface";
@@ -67,6 +68,31 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
       if (t1Goals > t2Goals) match.winnerTeam = match.teamOne as any;
       if (t2Goals > t1Goals) match.winnerTeam = match.teamTwo as any;
     }
+    const teamOne = match.teamOne as any;;
+    const teamTwo = match.teamTwo as any;
+    const league = match.league as any;
+    const leagueName = league?.leagueName || "League";
+    const winnerTeam = match?.winnerTeam?.toString() === match.teamOne.toString() ? teamOne : teamTwo;
+    const loserTeam = match?.winnerTeam?.toString() === match.teamOne.toString() ? teamTwo : teamOne;
+
+    // ✅ pick recipients (winner team players)
+    const winnerUserIds = [winnerTeam?.user, winnerTeam?.player].filter(Boolean);
+
+    // message
+    const message = `🏆 ${winnerTeam.teamName} won vs ${loserTeam.teamName} in ${leagueName}!`;
+
+    // bulk insert notifications (fast)
+    if (winnerUserIds.length) {
+      const uniqueIds = [...new Set(winnerUserIds.map((id) => id.toString()))];
+      await Notification.insertMany(
+        uniqueIds.map((uid) => ({
+          userId: uid,
+          message,
+          type: "success",
+          read: false,
+        }))
+      );
+    }
 
     await applyCompletedMatchToStandings(match);
     match.standingsApplied = true;
@@ -99,7 +125,7 @@ const getAllMatches = async (params: any, options: IOption) => {
 
   const data = await Match.find(where)
     .populate("teamOne teamTwo league matchVenue referee winnerTeam")
-     .sort({ [sortBy || "createdAt"]: sortOrder || "asc" } as any)
+    .sort({ [sortBy || "createdAt"]: sortOrder || "asc" } as any)
     .skip(skip)
     .limit(limit);
 

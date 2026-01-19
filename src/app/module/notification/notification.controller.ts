@@ -32,7 +32,7 @@ export const getUserNotifications = catchAsycn(
   async (req, res) => {
     const { userId } = req.params
 
-    const notifications = await Notification.find({ to: userId }).sort({
+    const notifications = await Notification.find({ userId: userId }).sort({
       createdAt: -1,
     })
 

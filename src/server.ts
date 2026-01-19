@@ -1,10 +1,12 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import app from "./app";
 import config from "./app/config";
 import cron from "node-cron";
 import League from "./app/module/league/league.model";
 import Match from "./app/module/match/match.model";
 import Standing from "./app/module/standing/standing.model";
+import { Notification } from "./app/module/notification/notification.model";
+import Team from "./app/module/team/team.model";
 
 const port = config.port || 5000;
 export const generateFixturesOrdered = (
@@ -53,6 +55,22 @@ export const generateFixturesOrdered = (
   return fixtures;
 };
 
+async function notifyUsers(userIds: Types.ObjectId[], message: string) {
+  const unique = [...new Set(userIds.map((id) => id.toString()))].map(
+    (id) => new Types.ObjectId(id)
+  );
+
+  if (unique.length === 0) return;
+
+  await Notification.insertMany(
+    unique.map((uid) => ({
+      userId: uid,
+      message,
+      type: "success",
+      read: false,
+    }))
+  );
+}
 const server = async () => {
   try {
     const connectmongodb = await mongoose.connect(config.database_url as string);
@@ -199,6 +217,55 @@ const server = async () => {
             console.log(
               `🎯 ${matchesToInsert.length} matches created for ${league.leagueName}`
             );
+          }
+          const teamIds1 = [
+            ...new Set(
+              matchesToInsert.flatMap((m) => [m.teamOne.toString(), m.teamTwo.toString()])
+            ),
+          ];
+
+          const teams1 = await Team.find({ _id: { $in: teamIds1 } })
+            .select("teamName user player")
+            .lean();
+
+          const teamMap = new Map(teams1.map((t: any) => [t._id.toString(), t]));
+          // 2) Build notifications: each match => notify both teams (user + player)
+          const notifications: any[] = [];
+
+          for (const m of matchesToInsert) {
+            const t1 = teamMap.get(m.teamOne.toString());
+            const t2 = teamMap.get(m.teamTwo.toString());
+
+            if (!t1 || !t2) continue;
+
+            const leagueName = league.leagueName;
+
+            // notify team 1 users
+            const t1Users = [t1.user, t1.player].filter(Boolean);
+            for (const uid of t1Users) {
+              notifications.push({
+                userId: uid,
+                message: `📅 Match scheduled: Your team ${t1.teamName} will play vs ${t2.teamName} in ${leagueName}.`,
+                type: "success",
+                read: false,
+              });
+            }
+
+            // notify team 2 users
+            const t2Users = [t2.user, t2.player].filter(Boolean);
+            for (const uid of t2Users) {
+              notifications.push({
+                userId: uid,
+                message: `📅 Match scheduled: Your team ${t2.teamName} will play vs ${t1.teamName} in ${leagueName}.`,
+                type: "success",
+                read: false,
+              });
+            }
+          }
+
+          // 3) Insert all notifications in one query
+          if (notifications.length > 0) {
+            await Notification.insertMany(notifications);
           }
         }
       } catch (err) {
