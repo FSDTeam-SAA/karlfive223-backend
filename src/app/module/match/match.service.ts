@@ -125,7 +125,7 @@ const getAllMatches = async (params: any, options: IOption) => {
 
   const data = await Match.find(where)
     .populate("teamOne teamTwo league matchVenue referee winnerTeam")
-    .sort({ [sortBy || "createdAt"]: sortOrder || "asc" } as any)
+    //  .sort({ [sortBy || "createdAt"]: sortOrder || "asc" } as any)
     .skip(skip)
     .limit(limit);
 
