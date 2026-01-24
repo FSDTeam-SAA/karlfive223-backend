@@ -126,6 +126,13 @@ const updatedProfile = async (
 
   return updatedUser;
 };
+const deleteUser = async (id: string) => {
+  const user = await User.findByIdAndDelete(id);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  return user;;
+};
 
 export const userServices = {
   createUser,
@@ -133,5 +140,6 @@ export const userServices = {
   playingLevel,
   gender,
   updatedProfile,
-  getUserById
+  getUserById,
+  deleteUser,
 };

@@ -33,4 +33,10 @@ router.put(
   userControllers.updatedProfile
 );
 
+router.delete(
+  "/:id",
+  auth(userrole.admin,userrole.manager, userrole.player),
+  userControllers.deleteUser
+);
+
 export const userRouter = router;

@@ -73,11 +73,22 @@ const updatedProfile = catchAsycn(async (req, res) => {
   });
 });
 
+const deleteUser = catchAsycn(async (req, res) => {
+  const result = await userServices.deleteUser(req.params.id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User deleted successfully",
+    data: result,
+  });
+});
+
 export const userControllers = {
   createUser,
   getUserByEmail,
   playingLevel,
   gender,
   updatedProfile,
-  getUserById
+  getUserById,
+  deleteUser
 };
