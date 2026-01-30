@@ -141,6 +141,70 @@ const getAllLeagues = async (params: any, options: IOption, userId: any) => {
   };
 };
 
+const getAllLeaguesfree = async (params: any, options: IOption,)  => {
+  const { page, limit, skip, sortBy, sortOrder } = pagenation(options);
+  const { searchTerm, startDate, endDate, leagueType, ...filterData } = params;
+
+  const andCondition: any[] = [];
+  const userSearchableFields = [
+    "leagueName",
+    "location",
+    "type",
+    "description",
+  ];
+
+  // 🔍 Search filter
+  if (searchTerm) {
+    andCondition.push({
+      $or: userSearchableFields.map((field) => ({
+        [field]: { $regex: searchTerm, $options: "i" },
+      })),
+    });
+  }
+
+  // 📅 Date range filter
+  if (startDate || endDate) {
+    const dateFilter: any = {};
+    if (startDate) dateFilter.$gte = new Date(startDate as string);
+    if (endDate) dateFilter.$lte = new Date(endDate as string);
+
+    andCondition.push({ startDate: dateFilter });
+  }
+  if (leagueType === "public") {
+    andCondition.push({ leagueType: "public" });
+  }
+
+  console.log(andCondition);
+
+  // 🎯 Exact match filters (leagueName, totalGameWeeks, etc.)
+  if (Object.keys(filterData).length) {
+    const filterConditions: any[] = [];
+
+    for (const [field, value] of Object.entries(filterData)) {
+      filterConditions.push({ [field]: value });
+    }
+
+    andCondition.push({ $and: filterConditions });
+  }
+
+  const whereCondition = andCondition.length > 0 ? { $and: andCondition } : {};
+
+  // ✅ Query DB
+  const result = await League.find(whereCondition)
+    .populate("addTeams")
+    .populate("user", "-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp")
+    .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 } as any)
+    .skip(skip)
+    .limit(limit);
+
+  const total = await League.countDocuments(whereCondition);
+
+  return {
+    data: result,
+    meta: { total, page, limit },
+  };
+};
+
 const getLeagueById = async (id: string) => {
   const result = await League.findById(id);
   if (!result) throw new AppError(404, "No league found");
@@ -207,4 +271,5 @@ export const leagueService = {
   getLeagueById,
   updateLeague,
   deleteLeague,
+  getAllLeaguesfree
 };

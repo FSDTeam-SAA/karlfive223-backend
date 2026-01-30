@@ -125,10 +125,37 @@ const deleteLeague = catchAsycn(async (req, res) => {
   });
 });
 
+
+const getAllLeaguesfree = catchAsycn(async (req, res) => {
+  const filters = pick(req.query, [
+    "searchTerm",
+    "startDate",
+    "endDate",
+    "leagueName",
+    "location",
+    "type",
+    "leagueType",
+    "totalGameWeeks",
+  ]);
+
+  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+
+  const result = await leagueService.getAllLeaguesfree(filters, options);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Leagues fetched successfully",
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
 export const leagueController = {
   createLeague,
   getAllLeagues,
   getLeagueById,
   updateLeague,
   deleteLeague,
+  getAllLeaguesfree
 };
