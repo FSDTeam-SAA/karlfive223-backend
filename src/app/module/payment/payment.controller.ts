@@ -1,12 +1,13 @@
-import Stripe from 'stripe'
-import catchAsycn from '../../utils/catchAsycn';
+import Stripe from 'stripe';
 import AppError from '../../error/appError';
-import { Payment } from './payment.model';
+import catchAsycn from '../../utils/catchAsycn';
 import sendResponse from '../../utils/sendRespopnse';
+import { Payment } from './payment.model';
 
 
 //  console.log()
-const stripe = new Stripe("sk_test_51S6pMbRZVOYD6qjBs3XxcUpw32E2k2j6b2AW2YH8WFIgjMbQi6MYMNRtWSkalY9uXVidPA0JSeMEJpQfSpoE8v6400VdeWSwFn" as string, {
+const stripe = new Stripe 
+(process.env.STRIPE_SECRET_KEY as string,  {
   apiVersion: '2025-08-27.basil',
 })
 
