@@ -77,7 +77,7 @@ const server = async () => {
     console.log(`✅ Database is connected: ${connectmongodb.connection.host}`);
 
     app.listen(port, () => {
-      console.log(`🚀 Server running on http://localhost:${port}`);
+      console.log(`🚀 Server running on http://localhost:${port} with ci-cd`);
     });
 
     // ===========================
