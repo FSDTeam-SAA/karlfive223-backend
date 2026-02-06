@@ -20,7 +20,7 @@ app.use("/api/v1", router);
 
 // root get
 app.get("/", (req: Request, res: Response) => {
-  res.status(200).send("<h2>server is running</h2>");
+  res.status(200).send("<h2>server is running with ci-cd</h2>");
 });
 
 // router error handler
