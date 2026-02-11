@@ -5,6 +5,7 @@ const paymentSchema = new Schema<IPayment>({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   league: { type: Schema.Types.ObjectId, ref: 'League'},
   team: { type: Schema.Types.ObjectId, ref: 'Team'},
+  type: {type: String, enum: ['subscription','league']}
   amount: { type: Number},
   transactionId: { type: String},
   status: {
