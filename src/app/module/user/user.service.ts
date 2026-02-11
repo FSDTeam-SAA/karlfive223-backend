@@ -7,6 +7,7 @@ import { sendMailer } from "../../helper/sendMailer";
 import createOtpTemplate from "../../utils/createOtpTemplate";
 import { IUser } from "./user.interface";
 import User from "./user.model";
+import { Payment } from "../payment/payment.model";
 
 const createUser = async (payload: Partial<IUser>) => {
   const existingUser = await User.findOne({ email: payload.email });
@@ -33,19 +34,19 @@ const createUser = async (payload: Partial<IUser>) => {
     html: createOtpTemplate(otp, newUser.email, "Pixel Central"),
   });
 
-    const accessToken = jwtHelper.generateToken(
-      { email: newUser.email, role: newUser.role },
-      config.jwt.access_secret as Secret,
-      config.jwt.access_expires_in
-    );
-  
-    const refreshToken = jwtHelper.generateToken(
-      { email: newUser.email, role: newUser.role },
-      config.jwt.refresh_secret as Secret,
-      config.jwt.refresh_expires_in
-    );
-    newUser.refreshToken = refreshToken;
-    await newUser.save();
+  const accessToken = jwtHelper.generateToken(
+    { email: newUser.email, role: newUser.role },
+    config.jwt.access_secret as Secret,
+    config.jwt.access_expires_in
+  );
+
+  const refreshToken = jwtHelper.generateToken(
+    { email: newUser.email, role: newUser.role },
+    config.jwt.refresh_secret as Secret,
+    config.jwt.refresh_expires_in
+  );
+  newUser.refreshToken = refreshToken;
+  await newUser.save();
 
 
   // await sendMailer(
@@ -59,7 +60,7 @@ const createUser = async (payload: Partial<IUser>) => {
   // Remove password before returning
   const { password: _, ...result } = newUser.toObject();
 
-  return {result,accessToken,refreshToken};
+  return { result, accessToken, refreshToken };
 };
 
 const getUserByEmail = async (email: string) => {
@@ -67,7 +68,28 @@ const getUserByEmail = async (email: string) => {
   if (!user) {
     throw new AppError(404, "User not found");
   }
-  return user;
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const endOfMonth = new Date();
+  endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+  endOfMonth.setDate(0);
+  endOfMonth.setHours(23, 59, 59, 999);
+
+  const paymentThisMonth = await Payment.findOne({
+    userId: user._id,
+    type: 'subscription',
+    createdAt: {
+      $gte: startOfMonth,
+      $lte: endOfMonth,
+    },
+  });
+
+  const user1 = user.toObject() as any ;
+  user1.subscription = paymentThisMonth ? true : false
+  
+  return user1;
 };
 const getUserById = async (email: string) => {
   const user = await User.findById(email).select("-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp");

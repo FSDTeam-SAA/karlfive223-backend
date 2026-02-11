@@ -40,6 +40,7 @@ export const createPayment = catchAsycn(async (req, res) => {
       amount,
       transactionId: paymentIntent.id,
       status: 'pending',
+      type: league ? 'league' : 'subscription'
     })
     await paymentInfo.save()
 
