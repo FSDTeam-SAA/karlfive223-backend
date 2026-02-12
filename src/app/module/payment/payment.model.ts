@@ -13,6 +13,8 @@ const paymentSchema = new Schema<IPayment>({
     enum: ['pending', 'success', 'failed'],
     default: 'pending',
   },
+},{
+  timestamps: true
 })
 
 export const Payment = model<IPayment>('Payment', paymentSchema)
