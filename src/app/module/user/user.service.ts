@@ -80,6 +80,7 @@ const getUserByEmail = async (email: string) => {
   const paymentThisMonth = await Payment.findOne({
     userId: user._id,
     type: 'subscription',
+    status: "success",
     createdAt: {
       $gte: startOfMonth,
       $lte: endOfMonth,
