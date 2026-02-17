@@ -25,7 +25,8 @@ jobs:
 
             git pull https://${{ secrets.GIT_USERNAME }}:${{ secrets.GIT_TOKEN }}@github.com/${{ github.repository }}.git ${{ github.ref_name }}
 
-            npm install --production
+            npm install
             npm run build
+
 
             pm2 restart backend || pm2 start dist/server.js --name "backend"
