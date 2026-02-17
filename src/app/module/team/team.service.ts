@@ -5,6 +5,7 @@ import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
 import League from "../league/league.model";
 import User from "../user/user.model";
+import { Payment } from "../payment/payment.model";
 import { ITeam } from "./team.interface";
 import Team from "./team.model";
 
@@ -18,6 +19,33 @@ const createTeam = async (
   if (!user) throw new AppError(404, "User not found");
 
   if (!player) throw new AppError(404, "Player not found");
+
+  // Check if co-player has an active subscription
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const endOfMonth = new Date();
+  endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+  endOfMonth.setDate(0);
+  endOfMonth.setHours(23, 59, 59, 999);
+
+  const coplayerSubscription = await Payment.findOne({
+    userId: player._id,
+    type: 'subscription',
+    status: "success",
+    createdAt: {
+      $gte: startOfMonth,
+      $lte: endOfMonth,
+    },
+  });
+
+  if (!coplayerSubscription) {
+    throw new AppError(
+      402,
+      `Co-player ${player.name} must have an active subscription to be added to the team`
+    );
+  }
 
   if (file) {
     console.log("File received for team logo:", file.originalname);
