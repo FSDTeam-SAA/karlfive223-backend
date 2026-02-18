@@ -4,8 +4,8 @@ import { fileUploader } from "../../helper/fileUploded";
 import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
 import League from "../league/league.model";
-import User from "../user/user.model";
 import { Payment } from "../payment/payment.model";
+import User from "../user/user.model";
 import { ITeam } from "./team.interface";
 import Team from "./team.model";
 
@@ -66,6 +66,23 @@ const createTeam = async (
         league2 = a._id;
       }
     }
+  }
+
+  // Check if league exists and validate start date
+  const leagueDoc = await League.findById(league2);
+  if (!leagueDoc) {
+    throw new AppError(404, "League not found");
+  }
+
+  // Check if league has already started
+  const currentDate = new Date();
+  const leagueStartDate = new Date(leagueDoc.startDate);
+  
+  if (leagueStartDate <= currentDate) {
+    throw new AppError(
+      400,
+      "This league has already started. You cannot create a team for this league. Please try to join another one."
+    );
   }
 
   const result = await Team.create({
