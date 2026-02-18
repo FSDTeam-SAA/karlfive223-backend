@@ -71,7 +71,7 @@ const createTeam = async (
   const result = await Team.create({
     ...rest,
     user: user._id,
-    player: user._id,
+    player: player._id,
     league: league2,
   });
   if (!result) throw new AppError(400, "Failed to create team");

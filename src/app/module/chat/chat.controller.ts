@@ -10,29 +10,61 @@
 import AppError from "../../error/appError";
 import catchAsycn from "../../utils/catchAsycn";
 import sendResponse from "../../utils/sendRespopnse";
-import Team from "../team/team.model";
-import User from "../user/user.model";
+import Match from "../match/match.model";
 import { Chat } from "./chat.model";
 
 export const createChat = catchAsycn(async (req, res) => {
-  const { sellerId, userId } = req.body;
-  const farm = await Team.findById(sellerId);
-  if (!farm) {
-    throw new AppError(404, "Seller not found");
+  const { matchId } = req.body;
+  
+  if (!req.user || !req.user._id) {
+    throw new AppError(401, "Unauthorized. Please login first.");
   }
-  let chat = await Chat.findOne({
-    $or: [
-      { seller: sellerId, user: userId },
-      { seller: userId, user: sellerId },
-    ],
-  });
+  
+  const userId = req.user._id;
+
+  // Find the match and populate teams
+  const match = await Match.findById(matchId).populate("teamOne teamTwo");
+  if (!match) {
+    throw new AppError(404, "Match not found");
+  }
+
+  // Teams are already populated from the match query
+  const teamOne = match.teamOne as any;
+  const teamTwo = match.teamTwo as any;
+
+  if (!teamOne || !teamTwo) {
+    throw new AppError(404, "Teams not found for this match");
+  }
+
+  // Verify that the requesting user belongs to one of the teams in this match
+  const isUserInTeamOne = 
+    teamOne.user?.toString() === userId.toString() || 
+    teamOne.player?.toString() === userId.toString();
+  
+  const isUserInTeamTwo = 
+    teamTwo.user?.toString() === userId.toString() || 
+    teamTwo.player?.toString() === userId.toString();
+
+  if (!isUserInTeamOne && !isUserInTeamTwo) {
+    throw new AppError(
+      403,
+      "You are not authorized for this chat."
+    );
+  }
+
+  // Check if chat already exists for this match
+  let chat = await Chat.findOne({ match: matchId });
+
   if (!chat) {
+    // Create chat with match reference
     chat = await Chat.create({
-      name: farm.teamName,
-      seller: sellerId,
-      user: userId,
+      name: `Match: ${teamOne.teamName} vs ${teamTwo.teamName}`,
+      match: matchId,
+      seller: teamOne._id,
+      user: teamTwo._id,
     });
   }
+
   sendResponse(res, {
     statusCode: 200,
     message: "Chat created successfully",
@@ -43,19 +75,50 @@ export const createChat = catchAsycn(async (req, res) => {
 
 export const sendMessage = catchAsycn(async (req, res) => {
   const { chatId, message } = req.body;
-  const chat = await Chat.findById(chatId);
+  
+  if (!req.user || !req.user._id) {
+    throw new AppError(401, "Unauthorized. Please login first.");
+  }
+  
+  const userId = req.user._id;
+
+  const chat = await Chat.findById(chatId).populate("match");
   if (!chat) {
     throw new AppError(404, "Chat not found");
   }
-  // if (
-  //   chat.user?.toString() !== req.user._id.toString() &&
-  //   chat?.seller?.toString() !== req.user._id.toString()
-  // ) {
-  //   throw new AppError(
-  //     401,
-  //     "You are not authorized to send message in this chat"
-  //   );
-  // }
+
+  // Verify user belongs to one of the teams in the match
+  if (chat.match) {
+    const match = await Match.findById(chat.match).populate("teamOne teamTwo");
+    if (!match) {
+      throw new AppError(404, "Match not found for this chat");
+    }
+
+    // Teams are already populated from the match query
+    const teamOne = match.teamOne as any;
+    const teamTwo = match.teamTwo as any;
+
+    if (!teamOne || !teamTwo) {
+      throw new AppError(404, "Teams not found for this match");
+    }
+
+    // Check if user belongs to either team
+    const isUserInTeamOne = 
+      teamOne.user?.toString() === userId.toString() || 
+      teamOne.player?.toString() === userId.toString();
+    
+    const isUserInTeamTwo = 
+      teamTwo.user?.toString() === userId.toString() || 
+      teamTwo.player?.toString() === userId.toString();
+
+    if (!isUserInTeamOne && !isUserInTeamTwo) {
+      throw new AppError(
+        403,
+        "You are not authorized to send messages in this chat. You must be a player in one of the teams."
+      );
+    }
+  }
+
   const messages = {
     text: message,
     user: req.user._id,
@@ -150,11 +213,51 @@ export const getChatForUser = catchAsycn(async (req, res) => {
 
 export const getSingleChat = catchAsycn(async (req, res) => {
   const { chatId } = req.params;
-  const chat = await Chat.findById(chatId).populate(
-    "messages.user",
-    "name role avatar"
-  );
+  
+  if (!req.user || !req.user._id) {
+    throw new AppError(401, "Unauthorized. Please login first.");
+  }
+  
+  const userId = req.user._id;
+
+  const chat = await Chat.findById(chatId)
+    .populate("messages.user", "name role avatar")
+    .populate("match");
+
   if (!chat) throw new AppError(404, "Chat not found");
+
+  // Verify user belongs to one of the teams in the match
+  if (chat.match) {
+    const match = await Match.findById(chat.match).populate("teamOne teamTwo");
+    if (!match) {
+      throw new AppError(404, "Match not found for this chat");
+    }
+
+    // Teams are already populated from the match query
+    const teamOne = match.teamOne as any;
+    const teamTwo = match.teamTwo as any;
+
+    if (!teamOne || !teamTwo) {
+      throw new AppError(404, "Teams not found for this match");
+    }
+
+    // Check if user belongs to either team
+    const isUserInTeamOne = 
+      teamOne.user?.toString() === userId.toString() || 
+      teamOne.player?.toString() === userId.toString();
+    
+    const isUserInTeamTwo = 
+      teamTwo.user?.toString() === userId.toString() || 
+      teamTwo.player?.toString() === userId.toString();
+
+    if (!isUserInTeamOne && !isUserInTeamTwo) {
+      throw new AppError(
+        403,
+        "You are not authorized to view this chat. You must be a player in one of the teams."
+      );
+    }
+  }
+
   sendResponse(res, {
     statusCode: 200,
     message: "Chat retrieved successfully",
