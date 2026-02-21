@@ -138,4 +138,42 @@ const getSingleMatch = (id: string) =>
 
 const deleteMatch = (id: string) => Match.findByIdAndDelete(id);
 
-export default { createMatch, updateMatch, getAllMatches, getSingleMatch, deleteMatch };
+// --- Get Player's Next Matches by User ID ---
+const getPlayerNextMatches = async (userId: string) => {
+  // Find all teams where the user is either the user or player
+  const teams = await Team.find({
+    $or: [{ user: userId }, { player: userId }],
+  });
+
+  if (!teams || teams.length === 0) {
+    return { nextMatch: null, upcomingMatches: [] };
+  }
+
+  const teamIds = teams.map((team) => team._id);
+
+  // Get today's date at start of day
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Find matches where user's teams are playing and match is not completed
+  const matches = await Match.find({
+    $or: [{ teamOne: { $in: teamIds } }, { teamTwo: { $in: teamIds } }],
+    matchStatus: { $ne: "completed" },
+  })
+    .populate("teamOne teamTwo league matchVenue referee winnerTeam")
+    .sort({ matchDateTime: 1 });
+
+  // Find today's incomplete matches (next match)
+  const todayMatches = matches.filter((match) => {
+    if (!match.matchDateTime) return false;
+    const matchDate = new Date(match.matchDateTime);
+    matchDate.setHours(0, 0, 0, 0);
+    return matchDate.getTime() >= today.getTime();
+  });
+
+  const nextMatch = todayMatches.length > 0 ? todayMatches[0] : null;
+
+  return { nextMatch, upcomingMatches: todayMatches };
+};
+
+export default { createMatch, updateMatch, getAllMatches, getSingleMatch, deleteMatch, getPlayerNextMatches };

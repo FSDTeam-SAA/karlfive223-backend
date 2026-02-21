@@ -83,9 +83,18 @@ export const confirmPayment = catchAsycn(async (req, res) => {
   // const { league } = paymentRecord
 
   if (paymentIntent.status === 'succeeded') {
+    // Calculate expiry date (31 days from now) for subscriptions
+    const updateData: any = { status: 'success' };
+    
+    if (paymentRecord.type === 'subscription') {
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 31);
+      updateData.expiryDate = expiryDate;
+    }
+    
     await Payment.findOneAndUpdate(
       { transactionId: paymentIntentId },
-      { status: 'success' }
+      updateData
     )
 
     // ✅ Update ticket payment status
