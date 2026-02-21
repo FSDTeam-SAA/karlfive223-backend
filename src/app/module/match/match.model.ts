@@ -5,7 +5,19 @@ const matchSchema = new Schema<IMatch>(
   {
     teamOne: { type: Schema.Types.ObjectId, ref: "Team", required: true },
     teamTwo: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-    matchDateTime: { type: Date },
+    matchDateTime: {
+      type: Date,
+      set: function (val: any) {
+        // ✅ Fix timezone issue: treat incoming dates as UTC
+        if (typeof val === "string") {
+          // If date string doesn't have timezone info, append 'Z' to treat it as UTC
+          if (!val.endsWith("Z") && !val.includes("+") && !val.includes("-", 10)) {
+            return new Date(val + "Z");
+          }
+        }
+        return val;
+      },
+    },
     matchVenue: { type: Schema.Types.ObjectId, ref: "Vanue" },
     league: { type: Schema.Types.ObjectId, ref: "League", required: true },
     matchStatus: {

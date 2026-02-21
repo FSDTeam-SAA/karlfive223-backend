@@ -8,4 +8,5 @@ export interface IPayment {
   status: 'pending' | 'success' | 'failed'
   transactionId: string
   type: string
+  expiryDate?: Date
 }

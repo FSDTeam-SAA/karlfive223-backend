@@ -7,6 +7,7 @@ import Match from "./app/module/match/match.model";
 import Standing from "./app/module/standing/standing.model";
 import { Notification } from "./app/module/notification/notification.model";
 import Team from "./app/module/team/team.model";
+import { Payment } from "./app/module/payment/payment.model";
 
 const port = config.port || 5000;
 export const generateFixturesOrdered = (
@@ -200,7 +201,7 @@ const server = async () => {
           for (const t of teamIds) {
             await Standing.create({ team: t, league: league._id });
           }
-
+          const defaultMatchDate = league.startDate ? new Date(league.startDate) : new Date();
           // ✅ ordered fixtures (NO date)
           const fixtures = generateFixturesOrdered(teamIds, play);
 
@@ -209,6 +210,7 @@ const server = async () => {
             teamTwo: f.teamTwo,
             league: league._id,
             matchVenue: null,
+            matchDateTime: defaultMatchDate,
             matchStatus: "upcoming",
           }));
 
@@ -270,6 +272,42 @@ const server = async () => {
         }
       } catch (err) {
         console.error("❌ Error in cron job:", err);
+      }
+    });
+
+    // 🔄 Cron job to expire subscriptions after 31 days
+    cron.schedule("0 0 * * *", async () => {
+      console.log("🔄 Checking for expired subscriptions...");
+
+      try {
+        const now = new Date();
+
+        // Find all subscriptions with status 'success' that have passed their expiry date
+        const expiredSubscriptions = await Payment.find({
+          type: "subscription",
+          status: "success",
+          expiryDate: { $lte: now },
+        });
+
+        if (expiredSubscriptions.length > 0) {
+          // Update all expired subscriptions to 'pending'
+          await Payment.updateMany(
+            {
+              type: "subscription",
+              status: "success",
+              expiryDate: { $lte: now },
+            },
+            {
+              status: "pending",
+            }
+          );
+
+          console.log(`✅ ${expiredSubscriptions.length} subscriptions expired and set to pending.`);
+        } else {
+          console.log("✅ No expired subscriptions found.");
+        }
+      } catch (err) {
+        console.error("❌ Error in subscription expiry cron job:", err);
       }
     });
   } catch (error: any) {

@@ -23,12 +23,15 @@ export const generateMatchesForLeague = catchAsycn(async (req: Request, res: Res
   const teams = league.addTeams as mongoose.Types.ObjectId[];
   const matches = [];
 
+  // Use league start date or current date as default
+  const defaultMatchDate = league.startDate ? new Date(league.startDate) : new Date();
+
   for (let i = 0; i < teams.length; i++) {
     for (let j = i + 1; j < teams.length; j++) {
       matches.push({
         teamOne: teams[i],
         teamTwo: teams[j],
-        matchDateTime: league.startDate,
+        matchDateTime: defaultMatchDate,
         matchVenue: null,
         league: league._id,
         matchStatus: "upcoming",
@@ -109,10 +112,30 @@ const deleteMatch = catchAsycn(async (req: Request, res: Response) => {
   });
 });
 
+const getPlayerNextMatches = catchAsycn(async (req: Request, res: Response) => {
+  const userId = req.user?._id || req.user?.id;
+
+  if (!userId) {
+    throw new AppError(401, "User not authenticated");
+  }
+
+  const result = await matchService.getPlayerNextMatches(userId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.nextMatch
+      ? "Player's next match found"
+      : "No upcoming matches found for this player",
+    data: result,
+  });
+});
+
 export default {
   createMatch,
   getAllMatches,
   getSingleMatch,
   updateMatch,
   deleteMatch,
+  getPlayerNextMatches,
 };

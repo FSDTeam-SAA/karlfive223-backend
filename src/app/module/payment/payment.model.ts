@@ -13,6 +13,7 @@ const paymentSchema = new Schema<IPayment>({
     enum: ['pending', 'success', 'failed'],
     default: 'pending',
   },
+  expiryDate: { type: Date }, // For subscriptions - 31 days from creation
 },{
   timestamps: true
 })
