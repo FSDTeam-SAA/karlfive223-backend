@@ -91,9 +91,9 @@ const getAllLeagues = async (params: any, options: IOption, userId: any) => {
     andCondition.push({ startDate: dateFilter });
   }
   if (leagueType === "private") {
-    // 1. Find all teams that belong to current user
+    // 1. Find all teams that belong to current user (as primary user or co-player)
     const teams = await Team.find({
-      $or: [{ user: userId }, { "players.user": userId }],
+      $or: [{ user: userId }, { player: userId }],
     }).select("_id");
     // Extract team IDs
     const teamIds = teams.map((team) => team._id);
