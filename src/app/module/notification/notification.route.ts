@@ -4,13 +4,13 @@ import Auth from '../../middlewares/Auth'
 
 const router = express.Router()
 
-// Get notifications for a user
-router.get('/:userId', getUserNotifications)
+// Mark all notifications as read for logged-in user (must come BEFORE /read/:notificationId)
+router.patch('/mark-all-as-read', Auth('user', 'admin', 'player'), markAllAsRead)
 
 // Mark single notification as read by ID
 router.patch('/read/:notificationId', Auth('user', 'admin', 'player'), markAsReadById)
 
-// Mark all notifications as read for logged-in user
-router.patch('/mark-all-as-read', Auth('user', 'admin', 'player'), markAllAsRead)
+// Get notifications for a user (must come LAST since it uses :userId parameter)
+router.get('/:userId', getUserNotifications)
 
 export const notificationRouter = router

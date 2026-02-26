@@ -88,6 +88,23 @@ export const sendNotificationToUsers = (
 };
 
 /**
+ * Emit updated unread notification count to a user via Socket.IO
+ * Call this after any read/unread status change
+ * @param userId - The user ID
+ */
+export const emitUnreadCount = async (
+  userId: string | Types.ObjectId
+) => {
+  if (!io) return;
+
+  const userIdStr = userId.toString();
+  const unreadCount = await Notification.countDocuments({ userId: userIdStr, read: false });
+
+  io.to(userIdStr).emit("unreadCount", { unreadCount });
+  console.log(`🔔 Unread count emitted to ${userIdStr}: ${unreadCount}`);
+};
+
+/**
  * Send a chat message notification to all users in a match
  * @param matchId - The match ID
  * @param messageData - The message data to broadcast
@@ -138,7 +155,7 @@ export const createAndSendNotifications = async (
 
     // Send notifications via Socket.IO in Flutter's expected format
     if (io) {
-      notifications.forEach((notification) => {
+      for (const notification of notifications) {
         const notificationData: any = notification.toObject ? notification.toObject() : notification;
         const userIdStr = notification.userId.toString();
         
@@ -154,9 +171,15 @@ export const createAndSendNotifications = async (
           updatedAt: notificationData.updatedAt.toISOString(),
         };
         
-        io?.to(userIdStr).emit("notification", flutterNotification);
+        // Emit the new notification event
+        io.to(userIdStr).emit("notification", flutterNotification);
         console.log(`📬 Notification sent to ${userIdStr}:`, title);
-      });
+        
+        // Emit updated unread count so badge updates instantly
+        const unreadCount = await Notification.countDocuments({ userId: notification.userId, read: false });
+        io.to(userIdStr).emit("unreadCount", { unreadCount });
+        console.log(`🔔 Unread count emitted to ${userIdStr}: ${unreadCount}`);
+      }
     }
 
     console.log(`✅ Created and sent ${notifications.length} notifications`);
