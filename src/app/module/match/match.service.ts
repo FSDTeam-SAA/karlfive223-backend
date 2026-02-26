@@ -84,13 +84,23 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
     ].filter(Boolean);
 
     const newDate = new Date(match.matchDateTime!);
-    const formattedDate = newDate.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    
+    // Use UTC methods to avoid ANY timezone conversion
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"];
+    
+    const month = monthNames[newDate.getUTCMonth()];
+    const day = newDate.getUTCDate();
+    const year = newDate.getUTCFullYear();
+    
+    let hours = newDate.getUTCHours();
+    const minutes = newDate.getUTCMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // 0 should be 12
+    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    
+    const formattedDate = `${month} ${day}, ${year}, ${formattedTime}`;
 
     const message = `📅 Match date updated: ${teamOne.teamName} vs ${teamTwo.teamName} in ${league.leagueName} has been rescheduled to ${formattedDate}`;
 
