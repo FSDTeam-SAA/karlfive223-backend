@@ -12,6 +12,7 @@ import catchAsycn from "../../utils/catchAsycn";
 import sendResponse from "../../utils/sendRespopnse";
 import Match from "../match/match.model";
 import { Chat } from "./chat.model";
+import { sendChatMessageToMatch, createAndSendNotifications } from "../../helper/socketHelper";
 
 export const createChat = catchAsycn(async (req, res) => {
   const { matchId } = req.body;
@@ -130,10 +131,37 @@ export const sendMessage = catchAsycn(async (req, res) => {
 
   const chat12 = await Chat.findOne({ _id: chatId })
     .select({ messages: { $slice: -1 } }) // Only include last message
-    .populate("messages.user", "name role avatar"); // Populate sender of last message
+    .populate("messages.user", "name role profileImage"); // Populate sender of last message
 
-  if (chat12?.messages[0]) {
-      // io.to(`chat_${chatId}`).emit("newMassage", chat12.messages[0]);
+  if (chat12?.messages[0] && chat.match) {
+    // Send message to all users in the match room via Socket.IO
+    sendChatMessageToMatch(chat.match, {
+      chatId: chatId,
+      message: chat12.messages[0],
+    });
+
+    // Get match and teams to notify all users
+    const match = await Match.findById(chat.match).populate("teamOne teamTwo league");
+    if (match) {
+      const teamOne = match.teamOne as any;
+      const teamTwo = match.teamTwo as any;
+      const senderName = req.user.name || "A player";
+
+      // Collect all user IDs from both teams (excluding the sender)
+      const allUserIds = [
+        teamOne?.user,
+        teamOne?.player,
+        teamTwo?.user,
+        teamTwo?.player,
+      ].filter((id) => id && id.toString() !== req.user._id.toString());
+
+      if (allUserIds.length > 0) {
+        const notificationMessage = `💬 New message from ${senderName} in ${teamOne.teamName} vs ${teamTwo.teamName} chat`;
+        
+        // Create notifications in DB and send via Socket.IO
+        await createAndSendNotifications(allUserIds, notificationMessage, "success");
+      }
+    }
   }
 
   sendResponse(res, {

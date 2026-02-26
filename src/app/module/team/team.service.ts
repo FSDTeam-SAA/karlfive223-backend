@@ -6,7 +6,6 @@ import { IOption } from "../../interface";
 import League from "../league/league.model";
 import { Payment } from "../payment/payment.model";
 import User from "../user/user.model";
-import { Payment } from "../payment/payment.model";
 import { ITeam } from "./team.interface";
 import Team from "./team.model";
 

@@ -1,4 +1,6 @@
 import mongoose, { Types } from "mongoose";
+import { createServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
 import app from "./app";
 import config from "./app/config";
 import cron from "node-cron";
@@ -8,8 +10,18 @@ import Standing from "./app/module/standing/standing.model";
 import { Notification } from "./app/module/notification/notification.model";
 import Team from "./app/module/team/team.model";
 import { Payment } from "./app/module/payment/payment.model";
+import { setSocketInstance } from "./app/helper/socketHelper";
 
 const port = config.port || 5000;
+
+// Create HTTP server and Socket.IO instance
+const httpServer = createServer(app);
+export const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: true,
+    credentials: true,
+  },
+});
 export const generateFixturesOrdered = (
   teamIdsInput: mongoose.Types.ObjectId[],
   legs: number = 1
@@ -77,8 +89,38 @@ const server = async () => {
     const connectmongodb = await mongoose.connect(config.database_url as string);
     console.log(`✅ Database is connected: ${connectmongodb.connection.host}`);
 
-    app.listen(port, () => {
+    // Set up Socket.IO connections
+    setSocketInstance(io);
+    
+    io.on("connection", (socket) => {
+      console.log(`🔌 Socket connected: ${socket.id}`);
+
+      // Join user to their personal room for notifications
+      socket.on("join", (userId: string) => {
+        socket.join(`user_${userId}`);
+        console.log(`👤 User ${userId} joined their notification room`);
+      });
+
+      // Join match-specific chat room
+      socket.on("joinMatch", (matchId: string) => {
+        socket.join(`match_${matchId}`);
+        console.log(`⚽ Socket ${socket.id} joined match_${matchId}`);
+      });
+
+      // Leave match chat room
+      socket.on("leaveMatch", (matchId: string) => {
+        socket.leave(`match_${matchId}`);
+        console.log(`👋 Socket ${socket.id} left match_${matchId}`);
+      });
+
+      socket.on("disconnect", () => {
+        console.log(`❌ Socket disconnected: ${socket.id}`);
+      });
+    });
+
+    httpServer.listen(port, () => {
       console.log(`🚀 Server running on http://localhost:${port} with ci-cd`);
+      console.log(`🔌 Socket.IO server is ready`);
     });
 
     // ===========================

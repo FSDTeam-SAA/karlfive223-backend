@@ -6,6 +6,7 @@ import { applyCompletedMatchToStandings } from "../standing/standing.service";
 import Team from "../team/team.model";
 import { IMatch } from "./match.interface";
 import Match from "./match.model";
+import { createAndSendNotifications } from "../../helper/socketHelper";
 
 // --- Create match ---
 const createMatch = async (payload: IMatch) => {
@@ -45,6 +46,12 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
   const match = await Match.findById(id);
   if (!match) return null;
 
+  // Store old match date to detect changes
+  const oldMatchDateTime = match.matchDateTime;
+  const dateChanged = payload.matchDateTime && 
+    oldMatchDateTime && 
+    new Date(payload.matchDateTime).getTime() !== new Date(oldMatchDateTime).getTime();
+
   // Keep league/team consistency if any of these fields are being changed
   if (payload.teamOne || payload.teamTwo) {
     const t1 = await Team.findById(payload.teamOne ?? match.teamOne);
@@ -58,6 +65,38 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
 
   Object.assign(match, payload);
   await match.save();
+
+  // Populate match details for notifications
+  await match.populate("teamOne teamTwo league");
+
+  // If match date changed, notify all users in both teams
+  if (dateChanged) {
+    const teamOne = match.teamOne as any;
+    const teamTwo = match.teamTwo as any;
+    const league = match.league as any;
+
+    // Get all user IDs from both teams
+    const userIds = [
+      teamOne?.user,
+      teamOne?.player,
+      teamTwo?.user,
+      teamTwo?.player,
+    ].filter(Boolean);
+
+    const newDate = new Date(match.matchDateTime!);
+    const formattedDate = newDate.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const message = `📅 Match date updated: ${teamOne.teamName} vs ${teamTwo.teamName} in ${league.leagueName} has been rescheduled to ${formattedDate}`;
+
+    // Create notifications in DB and send via Socket.IO
+    await createAndSendNotifications(userIds, message, "warning");
+  }
 
   // Only apply once
   if (match.matchStatus === "completed") {
