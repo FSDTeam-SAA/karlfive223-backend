@@ -353,6 +353,29 @@ const server = async () => {
         console.error("❌ Error in subscription expiry cron job:", err);
       }
     });
+
+    // ===========================
+    // 🔹 CRON JOB: Delete old read notifications (24+ hours old)
+    // Runs every hour
+    // ===========================
+    cron.schedule("0 * * * *", async () => {
+      try {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        
+        const result = await Notification.deleteMany({
+          read: true,
+          createdAt: { $lt: twentyFourHoursAgo }
+        });
+
+        if (result.deletedCount > 0) {
+          console.log(`🗑️ Deleted ${result.deletedCount} old read notifications (24+ hours old)`);
+        } else {
+          console.log("✅ No old read notifications to delete.");
+        }
+      } catch (err) {
+        console.error("❌ Error in notification cleanup cron job:", err);
+      }
+    });
   } catch (error: any) {
     console.error("❌ MongoDB connection error:", error.message);
     process.exit(1);
