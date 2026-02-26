@@ -68,7 +68,7 @@ export const generateFixturesOrdered = (
   return fixtures;
 };
 
-async function notifyUsers(userIds: Types.ObjectId[], message: string) {
+async function notifyUsers(userIds: Types.ObjectId[], title: string, message: string) {
   const unique = [...new Set(userIds.map((id) => id.toString()))].map(
     (id) => new Types.ObjectId(id)
   );
@@ -78,6 +78,7 @@ async function notifyUsers(userIds: Types.ObjectId[], message: string) {
   await Notification.insertMany(
     unique.map((uid) => ({
       userId: uid,
+      title,
       message,
       type: "success",
       read: false,
@@ -93,24 +94,24 @@ const server = async () => {
     setSocketInstance(io);
     
     io.on("connection", (socket) => {
-      console.log(`🔌 Socket connected: ${socket.id}`);
+      console.log(`✅ User connected: ${socket.id}`);
 
       // Join user to their personal room for notifications
       socket.on("join", (userId: string) => {
-        socket.join(`user_${userId}`);
+        socket.join(userId);
         console.log(`👤 User ${userId} joined their notification room`);
       });
 
       // Join match-specific chat room
       socket.on("joinMatch", (matchId: string) => {
-        socket.join(`match_${matchId}`);
-        console.log(`⚽ Socket ${socket.id} joined match_${matchId}`);
+        socket.join(matchId);
+        console.log(`⚽ User joined match room: ${matchId}`);
       });
 
       // Leave match chat room
       socket.on("leaveMatch", (matchId: string) => {
-        socket.leave(`match_${matchId}`);
-        console.log(`👋 Socket ${socket.id} left match_${matchId}`);
+        socket.leave(matchId);
+        console.log(`👋 User left match room: ${matchId}`);
       });
 
       socket.on("disconnect", () => {

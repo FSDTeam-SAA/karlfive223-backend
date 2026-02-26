@@ -20,12 +20,13 @@ export const getSocketInstance = (): SocketIOServer | null => {
 
 /**
  * Send a notification to a specific user via Socket.IO
+ * Transforms data to match Flutter's expected format
  * @param userId - The user ID to send notification to
  * @param notification - The notification data
  */
 export const sendNotificationToUser = (
   userId: string | Types.ObjectId,
-  notification: { message: string; type: string; _id?: any }
+  notification: { title: string; message: string; type: string; _id?: any; read?: boolean; createdAt?: Date; updatedAt?: Date }
 ) => {
   if (!io) {
     console.warn("Socket.IO instance not initialized");
@@ -33,18 +34,32 @@ export const sendNotificationToUser = (
   }
 
   const userIdStr = userId.toString();
-  io.to(`user_${userIdStr}`).emit("notification", notification);
-  console.log(`📤 Notification sent to user_${userIdStr}`);
+  
+  // Transform to Flutter's expected format
+  const flutterNotification = {
+    _id: notification._id?.toString() || '',
+    to: userIdStr,
+    title: notification.title,
+    message: notification.message,
+    type: notification.type,
+    isViewed: notification.read || false,
+    createdAt: (notification.createdAt || new Date()).toISOString(),
+    updatedAt: (notification.updatedAt || new Date()).toISOString(),
+  };
+  
+  io.to(userIdStr).emit("notification", flutterNotification);
+  console.log(`📤 Notification sent to ${userIdStr}:`, notification.title);
 };
 
 /**
  * Send notifications to multiple users via Socket.IO
+ * Transforms data to match Flutter's expected format
  * @param userIds - Array of user IDs
  * @param notification - The notification data
  */
 export const sendNotificationToUsers = (
   userIds: (string | Types.ObjectId)[],
-  notification: { message: string; type: string }
+  notification: { title: string; message: string; type: string; _id?: any; read?: boolean; createdAt?: Date; updatedAt?: Date }
 ) => {
   if (!io) {
     console.warn("Socket.IO instance not initialized");
@@ -53,7 +68,20 @@ export const sendNotificationToUsers = (
 
   userIds.forEach((userId) => {
     const userIdStr = userId.toString();
-    io?.to(`user_${userIdStr}`).emit("notification", notification);
+    
+    // Transform to Flutter's expected format
+    const flutterNotification = {
+      _id: notification._id?.toString() || '',
+      to: userIdStr,
+      title: notification.title,
+      message: notification.message,
+      type: notification.type,
+      isViewed: notification.read || false,
+      createdAt: (notification.createdAt || new Date()).toISOString(),
+      updatedAt: (notification.updatedAt || new Date()).toISOString(),
+    };
+    
+    io?.to(userIdStr).emit("notification", flutterNotification);
   });
 
   console.log(`📤 Notification sent to ${userIds.length} users`);
@@ -74,20 +102,22 @@ export const sendChatMessageToMatch = (
   }
 
   const matchIdStr = matchId.toString();
-  io.to(`match_${matchIdStr}`).emit("newMessage", messageData);
-  console.log(`💬 Message sent to match_${matchIdStr}`);
+  io.to(matchIdStr).emit("newMessage", messageData);
+  console.log(`💬 Message sent to match ${matchIdStr}`);
 };
 
 /**
  * Create notifications in database and send to users via Socket.IO
  * @param userIds - Array of user IDs to notify
+ * @param title - The notification title
  * @param message - The notification message
- * @param type - Notification type (success, error, warning)
+ * @param type - Notification type (success, error, warning, match, league, general)
  */
 export const createAndSendNotifications = async (
   userIds: (string | Types.ObjectId)[],
+  title: string,
   message: string,
-  type: "success" | "error" | "warning" = "success"
+  type: "success" | "error" | "warning" | "match" | "league" | "general" = "success"
 ) => {
   try {
     // Remove duplicates
@@ -99,23 +129,33 @@ export const createAndSendNotifications = async (
     const notifications = await Notification.insertMany(
       uniqueUserIds.map((uid) => ({
         userId: uid,
+        title,
         message,
         type,
         read: false,
       }))
     );
 
-    // Send notifications via Socket.IO
+    // Send notifications via Socket.IO in Flutter's expected format
     if (io) {
       notifications.forEach((notification) => {
         const notificationData: any = notification.toObject ? notification.toObject() : notification;
-        io?.to(`user_${notification.userId.toString()}`).emit("notification", {
-          _id: notificationData._id,
+        const userIdStr = notification.userId.toString();
+        
+        // Transform to Flutter's expected format
+        const flutterNotification = {
+          _id: notificationData._id.toString(),
+          to: userIdStr,
+          title: notificationData.title,
           message: notificationData.message,
           type: notificationData.type,
-          read: notificationData.read,
-          createdAt: notificationData.createdAt,
-        });
+          isViewed: notificationData.read,
+          createdAt: notificationData.createdAt.toISOString(),
+          updatedAt: notificationData.updatedAt.toISOString(),
+        };
+        
+        io?.to(userIdStr).emit("notification", flutterNotification);
+        console.log(`📬 Notification sent to ${userIdStr}:`, title);
       });
     }
 

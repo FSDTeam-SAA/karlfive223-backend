@@ -156,10 +156,11 @@ export const sendMessage = catchAsycn(async (req, res) => {
       ].filter((id) => id && id.toString() !== req.user._id.toString());
 
       if (allUserIds.length > 0) {
+        const notificationTitle = "New Chat Message";
         const notificationMessage = `💬 New message from ${senderName} in ${teamOne.teamName} vs ${teamTwo.teamName} chat`;
         
         // Create notifications in DB and send via Socket.IO
-        await createAndSendNotifications(allUserIds, notificationMessage, "success");
+        await createAndSendNotifications(allUserIds, notificationTitle, notificationMessage, "general");
       }
     }
   }

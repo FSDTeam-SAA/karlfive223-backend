@@ -95,7 +95,12 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
     const message = `📅 Match date updated: ${teamOne.teamName} vs ${teamTwo.teamName} in ${league.leagueName} has been rescheduled to ${formattedDate}`;
 
     // Create notifications in DB and send via Socket.IO
-    await createAndSendNotifications(userIds, message, "warning");
+    await createAndSendNotifications(
+      userIds, 
+      "Match Rescheduled", 
+      message, 
+      "match"
+    );
   }
 
   // Only apply once
@@ -126,6 +131,7 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
       await Notification.insertMany(
         uniqueIds.map((uid) => ({
           userId: uid,
+          title: "Match Won! 🏆",
           message,
           type: "success",
           read: false,
