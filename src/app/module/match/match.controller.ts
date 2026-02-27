@@ -131,6 +131,25 @@ const getPlayerNextMatches = catchAsycn(async (req: Request, res: Response) => {
   });
 });
 
+const getTeamFixturesByLeague = catchAsycn(async (req: Request, res: Response) => {
+  const { teamId, leagueId } = req.query;
+
+  if (!teamId || !leagueId) {
+    throw new AppError(400, "Both teamId and leagueId are required");
+  }
+
+  const result = await matchService.getTeamFixturesByLeague(teamId as string, leagueId as string);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.length > 0 
+      ? "Team fixtures fetched successfully" 
+      : "No fixtures found for this team in the specified league",
+    data: result,
+  });
+});
+
 export default {
   createMatch,
   getAllMatches,
@@ -138,4 +157,5 @@ export default {
   updateMatch,
   deleteMatch,
   getPlayerNextMatches,
+  getTeamFixturesByLeague,
 };

@@ -231,4 +231,31 @@ const getPlayerNextMatches = async (userId: string) => {
   return { nextMatch, upcomingMatches: todayMatches };
 };
 
-export default { createMatch, updateMatch, getAllMatches, getSingleMatch, deleteMatch, getPlayerNextMatches };
+// --- Get Team Fixtures by Team ID and League ID ---
+const getTeamFixturesByLeague = async (teamId: string, leagueId: string) => {
+  // Verify team exists
+  const team = await Team.findById(teamId);
+  if (!team) {
+    throw new AppError(404, "Team not found");
+  }
+
+  // Find all matches where the team is playing in the specified league
+  const fixtures = await Match.find({
+    $or: [{ teamOne: teamId }, { teamTwo: teamId }],
+    league: leagueId,
+  })
+    .populate("teamOne teamTwo league matchVenue referee winnerTeam")
+    .sort({ matchDateTime: 1 }); // Sort by match date ascending
+
+  return fixtures;
+};
+
+export default { 
+  createMatch, 
+  updateMatch, 
+  getAllMatches, 
+  getSingleMatch, 
+  deleteMatch, 
+  getPlayerNextMatches,
+  getTeamFixturesByLeague 
+};
