@@ -149,9 +149,16 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
       );
     }
 
-    await applyCompletedMatchToStandings(match);
-    match.standingsApplied = true;
-    await match.save();
+    // ✅ FIX: Extract league ID properly (handle populated league object)
+    const leagueId = typeof league === 'object' && league?._id 
+      ? league._id.toString() 
+      : league?.toString();
+
+    if (leagueId) {
+      await applyCompletedMatchToStandings(match);
+      match.standingsApplied = true;
+      await match.save();
+    }
   }
 
   return match.populate("teamOne teamTwo league matchVenue referee winnerTeam");

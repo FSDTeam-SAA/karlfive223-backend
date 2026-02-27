@@ -33,6 +33,11 @@ export const applyCompletedMatchToStandings = async (match: IMatch) => {
   const { teamOne, teamTwo, winnerTeam, league, matchScore, referee } = match;
   if (!league || !matchScore?.sets?.length) return;
 
+  // ✅ Extract league ID properly (handle populated league object)
+  const leagueId = typeof league === 'object' && (league as any)?._id 
+    ? (league as any)._id.toString() 
+    : league.toString();
+
   const t1Goals = matchScore.sets.reduce(
     (a, s) => a + (s.teamOneGames || 0),
     0
@@ -44,13 +49,13 @@ export const applyCompletedMatchToStandings = async (match: IMatch) => {
 
   const [s1, s2] = await Promise.all([
     Standing.findOneAndUpdate(
-      { team: teamOne, league },
-      { $setOnInsert: { team: teamOne, league, user: referee } },
+      { team: teamOne, league: leagueId },
+      { $setOnInsert: { team: teamOne, league: leagueId, user: referee } },
       { new: true, upsert: true }
     ),
     Standing.findOneAndUpdate(
-      { team: teamTwo, league },
-      { $setOnInsert: { team: teamTwo, league, user: referee } },
+      { team: teamTwo, league: leagueId },
+      { $setOnInsert: { team: teamTwo, league: leagueId, user: referee } },
       { new: true, upsert: true }
     ),
   ]);
@@ -85,7 +90,7 @@ export const applyCompletedMatchToStandings = async (match: IMatch) => {
   s2.goalDifference = s2.goalsFor - s2.goalsAgainst;
 
   await Promise.all([s1.save(), s2.save()]);
-  await recalcPositions(league.toString());
+  await recalcPositions(leagueId);
 };
 
 // --- Optional admin helpers (list, get, update, delete) ---

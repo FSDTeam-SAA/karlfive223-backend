@@ -93,11 +93,36 @@ const getSingleMatch = catchAsycn(async (req: Request, res: Response) => {
 const updateMatch = catchAsycn(async (req: Request, res: Response) => {
   const result = await matchService.updateMatch(req.params.id, req.body);
 
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Match not found",
+      data: null,
+    });
+  }
+
+  // ✅ Add winner name to response for completed matches
+  let responseData: any = result.toObject();
+  
+  if (result.matchStatus === "completed" && result.winnerTeam) {
+    const teamOne = result.teamOne as any;
+    const teamTwo = result.teamTwo as any;
+    const winnerTeamId = result.winnerTeam.toString();
+    
+    // Determine winner name
+    const winnerName = winnerTeamId === teamOne._id.toString() 
+      ? teamOne.teamName 
+      : teamTwo.teamName;
+    
+    responseData.winnerName = winnerName;
+  }
+
   sendResponse(res, {
-    statusCode: result ? 200 : 404,
-    success: !!result,
-    message: result ? "Match updated successfully" : "Match not found",
-    data: result,
+    statusCode: 200,
+    success: true,
+    message: "Match updated successfully",
+    data: responseData,
   });
 });
 
