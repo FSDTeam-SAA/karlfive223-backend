@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
-import matchService from "./match.service";
-import catchAsycn from "../../utils/catchAsycn";
+import mongoose from "mongoose";
+import AppError from "../../error/appError";
 import pick from "../../helper/pike";
+import catchAsycn from "../../utils/catchAsycn";
 import sendResponse from "../../utils/sendRespopnse";
 import League from "../league/league.model";
-import AppError from "../../error/appError";
 import Match from "./match.model";
-import mongoose from "mongoose";
+import matchService from "./match.service";
 
 
 export const generateMatchesForLeague = catchAsycn(async (req: Request, res: Response) => {

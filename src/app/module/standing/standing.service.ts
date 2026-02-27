@@ -1,5 +1,5 @@
-import Standing from "./standing.model";
 import { IMatch } from "../match/match.interface";
+import Standing from "./standing.model";
 
 const POINTS = { WIN: 3, DRAW: 1, LOSS: 0 };
 

@@ -1,12 +1,12 @@
 import AppError from "../../error/appError";
 import pagenation from "../../helper/pagenation";
+import { createAndSendNotifications } from "../../helper/socketHelper";
 import { IOption } from "../../interface";
 import { Notification } from "../notification/notification.model";
 import { applyCompletedMatchToStandings } from "../standing/standing.service";
 import Team from "../team/team.model";
 import { IMatch } from "./match.interface";
 import Match from "./match.model";
-import { createAndSendNotifications } from "../../helper/socketHelper";
 
 // --- Create match ---
 const createMatch = async (payload: IMatch) => {
