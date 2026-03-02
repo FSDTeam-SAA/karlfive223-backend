@@ -3,11 +3,9 @@ import config from "../../config";
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
 import { jwtHelper } from "../../helper/jwtHelper";
-import { sendMailer } from "../../helper/sendMailer";
-import createOtpTemplate from "../../utils/createOtpTemplate";
+import { Payment } from "../payment/payment.model";
 import { IUser } from "./user.interface";
 import User from "./user.model";
-import { Payment } from "../payment/payment.model";
 
 const createUser = async (payload: Partial<IUser>) => {
   const existingUser = await User.findOne({ email: payload.email });
@@ -27,12 +25,12 @@ const createUser = async (payload: Partial<IUser>) => {
   newUser.isVerified = true;
   await newUser.save();
 
-  await sendMailer({
-    to: newUser.email,
-    subject: "Verify Your Mail",
-    text: `Your OTP is ${otp}. It will expire in 5 minutes.`, // fallback for non-HTML clients
-    html: createOtpTemplate(otp, newUser.email, "Pixel Central"),
-  });
+  // await sendMailer({
+  //   to: newUser.email,
+  //   subject: "Verify Your Mail",
+  //   text: `Your OTP is ${otp}. It will expire in 5 minutes.`, // fallback for non-HTML clients
+  //   html: createOtpTemplate(otp, newUser.email, "Pixel Central"),
+  // });
 
   const accessToken = jwtHelper.generateToken(
     { email: newUser.email, role: newUser.role },
