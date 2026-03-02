@@ -83,12 +83,12 @@ export const confirmPayment = catchAsycn(async (req, res) => {
   // const { league } = paymentRecord
 
   if (paymentIntent.status === 'succeeded') {
-    // Calculate expiry date (31 days from now) for subscriptions
+    // Calculate expiry date (1 month from now) for subscriptions
     const updateData: any = { status: 'success' };
     
     if (paymentRecord.type === 'subscription') {
       const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 31);
+      expiryDate.setMonth(expiryDate.getMonth() + 1);
       updateData.expiryDate = expiryDate;
     }
     
