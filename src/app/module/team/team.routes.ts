@@ -3,6 +3,9 @@ import auth from "../../middlewares/Auth";
 import { userrole } from "../user/user.constent";
 import { teamController } from "./team.controller";
 import { fileUploader } from "../../helper/fileUploded";
+import requestValidation from "../../middlewares/requestValidation";
+import { teamValidation } from "./team.valadetion";
+
 const router = express.Router();
 
 router.post(
@@ -17,6 +20,13 @@ router.get("/all-team", auth(userrole.player,userrole.manager, userrole.admin), 
 router.patch(
   "/update-status/:id",
   teamController.updatedStatus
+);
+
+router.patch(
+  "/change-member/:id",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  requestValidation(teamValidation.changeTeamMemberSchema),
+  teamController.changeTeamMember
 );
 
 

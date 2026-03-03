@@ -188,6 +188,134 @@ const updatedStatus = async (idL: string, payload: Partial<ITeam>) => {
   return result;
 };
 
+const changeTeamMember = async (
+  teamId: string,
+  payload: { memberType: 'user' | 'player'; newMemberEmail: string; },
+  requesterEmail: string
+) => {
+  const { memberType, newMemberEmail } = payload;
+
+  // Validate input
+  if (!memberType || !newMemberEmail) {
+    throw new AppError(400, "Member type and new member email are required");
+  }
+
+  if (memberType !== 'user' && memberType !== 'player') {
+    throw new AppError(400, "Member type must be either 'user' or 'player'");
+  }
+
+  // Find the team
+  const team = await Team.findById(teamId)
+    .populate('user', 'name email')
+    .populate('player', 'name email')
+    .populate('league', 'leagueName');
+
+  if (!team) {
+    throw new AppError(404, "Team not found");
+  }
+
+  // Check if requester is authorized (must be the team captain/user)
+  const requester = await User.findOne({ email: requesterEmail });
+  if (!requester) {
+    throw new AppError(404, "Requester not found");
+  }
+
+  const teamUser: any = team.user;
+  const teamPlayer: any = team.player;
+  
+  if (teamUser._id.toString() !== requester._id.toString()) {
+    throw new AppError(403, "Only the team captain can change team members");
+  }
+
+  // Find the new member - must be a registered user
+  const newMember = await User.findOne({ email: newMemberEmail });
+  if (!newMember) {
+    throw new AppError(
+      404, 
+      `User with email ${newMemberEmail} is not registered. The new member must have an account in the system before being added to the team.`
+    );
+  }
+
+  // Check if new member is already in the team
+  if (
+    teamUser._id.toString() === newMember._id.toString() ||
+    teamPlayer._id.toString() === newMember._id.toString()
+  ) {
+    throw new AppError(400, "This user is already a member of this team");
+  }
+
+  // Check if the new member has an active subscription
+  // Using the same logic as createTeam - check for subscription in current month OR valid expiry date
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const endOfMonth = new Date();
+  endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+  endOfMonth.setDate(0);
+  endOfMonth.setHours(23, 59, 59, 999);
+
+  const currentDateStart = new Date();
+  currentDateStart.setHours(0, 0, 0, 0);
+
+  const activeSubscription = await Payment.findOne({
+    userId: newMember._id,
+    type: 'subscription',
+    status: 'success',
+    $or: [
+      {
+        // Check if subscription was created this month
+        createdAt: {
+          $gte: startOfMonth,
+          $lte: endOfMonth,
+        },
+      },
+      {
+        // OR check if subscription has a valid expiry date
+        expiryDate: { $gte: currentDateStart },
+      },
+    ],
+  });
+
+  if (!activeSubscription) {
+    throw new AppError(
+      402,
+      `${newMember.name} (${newMemberEmail}) must have an active subscription to be added to the team`
+    );
+  }
+
+  // Update the team member
+  const updateData: any = {};
+  updateData[memberType] = newMember._id;
+
+  // Also update related fields if changing the captain (user)
+  if (memberType === 'user') {
+    updateData.email = newMember.email;
+    updateData.captainName = newMember.name;
+  } else {
+    // If changing player, update partner name
+    updateData.partnerName = newMember.name;
+  }
+
+  const updatedTeam = await Team.findByIdAndUpdate(
+    teamId,
+    updateData,
+    { new: true }
+  )
+    .populate('user', 'name email role')
+    .populate('player', 'name email role')
+    .populate('league', 'leagueName leagueLogo location');
+
+  if (!updatedTeam) {
+    throw new AppError(500, "Failed to update team member");
+  }
+
+  return {
+    team: updatedTeam,
+    message: `Successfully changed ${memberType === 'user' ? 'captain' : 'player'} to ${newMember.name}`,
+  };
+};
+
 export const TeamService = {
   createTeam,
   getAllTeams,
@@ -195,4 +323,5 @@ export const TeamService = {
   updateTeam,
   deleteTeam,
   updatedStatus,
+  changeTeamMember,
 };

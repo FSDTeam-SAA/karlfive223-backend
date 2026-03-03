@@ -82,6 +82,24 @@ const updatedStatus = catchAsycn(async (req, res) => {
   });
 });
 
+const changeTeamMember = catchAsycn(async (req, res) => {
+  const teamId = req.params.id;
+  const { memberType, newMemberEmail } = req.body;
+  
+  const result = await TeamService.changeTeamMember(
+    teamId,
+    { memberType, newMemberEmail },
+    req.user?.email
+  );
+  
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.message,
+    data: result.team,
+  });
+});
+
 export const teamController = {
   createTeam,
   getAllTeams,
@@ -89,4 +107,5 @@ export const teamController = {
   updateTeam,
   deleteTeam,
   updatedStatus,
+  changeTeamMember,
 };
