@@ -316,6 +316,53 @@ const changeTeamMember = async (
   };
 };
 
+const deleteTeamByLeagueCreator = async (
+  teamId: string,
+  requesterEmail: string
+) => {
+  // Find the team with league populated
+  const team = await Team.findById(teamId).populate('league', 'user leagueName');
+
+  if (!team) {
+    throw new AppError(404, "Team not found");
+  }
+
+  // Find the requester
+  const requester = await User.findOne({ email: requesterEmail });
+  if (!requester) {
+    throw new AppError(404, "Requester not found");
+  }
+
+  // Check if the league exists
+  const leagueData: any = team.league;
+  if (!leagueData) {
+    throw new AppError(404, "League not found for this team");
+  }
+
+  // Check if requester is the league creator
+  if (leagueData.user.toString() !== requester._id.toString()) {
+    throw new AppError(
+      403,
+      "Only the league creator can delete teams from this league"
+    );
+  }
+
+  // Remove team from league's addTeams array
+  await League.findByIdAndUpdate(
+    leagueData._id,
+    { $pull: { addTeams: teamId } }
+  );
+
+  // Delete the team
+  const deletedTeam = await Team.findByIdAndDelete(teamId);
+
+  if (!deletedTeam) {
+    throw new AppError(500, "Failed to delete team");
+  }
+
+  return deletedTeam;
+};
+
 export const TeamService = {
   createTeam,
   getAllTeams,
@@ -324,4 +371,5 @@ export const TeamService = {
   deleteTeam,
   updatedStatus,
   changeTeamMember,
+  deleteTeamByLeagueCreator,
 };

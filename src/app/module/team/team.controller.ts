@@ -100,6 +100,22 @@ const changeTeamMember = catchAsycn(async (req, res) => {
   });
 });
 
+const deleteTeamByLeagueCreator = catchAsycn(async (req, res) => {
+  const teamId = req.params.id;
+  
+  const result = await TeamService.deleteTeamByLeagueCreator(
+    teamId,
+    req.user?.email
+  );
+  
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Team deleted successfully by league creator",
+    data: result,
+  });
+});
+
 export const teamController = {
   createTeam,
   getAllTeams,
@@ -108,4 +124,5 @@ export const teamController = {
   deleteTeam,
   updatedStatus,
   changeTeamMember,
+  deleteTeamByLeagueCreator,
 };

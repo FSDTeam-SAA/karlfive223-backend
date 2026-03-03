@@ -29,6 +29,12 @@ router.patch(
   teamController.changeTeamMember
 );
 
+router.delete(
+  "/league-creator/:id",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  teamController.deleteTeamByLeagueCreator
+);
+
 
 router.get("/:id", auth(userrole.player,userrole.manager, userrole.admin), teamController.getSingleTeam);
 router.patch(
