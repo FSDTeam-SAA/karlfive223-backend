@@ -158,7 +158,7 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
             userId: uid,
             title: "Match Draw",
             message,
-            type: "info",
+            type: "match",
             read: false,
           }))
         );
