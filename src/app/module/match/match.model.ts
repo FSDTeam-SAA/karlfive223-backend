@@ -25,7 +25,7 @@ const matchSchema = new Schema<IMatch>(
       enum: ["upcoming", "live", "completed", "postponed"],
       default: "upcoming",
     },
-    winnerTeam: { type: Schema.Types.ObjectId, ref: "Team" },
+    winnerTeam: { type: Schema.Types.ObjectId, ref: "Team", default: null },
     referee: { type: Schema.Types.ObjectId, ref: "User" },
     matchScore: {
       sets: [

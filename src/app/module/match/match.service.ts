@@ -115,38 +115,78 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
 
   // Only apply once
   if (match.matchStatus === "completed") {
-    if (!match.winnerTeam && match.matchScore) {
-      // If no explicit winner, infer by total games
-      const t1Goals = match.matchScore.sets.reduce((a, s) => a + (s.teamOneGames || 0), 0);
-      const t2Goals = match.matchScore.sets.reduce((a, s) => a + (s.teamTwoGames || 0), 0);
-      if (t1Goals > t2Goals) match.winnerTeam = match.teamOne as any;
-      if (t2Goals > t1Goals) match.winnerTeam = match.teamTwo as any;
+    // Calculate total games for both teams
+    const t1Goals = match.matchScore?.sets.reduce((a, s) => a + (s.teamOneGames || 0), 0) || 0;
+    const t2Goals = match.matchScore?.sets.reduce((a, s) => a + (s.teamTwoGames || 0), 0) || 0;
+
+    // Determine winner or draw (check if winnerTeam was explicitly set, otherwise infer from scores)
+    if (match.winnerTeam === undefined && match.matchScore) {
+      // If no explicit winner set, infer by total games
+      if (t1Goals > t2Goals) {
+        match.winnerTeam = match.teamOne as any;
+      } else if (t2Goals > t1Goals) {
+        match.winnerTeam = match.teamTwo as any;
+      } else {
+        // It's a draw - explicitly set to null
+        match.winnerTeam = null;
+      }
     }
-    const teamOne = match.teamOne as any;;
+
+    const teamOne = match.teamOne as any;
     const teamTwo = match.teamTwo as any;
     const league = match.league as any;
     const leagueName = league?.leagueName || "League";
-    const winnerTeam = match?.winnerTeam?.toString() === match.teamOne.toString() ? teamOne : teamTwo;
-    const loserTeam = match?.winnerTeam?.toString() === match.teamOne.toString() ? teamTwo : teamOne;
 
-    // ✅ pick recipients (winner team players)
-    const winnerUserIds = [winnerTeam?.user, winnerTeam?.player].filter(Boolean);
+    // Check if it's a draw (winnerTeam is null)
+    const isDraw = match.winnerTeam === null;
 
-    // message
-    const message = `🏆 ${winnerTeam.teamName} won vs ${loserTeam.teamName} in ${leagueName}!`;
+    if (isDraw) {
+      // Send draw notifications to all players in both teams
+      const allUserIds = [
+        teamOne?.user,
+        teamOne?.player,
+        teamTwo?.user,
+        teamTwo?.player,
+      ].filter(Boolean);
 
-    // bulk insert notifications (fast)
-    if (winnerUserIds.length) {
-      const uniqueIds = [...new Set(winnerUserIds.map((id) => id.toString()))];
-      await Notification.insertMany(
-        uniqueIds.map((uid) => ({
-          userId: uid,
-          title: "Match Won! 🏆",
-          message,
-          type: "success",
-          read: false,
-        }))
-      );
+      const message = `🤝 Match ended in a draw: ${teamOne.teamName} vs ${teamTwo.teamName} in ${leagueName} (${t1Goals}-${t2Goals})`;
+
+      if (allUserIds.length) {
+        const uniqueIds = [...new Set(allUserIds.map((id) => id.toString()))];
+        await Notification.insertMany(
+          uniqueIds.map((uid) => ({
+            userId: uid,
+            title: "Match Draw",
+            message,
+            type: "info",
+            read: false,
+          }))
+        );
+      }
+    } else if (match.winnerTeam) {
+      // Send winner notifications
+      const winnerTeam = match.winnerTeam.toString() === match.teamOne.toString() ? teamOne : teamTwo;
+      const loserTeam = match.winnerTeam.toString() === match.teamOne.toString() ? teamTwo : teamOne;
+
+      // ✅ pick recipients (winner team players)
+      const winnerUserIds = [winnerTeam?.user, winnerTeam?.player].filter(Boolean);
+
+      // message
+      const message = `🏆 ${winnerTeam.teamName} won vs ${loserTeam.teamName} in ${leagueName}!`;
+
+      // bulk insert notifications (fast)
+      if (winnerUserIds.length) {
+        const uniqueIds = [...new Set(winnerUserIds.map((id) => id.toString()))];
+        await Notification.insertMany(
+          uniqueIds.map((uid) => ({
+            userId: uid,
+            title: "Match Won! 🏆",
+            message,
+            type: "success",
+            read: false,
+          }))
+        );
+      }
     }
 
     // ✅ FIX: Extract league ID properly (handle populated league object)

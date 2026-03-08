@@ -7,7 +7,7 @@ export interface IMatch extends Document {
   matchVenue: ObjectId;
   league: ObjectId;
   matchStatus: "upcoming" | "live" | "completed" | "postponed";
-  winnerTeam?: ObjectId; // Optional: only for completed matches
+  winnerTeam?: ObjectId | null; // Optional: only for completed matches with a winner, null for draws
   referee?: ObjectId; // Optional: as it might not always be assigned
   matchScore?: {
     // Structured object for scores

@@ -67,6 +67,37 @@ const getAllMatches = catchAsycn(async (req: Request, res: Response) => {
 
   const result = await matchService.getAllMatches(filters, options);
 
+  // ✅ Add winner name or draw status to each completed match
+  const enrichedData = result.data.map((match: any) => {
+    const matchObj = match.toObject ? match.toObject() : match;
+    
+    if (matchObj.matchStatus === "completed") {
+      const teamOne = matchObj.teamOne;
+      const teamTwo = matchObj.teamTwo;
+      
+      if (matchObj.winnerTeam === null) {
+        // It's a draw (winnerTeam is explicitly null)
+        matchObj.matchResult = "Draw";
+        matchObj.winnerName = "Draw";
+      } else if (matchObj.winnerTeam) {
+        const winnerTeamId = matchObj.winnerTeam._id ? matchObj.winnerTeam._id.toString() : matchObj.winnerTeam.toString();
+        const teamOneId = teamOne._id ? teamOne._id.toString() : teamOne.toString();
+        const winnerName = winnerTeamId === teamOneId 
+          ? (teamOne.teamName || teamOne) 
+          : (teamTwo.teamName || teamTwo);
+        
+        matchObj.winnerName = winnerName;
+        matchObj.matchResult = "Win";
+      }
+    } else {
+      // Match not completed yet - show TBA
+      matchObj.winnerName = "TBA";
+      matchObj.matchResult = "TBA";
+    }
+    
+    return matchObj;
+  });
+
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -75,18 +106,54 @@ const getAllMatches = catchAsycn(async (req: Request, res: Response) => {
         ? "No matches found"
         : "Matches fetched successfully",
     meta: result.meta,
-    data: result.data,
+    data: enrichedData,
   });
 });
 
 const getSingleMatch = catchAsycn(async (req: Request, res: Response) => {
   const result = await matchService.getSingleMatch(req.params.id);
 
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Match not found",
+      data: null,
+    });
+  }
+
+  // ✅ Add winner name or draw status to response for completed matches
+  let responseData: any = result.toObject();
+  
+  if (result.matchStatus === "completed") {
+    const teamOne = result.teamOne as any;
+    const teamTwo = result.teamTwo as any;
+    
+    if (result.winnerTeam === null) {
+      // It's a draw (winnerTeam is explicitly null)
+      responseData.matchResult = "Draw";
+      responseData.winnerName = "Draw";
+    } else if (result.winnerTeam) {
+      // There's a winner
+      const winnerTeamId = result.winnerTeam.toString();
+      const winnerName = winnerTeamId === teamOne._id.toString() 
+        ? teamOne.teamName 
+        : teamTwo.teamName;
+      
+      responseData.winnerName = winnerName;
+      responseData.matchResult = "Win";
+    }
+  } else {
+    // Match not completed yet - show TBA
+    responseData.winnerName = "TBA";
+    responseData.matchResult = "TBA";
+  }
+
   sendResponse(res, {
-    statusCode: result ? 200 : 404,
-    success: !!result,
-    message: result ? "Match fetched successfully" : "Match not found",
-    data: result,
+    statusCode: 200,
+    success: true,
+    message: "Match fetched successfully",
+    data: responseData,
   });
 });
 
@@ -102,20 +169,31 @@ const updateMatch = catchAsycn(async (req: Request, res: Response) => {
     });
   }
 
-  // ✅ Add winner name to response for completed matches
+  // ✅ Add winner name or draw status to response for completed matches
   let responseData: any = result.toObject();
   
-  if (result.matchStatus === "completed" && result.winnerTeam) {
+  if (result.matchStatus === "completed") {
     const teamOne = result.teamOne as any;
     const teamTwo = result.teamTwo as any;
-    const winnerTeamId = result.winnerTeam.toString();
     
-    // Determine winner name
-    const winnerName = winnerTeamId === teamOne._id.toString() 
-      ? teamOne.teamName 
-      : teamTwo.teamName;
-    
-    responseData.winnerName = winnerName;
+    if (result.winnerTeam === null) {
+      // It's a draw (winnerTeam is explicitly null)
+      responseData.matchResult = "Draw";
+      responseData.winnerName = "Draw";
+    } else if (result.winnerTeam) {
+      // There's a winner
+      const winnerTeamId = result.winnerTeam.toString();
+      const winnerName = winnerTeamId === teamOne._id.toString() 
+        ? teamOne.teamName 
+        : teamTwo.teamName;
+      
+      responseData.winnerName = winnerName;
+      responseData.matchResult = "Win";
+    }
+  } else {
+    // Match not completed yet - show TBA
+    responseData.winnerName = "TBA";
+    responseData.matchResult = "TBA";
   }
 
   sendResponse(res, {
