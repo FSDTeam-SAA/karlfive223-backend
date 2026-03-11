@@ -1,5 +1,5 @@
-import { Server as SocketIOServer } from "socket.io";
 import { Types } from "mongoose";
+import { Server as SocketIOServer } from "socket.io";
 import { Notification } from "../module/notification/notification.model";
 
 let io: SocketIOServer | null = null;
@@ -128,13 +128,13 @@ export const sendChatMessageToMatch = (
  * @param userIds - Array of user IDs to notify
  * @param title - The notification title
  * @param message - The notification message
- * @param type - Notification type (success, error, warning, match, league, general)
+ * @param type - Notification type (success, error, warning, match, league, event, general)
  */
 export const createAndSendNotifications = async (
   userIds: (string | Types.ObjectId)[],
   title: string,
   message: string,
-  type: "success" | "error" | "warning" | "match" | "league" | "general" = "success"
+  type: "success" | "error" | "warning" | "match" | "league" | "event" | "general" = "success"
 ) => {
   try {
     // Remove duplicates
