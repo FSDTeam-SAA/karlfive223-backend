@@ -1,13 +1,17 @@
+import * as crypto from "crypto";
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
 import pagenation from "../../helper/pagenation";
 import { IOption } from "../../interface";
+import {
+  enforceCreateLeagueLimit,
+  incrementLeaguesCreated,
+} from "../../utils/subscriptionEnforcement";
 import Match from "../match/match.model";
 import Team from "../team/team.model";
 import User from "../user/user.model";
 import { ILeague } from "./league.interface";
 import League from "./league.model";
-import * as crypto from "crypto";
 
 async function generateUniqueLeagueCode() {
   let code;
@@ -49,6 +53,9 @@ const createLeague = async (
   let leagueType = user.role === "player" ? "private" : "public";
   let leagueCode = crypto.randomBytes(4).toString("hex");
 
+  // ─── Enforce subscription limits for private leagues ──────────────────────
+  await enforceCreateLeagueLimit(String(user._id), leagueType as "public" | "private");
+
   // Save League
   const league = await League.create({
     ...payload,
@@ -57,6 +64,11 @@ const createLeague = async (
     leagueCode,
   });
   if (!league) throw new AppError(400, "Failed to create league");
+
+  // ─── Increment the user's private-league create counter ───────────────────
+  if (leagueType === "private") {
+    await incrementLeaguesCreated(String(user._id));
+  }
 
   return league;
 };

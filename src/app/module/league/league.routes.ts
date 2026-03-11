@@ -1,15 +1,15 @@
 import express from "express";
+import { fileUploader } from "../../helper/fileUploded";
 import auth from "../../middlewares/Auth";
 import { userrole } from "../user/user.constent";
 import { leagueController } from "./league.controller";
-import { fileUploader } from "../../helper/fileUploded";
 
 const router = express.Router();
 
 // CREATE league (with logo + banner)
 router.post(
   "/create",
-  auth(userrole.manager,userrole.player),
+  auth(userrole.manager, userrole.player),
   fileUploader.upload.fields([
     { name: "logo", maxCount: 1 },
     { name: "banner", maxCount: 1 },
@@ -18,7 +18,7 @@ router.post(
 );
 
 // GET all leagues
-router.get("/all-league"  ,  auth(userrole.manager,userrole.player,userrole.admin), leagueController.getAllLeagues);
+router.get("/all-league", auth(userrole.manager, userrole.player, userrole.admin), leagueController.getAllLeagues);
 
 router.get("/hh/all-league"  ,  leagueController.getAllLeaguesfree);
 
