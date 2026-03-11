@@ -1,7 +1,7 @@
-import mongoose from "mongoose";
-import { IUser } from "./user.interface";
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 import config from "../../config";
+import { IUser } from "./user.interface";
 
 const userSchema = new mongoose.Schema<IUser>(
   {
@@ -47,6 +47,11 @@ const userSchema = new mongoose.Schema<IUser>(
     clubAffiliation: { type: String },
     birthday: { type: Date },
     refreshToken: { type: String, default: null },
+    // ─── Subscription tracking ─────────────────────────────────────────────────
+    isOrganizer: { type: Boolean, default: false },
+    freeTrialUsed: { type: Boolean, default: false },
+    leaguesCreatedCount: { type: Number, default: 0 },
+    leaguesJoinedCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

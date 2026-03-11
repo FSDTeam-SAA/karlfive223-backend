@@ -3,7 +3,8 @@ import config from "../../config";
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
 import { jwtHelper } from "../../helper/jwtHelper";
-import { Payment } from "../payment/payment.model";
+import { PLAN_DETAILS } from "../subscription/subscription.constant";
+import { subscriptionService } from "../subscription/subscription.service";
 import { IUser } from "./user.interface";
 import User from "./user.model";
 
@@ -21,16 +22,14 @@ const createUser = async (payload: Partial<IUser>) => {
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
   newUser.otp = otp;
-  newUser.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 5 mins
+  newUser.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
   newUser.isVerified = true;
   await newUser.save();
 
-  // await sendMailer({
-  //   to: newUser.email,
-  //   subject: "Verify Your Mail",
-  //   text: `Your OTP is ${otp}. It will expire in 5 minutes.`, // fallback for non-HTML clients
-  //   html: createOtpTemplate(otp, newUser.email, "Pixel Central"),
-  // });
+  // ─── Auto-assign 24-hour free trial ──────────────────────────────────────
+  // The free trial is automatically granted on registration (one-time only)
+  // Users can also manually activate via POST /subscription/activate-free-trial
+  await subscriptionService.assignFreeTrial(String(newUser._id));
 
   const accessToken = jwtHelper.generateToken(
     { email: newUser.email, role: newUser.role },
@@ -66,28 +65,34 @@ const getUserByEmail = async (email: string) => {
   if (!user) {
     throw new AppError(404, "User not found");
   }
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
 
-  const endOfMonth = new Date();
-  endOfMonth.setMonth(endOfMonth.getMonth() + 1);
-  endOfMonth.setDate(0);
-  endOfMonth.setHours(23, 59, 59, 999);
+  // Fetch the active subscription payment record
+  const activeSubscription = await subscriptionService.getMySubscription(String(user._id));
 
-  const paymentThisMonth = await Payment.findOne({
-    userId: user._id,
-    type: 'subscription',
-    status: "success",
-    createdAt: {
-      $gte: startOfMonth,
-      $lte: endOfMonth,
-    },
-  });
-
-  const user1 = user.toObject() as any ;
-  user1.subscription = paymentThisMonth ? true : false
+  const user1 = user.toObject() as any;
   
+  // Build detailed subscription info for the response
+  if (activeSubscription) {
+    const planDetails = activeSubscription.subscriptionPlan 
+      ? PLAN_DETAILS[activeSubscription.subscriptionPlan as keyof typeof PLAN_DETAILS]
+      : null;
+
+    user1.subscription = {
+      plan: activeSubscription.subscriptionPlan ?? null,
+      planName: planDetails?.name ?? 'Unknown Plan',
+      price: activeSubscription.amount ?? 0,
+      purchaseDate: activeSubscription.createdAt ?? null,
+      expiryDate: activeSubscription.expiryDate ?? null,
+      isActive: activeSubscription.expiryDate 
+        ? new Date(activeSubscription.expiryDate) > new Date()
+        : false,
+      maxJoinLeagues: planDetails?.maxJoinLeagues ?? 0,
+      maxCreateLeagues: planDetails?.maxCreateLeagues ?? 0,
+    };
+  } else {
+    user1.subscription = null;
+  }
+
   return user1;
 };
 const getUserById = async (email: string) => {

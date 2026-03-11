@@ -20,4 +20,13 @@ export interface IUser {
   clubAffiliation?: string;
   birthday?: Date;
   refreshToken?: string;
+  // ─── Subscription tracking ───────────────────────────────────────────────────
+  /** True after the user purchases / activates the Club plan */
+  isOrganizer: boolean;
+  /** Whether the user has already consumed their one-time 24-hour free trial */
+  freeTrialUsed: boolean;
+  /** How many private leagues this user has created in the current billing period */
+  leaguesCreatedCount: number;
+  /** How many private leagues this user has joined in the current billing period */
+  leaguesJoinedCount: number;
 }
