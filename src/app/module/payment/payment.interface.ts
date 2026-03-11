@@ -7,6 +7,10 @@ export interface IPayment {
   amount: number
   status: 'pending' | 'success' | 'failed'
   transactionId: string
-  type: string
+  type: 'subscription' | 'league'
+  /** Which plan was purchased — only populated when type === 'subscription' */
+  subscriptionPlan?: 'free' | 'basic' | 'gold' | 'club'
   expiryDate?: Date
+  createdAt?: Date
+  updatedAt?: Date
 }
