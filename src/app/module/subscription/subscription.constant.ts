@@ -47,7 +47,7 @@ export const PLAN_DETAILS: Record<
     isOrganizerPlan: false,
   },
   club: {
-    name: 'Club / Organizer Plan',
+    name: 'Club / Organiser Plan',
     price: 33.58,
     maxJoinLeagues: null,    // unlimited
     maxCreateLeagues: null,  // unlimited
