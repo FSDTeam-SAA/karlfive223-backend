@@ -26,10 +26,10 @@ const createUser = async (payload: Partial<IUser>) => {
   newUser.isVerified = true;
   await newUser.save();
 
-  // ─── Auto-assign 24-hour free trial ──────────────────────────────────────
-  // The free trial is automatically granted on registration (one-time only)
-  // Users can also manually activate via POST /subscription/activate-free-trial
-  await subscriptionService.assignFreeTrial(String(newUser._id));
+  // // ─── Auto-assign 24-hour free trial ──────────────────────────────────────
+  // // The free trial is automatically granted on registration (one-time only)
+  // // Users can also manually activate via POST /subscription/activate-free-trial
+  // await subscriptionService.assignFreeTrial(String(newUser._id));
 
   const accessToken = jwtHelper.generateToken(
     { email: newUser.email, role: newUser.role },
