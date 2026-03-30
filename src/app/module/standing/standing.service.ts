@@ -1,4 +1,5 @@
 import { IMatch } from "../match/match.interface";
+import Match from "../match/match.model";
 import Standing from "./standing.model";
 
 const POINTS = { WIN: 3, DRAW: 1, LOSS: 0 };
@@ -38,6 +39,22 @@ export const applyCompletedMatchToStandings = async (match: IMatch) => {
     ? (league as any)._id.toString() 
     : league.toString();
 
+  // ✅ NEW: Calculate winner by SET WINS (not total games)
+  let t1SetsWon = 0;
+  let t2SetsWon = 0;
+
+  for (const set of matchScore.sets) {
+    const teamOneGames = set.teamOneGames || 0;
+    const teamTwoGames = set.teamTwoGames || 0;
+
+    if (teamOneGames > teamTwoGames) {
+      t1SetsWon += 1;
+    } else if (teamTwoGames > teamOneGames) {
+      t2SetsWon += 1;
+    }
+  }
+
+  // Calculate total goals for standings tracking
   const t1Goals = matchScore.sets.reduce(
     (a, s) => a + (s.teamOneGames || 0),
     0
@@ -64,23 +81,32 @@ export const applyCompletedMatchToStandings = async (match: IMatch) => {
   s1.played += 1;
   s2.played += 1;
 
-  // goals
+  // goals (for reference/historical tracking)
   s1.goalsFor += t1Goals;
   s1.goalsAgainst += t2Goals;
   s2.goalsFor += t2Goals;
   s2.goalsAgainst += t1Goals;
 
-  // W/D/L & points
-  if (t1Goals === t2Goals) {
+  // ✅ Sets tracking
+  s1.setsFor += t1SetsWon;
+  s1.setsAgainst += t2SetsWon;
+  s2.setsFor += t2SetsWon;
+  s2.setsAgainst += t1SetsWon;
+
+  // ✅ W/D/L & points based on SET WINS
+  if (t1SetsWon === t2SetsWon) {
+    // Draw in sets
     s1.drawn += 1;
     s2.drawn += 1;
     s1.points += POINTS.DRAW;
     s2.points += POINTS.DRAW;
-  } else if (winnerTeam && winnerTeam.toString() === teamOne.toString()) {
+  } else if (t1SetsWon > t2SetsWon) {
+    // Team 1 won more sets
     s1.won += 1;
     s2.lost += 1;
     s1.points += POINTS.WIN;
   } else {
+    // Team 2 won more sets
     s2.won += 1;
     s1.lost += 1;
     s2.points += POINTS.WIN;
@@ -88,9 +114,40 @@ export const applyCompletedMatchToStandings = async (match: IMatch) => {
 
   s1.goalDifference = s1.goalsFor - s1.goalsAgainst;
   s2.goalDifference = s2.goalsFor - s2.goalsAgainst;
+  s1.setDifference = s1.setsFor - s1.setsAgainst;
+  s2.setDifference = s2.setsFor - s2.setsAgainst;
 
   await Promise.all([s1.save(), s2.save()]);
   await recalcPositions(leagueId);
+};
+
+export const rebuildLeagueStandingsForCompletedMatches = async (
+  leagueId: string
+) => {
+  if (!leagueId) return;
+
+  await Standing.deleteMany({ league: leagueId });
+
+  const completedMatches = await Match.find({
+    league: leagueId,
+    matchStatus: "completed",
+    "matchScore.sets.0": { $exists: true },
+  })
+    .sort({ matchDateTime: 1, createdAt: 1 })
+    .select("teamOne teamTwo winnerTeam league matchScore referee");
+
+  for (const match of completedMatches) {
+    await applyCompletedMatchToStandings(match as unknown as IMatch);
+  }
+
+  await Match.updateMany({ league: leagueId }, { $set: { standingsApplied: false } });
+
+  if (completedMatches.length) {
+    await Match.updateMany(
+      { _id: { $in: completedMatches.map((m) => m._id) } },
+      { $set: { standingsApplied: true } }
+    );
+  }
 };
 
 // --- Optional admin helpers (list, get, update, delete) ---

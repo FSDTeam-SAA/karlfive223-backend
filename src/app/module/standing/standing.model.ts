@@ -14,6 +14,9 @@ const standingSchema = new Schema<IStanding>(
     goalsFor: { type: Number, default: 0 },
     goalsAgainst: { type: Number, default: 0 },
     goalDifference: { type: Number, default: 0 },
+    setsFor: { type: Number, default: 0 },
+    setsAgainst: { type: Number, default: 0 },
+    setDifference: { type: Number, default: 0 },
     points: { type: Number, default: 0 },
   },
   { timestamps: true }

@@ -12,5 +12,8 @@ export interface IStanding extends Document {
   goalsFor: number;
   goalsAgainst: number;
   goalDifference: number;
+  setsFor: number;
+  setsAgainst: number;
+  setDifference: number;
   points: number;
 }
