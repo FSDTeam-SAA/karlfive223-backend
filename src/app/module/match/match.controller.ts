@@ -1,12 +1,41 @@
 import { Request, Response } from "express";
+import { JwtPayload, Secret } from "jsonwebtoken";
 import mongoose from "mongoose";
+import config from "../../config";
 import AppError from "../../error/appError";
+import { jwtHelper } from "../../helper/jwtHelper";
 import pick from "../../helper/pike";
 import catchAsycn from "../../utils/catchAsycn";
 import sendResponse from "../../utils/sendRespopnse";
 import League from "../league/league.model";
 import Match from "./match.model";
 import matchService from "./match.service";
+
+const getCurrentUserIdFromRequest = (req: Request) => {
+  const fromReqUser = req.user?._id || req.user?.id;
+  if (fromReqUser) {
+    return fromReqUser.toString();
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return undefined;
+  }
+
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.split(" ")[1]
+    : authHeader;
+
+  try {
+    const decoded = jwtHelper.verifyToken(
+      token,
+      config.jwt.access_secret as Secret
+    ) as JwtPayload | any;
+    return decoded?._id?.toString?.() || decoded?.id?.toString?.();
+  } catch {
+    return undefined;
+  }
+};
 
 
 export const generateMatchesForLeague = catchAsycn(async (req: Request, res: Response) => {
@@ -51,7 +80,8 @@ export const generateMatchesForLeague = catchAsycn(async (req: Request, res: Res
 
 
 const createMatch = catchAsycn(async (req: Request, res: Response) => {
-  const result = await matchService.createMatch(req.body);
+  const currentUserId = getCurrentUserIdFromRequest(req);
+  const result = await matchService.createMatch(req.body, currentUserId);
 
   sendResponse(res, {
     statusCode: 201,
@@ -157,8 +187,64 @@ const getSingleMatch = catchAsycn(async (req: Request, res: Response) => {
   });
 });
 
+const getMatchResultForEdit = catchAsycn(async (req: Request, res: Response) => {
+  const result = await matchService.getSingleMatch(req.params.id);
+
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Match not found",
+      data: null,
+    });
+  }
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Match result fetched successfully",
+    data: result,
+  });
+});
+
+const editCompletedMatchScore = catchAsycn(async (req: Request, res: Response) => {
+  const { matchScore, winnerTeam } = req.body;
+
+  if (!matchScore || !Array.isArray(matchScore.sets) || !matchScore.sets.length) {
+    throw new AppError(400, "matchScore.sets is required to correct a completed match.");
+  }
+
+  const currentUserId = getCurrentUserIdFromRequest(req);
+  const result = await matchService.editCompletedMatchScore(
+    req.params.id,
+    { matchScore, winnerTeam },
+    currentUserId
+  );
+
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Match not found",
+      data: null,
+    });
+  }
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Match score corrected and standings regenerated successfully",
+    data: result,
+  });
+});
+
 const updateMatch = catchAsycn(async (req: Request, res: Response) => {
-  const result = await matchService.updateMatch(req.params.id, req.body);
+  const currentUserId = getCurrentUserIdFromRequest(req);
+  const result = await matchService.updateMatch(
+    req.params.id,
+    req.body,
+    currentUserId
+  );
 
   if (!result) {
     return sendResponse(res, {
@@ -201,6 +287,33 @@ const updateMatch = catchAsycn(async (req: Request, res: Response) => {
     success: true,
     message: "Match updated successfully",
     data: responseData,
+  });
+});
+
+const assignCourtNumber = catchAsycn(async (req: Request, res: Response) => {
+  const { courtNumber } = req.body;
+  const currentUserId = getCurrentUserIdFromRequest(req);
+
+  const result = await matchService.updateMatch(
+    req.params.id,
+    { courtNumber } as any,
+    currentUserId
+  );
+
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Match not found",
+      data: null,
+    });
+  }
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Court number assigned successfully",
+    data: result,
   });
 });
 
@@ -256,8 +369,11 @@ const getTeamFixturesByLeague = catchAsycn(async (req: Request, res: Response) =
 export default {
   createMatch,
   getAllMatches,
+  getMatchResultForEdit,
   getSingleMatch,
+  editCompletedMatchScore,
   updateMatch,
+  assignCourtNumber,
   deleteMatch,
   getPlayerNextMatches,
   getTeamFixturesByLeague,

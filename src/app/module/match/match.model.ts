@@ -19,6 +19,7 @@ const matchSchema = new Schema<IMatch>(
       },
     },
     matchVenue: { type: Schema.Types.ObjectId, ref: "Vanue" },
+    courtNumber: { type: String, trim: true },
     league: { type: Schema.Types.ObjectId, ref: "League", required: true },
     matchStatus: {
       type: String,

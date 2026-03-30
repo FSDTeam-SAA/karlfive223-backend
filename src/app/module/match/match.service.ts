@@ -2,14 +2,39 @@ import AppError from "../../error/appError";
 import pagenation from "../../helper/pagenation";
 import { createAndSendNotifications } from "../../helper/socketHelper";
 import { IOption } from "../../interface";
+import League from "../league/league.model";
 import { Notification } from "../notification/notification.model";
-import { applyCompletedMatchToStandings } from "../standing/standing.service";
+import { rebuildLeagueStandingsForCompletedMatches } from "../standing/standing.service";
 import Team from "../team/team.model";
 import { IMatch } from "./match.interface";
 import Match from "./match.model";
 
+const ensureLeagueOwnerCanManageMatch = async (
+  leagueId: any,
+  currentUserId?: string
+) => {
+  if (!currentUserId) {
+    throw new AppError(401, "Only league owner can manage this match.");
+  }
+  const league = await League.findById(leagueId).select("user");
+  if (!league) {
+    throw new AppError(404, "League not found.");
+  }
+
+  if (league.user.toString() !== currentUserId.toString()) {
+    throw new AppError(403, "Only league owner can manage this match.");
+  }
+};
+
+const getLeagueId = (league: any) => {
+  if (!league) return "";
+  return typeof league === "object" && league?._id
+    ? league._id.toString()
+    : league.toString();
+};
+
 // --- Create match ---
-const createMatch = async (payload: IMatch) => {
+const createMatch = async (payload: IMatch, currentUserId?: string) => {
   if (!payload.teamOne || !payload.teamTwo) {
     throw new AppError(400, "Both teams are required.");
   }
@@ -30,21 +55,35 @@ const createMatch = async (payload: IMatch) => {
   }
   payload.league = t1.league; // normalize
 
+  if (payload.courtNumber !== undefined) {
+    await ensureLeagueOwnerCanManageMatch(payload.league, currentUserId);
+  }
+
   const match = await Match.create(payload);
 
-  if (match.matchStatus === "completed" && !match.standingsApplied) {
-    await applyCompletedMatchToStandings(match);
-    match.standingsApplied = true;
-    await match.save();
+  if (match.matchStatus === "completed") {
+    const leagueId = getLeagueId(match.league);
+    if (leagueId) {
+      await rebuildLeagueStandingsForCompletedMatches(leagueId);
+      match.standingsApplied = true;
+      await match.save();
+    }
   }
 
   return match.populate("teamOne teamTwo league matchVenue referee winnerTeam");
 };
 
 // --- Update match ---
-const updateMatch = async (id: string, payload: Partial<IMatch>) => {
+const updateMatch = async (
+  id: string,
+  payload: Partial<IMatch>,
+  currentUserId?: string
+) => {
   const match = await Match.findById(id);
   if (!match) return null;
+
+  const oldMatchStatus = match.matchStatus;
+  const scoreChanged = payload.matchScore !== undefined;
 
   // Store old match date to detect changes
   const oldMatchDateTime = match.matchDateTime;
@@ -61,6 +100,11 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
       throw new AppError(400, "Both teams must belong to the same league.");
     }
     payload.league = t1.league;
+  }
+
+  if (payload.courtNumber !== undefined) {
+    const leagueId = payload.league ?? match.league;
+    await ensureLeagueOwnerCanManageMatch(leagueId, currentUserId);
   }
 
   Object.assign(match, payload);
@@ -115,27 +159,41 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
 
   // Only apply once
   if (match.matchStatus === "completed") {
-    // Calculate total games for both teams
-    const t1Goals = match.matchScore?.sets.reduce((a, s) => a + (s.teamOneGames || 0), 0) || 0;
-    const t2Goals = match.matchScore?.sets.reduce((a, s) => a + (s.teamTwoGames || 0), 0) || 0;
+    // ✅ NEW: Calculate winner by SET WINS (not total games)
+    if (scoreChanged && payload.winnerTeam === undefined && match.matchScore) {
+      let t1SetsWon = 0;
+      let t2SetsWon = 0;
 
-    // Determine winner or draw (check if winnerTeam was explicitly set, otherwise infer from scores)
-    if (match.winnerTeam === undefined && match.matchScore) {
-      // If no explicit winner set, infer by total games
-      if (t1Goals > t2Goals) {
-        match.winnerTeam = match.teamOne as any;
-      } else if (t2Goals > t1Goals) {
-        match.winnerTeam = match.teamTwo as any;
-      } else {
-        // It's a draw - explicitly set to null
-        match.winnerTeam = null;
+      for (const set of match.matchScore.sets) {
+        const teamOneGames = set.teamOneGames || 0;
+        const teamTwoGames = set.teamTwoGames || 0;
+
+        if (teamOneGames > teamTwoGames) {
+          t1SetsWon += 1;
+        } else if (teamTwoGames > teamOneGames) {
+          t2SetsWon += 1;
+        }
       }
+
+      if (t1SetsWon === t2SetsWon) {
+        // Draw
+        match.winnerTeam = null;
+      } else if (t1SetsWon > t2SetsWon) {
+        match.winnerTeam = match.teamOne as any;
+      } else {
+        match.winnerTeam = match.teamTwo as any;
+      }
+      await match.save();
     }
 
     const teamOne = match.teamOne as any;
     const teamTwo = match.teamTwo as any;
     const league = match.league as any;
     const leagueName = league?.leagueName || "League";
+
+    // Calculate total games for notification message
+    const t1Goals = match.matchScore?.sets.reduce((a, s) => a + (s.teamOneGames || 0), 0) || 0;
+    const t2Goals = match.matchScore?.sets.reduce((a, s) => a + (s.teamTwoGames || 0), 0) || 0;
 
     // Check if it's a draw (winnerTeam is null)
     const isDraw = match.winnerTeam === null;
@@ -189,19 +247,48 @@ const updateMatch = async (id: string, payload: Partial<IMatch>) => {
       }
     }
 
-    // ✅ FIX: Extract league ID properly (handle populated league object)
-    const leagueId = typeof league === 'object' && league?._id 
-      ? league._id.toString() 
-      : league?.toString();
+  }
 
+  // Rebuild standings whenever a completed match is edited or status changes to/from completed.
+  if (oldMatchStatus === "completed" || match.matchStatus === "completed") {
+    const leagueId = getLeagueId(match.league);
     if (leagueId) {
-      await applyCompletedMatchToStandings(match);
-      match.standingsApplied = true;
+      await rebuildLeagueStandingsForCompletedMatches(leagueId);
+      match.standingsApplied = match.matchStatus === "completed";
       await match.save();
     }
   }
 
   return match.populate("teamOne teamTwo league matchVenue referee winnerTeam");
+};
+
+const editCompletedMatchScore = async (
+  id: string,
+  payload: Pick<IMatch, "matchScore" | "winnerTeam">,
+  currentUserId?: string
+) => {
+  const existingMatch = await Match.findById(id);
+  if (!existingMatch) return null;
+
+  if (existingMatch.matchStatus !== "completed") {
+    throw new AppError(
+      400,
+      "Only completed match scores can be corrected from this endpoint."
+    );
+  }
+
+  await ensureLeagueOwnerCanManageMatch(existingMatch.league, currentUserId);
+
+  const updatePayload: Partial<IMatch> = {
+    matchStatus: "completed",
+    matchScore: payload.matchScore,
+  };
+
+  if (payload.winnerTeam !== undefined) {
+    updatePayload.winnerTeam = payload.winnerTeam;
+  }
+
+  return updateMatch(id, updatePayload, currentUserId);
 };
 
 // --- Queries ---
@@ -299,6 +386,7 @@ const getTeamFixturesByLeague = async (teamId: string, leagueId: string) => {
 
 export default { 
   createMatch, 
+  editCompletedMatchScore,
   updateMatch, 
   getAllMatches, 
   getSingleMatch, 

@@ -5,6 +5,7 @@ export interface IMatch extends Document {
   teamTwo: ObjectId;
   matchDateTime: Date; // Combined date and time for easier querying
   matchVenue: ObjectId;
+  courtNumber?: string;
   league: ObjectId;
   matchStatus: "upcoming" | "live" | "completed" | "postponed";
   winnerTeam?: ObjectId | null; // Optional: only for completed matches with a winner, null for draws
