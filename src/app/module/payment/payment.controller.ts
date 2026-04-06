@@ -2,6 +2,11 @@ import Stripe from 'stripe';
 import AppError from '../../error/appError';
 import catchAsycn from '../../utils/catchAsycn';
 import sendResponse from '../../utils/sendRespopnse';
+import AmericanoLeague from '../americano/americanoLeague.model';
+import AmericanoMatch from '../americano/americanoMatch.model';
+import Event from '../event/event.model';
+import League from '../league/league.model';
+import Match from '../match/match.model';
 import { PLAN_DETAILS, SubscriptionPlanType } from '../subscription/subscription.constant';
 import User from '../user/user.model';
 import { Payment } from './payment.model';
@@ -136,5 +141,376 @@ export const allPayment = catchAsycn(async (_req, res) => {
     success: true,
     message: 'All payments',
     data: payment,
+  });
+});
+
+// ─── Manager Analytics: Subscription income (day + month) ───────────────────
+export const getSubscriptionIncomeDayMonth = catchAsycn(async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  const matchStage: any = {
+    type: 'subscription',
+    status: 'success',
+  };
+
+  if (startDate || endDate) {
+    matchStage.createdAt = {};
+    if (startDate) {
+      const start = new Date(String(startDate));
+      start.setHours(0, 0, 0, 0);
+      matchStage.createdAt.$gte = start;
+    }
+    if (endDate) {
+      const end = new Date(String(endDate));
+      end.setHours(23, 59, 59, 999);
+      matchStage.createdAt.$lte = end;
+    }
+  }
+
+  const [dayWise, monthWise, total] = await Promise.all([
+    Payment.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$createdAt',
+            },
+          },
+          income: { $sum: '$amount' },
+          totalPayments: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          day: '$_id',
+          income: 1,
+          totalPayments: 1,
+        },
+      },
+    ]),
+    Payment.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: '%Y-%m',
+              date: '$createdAt',
+            },
+          },
+          income: { $sum: '$amount' },
+          totalPayments: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          month: '$_id',
+          income: 1,
+          totalPayments: 1,
+        },
+      },
+    ]),
+    Payment.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: null,
+          totalIncome: { $sum: '$amount' },
+          totalPayments: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalIncome: 1,
+          totalPayments: 1,
+        },
+      },
+    ]),
+  ]);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Subscription income (day/month) fetched successfully',
+    data: {
+      summary: total[0] || { totalIncome: 0, totalPayments: 0 },
+      dayWise,
+      monthWise,
+    },
+  });
+});
+
+// ─── Manager Analytics: Subscription income by category(plan) ───────────────
+export const getSubscriptionIncomeCategoryWise = catchAsycn(async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  const matchStage: any = {
+    type: 'subscription',
+    status: 'success',
+  };
+
+  if (startDate || endDate) {
+    matchStage.createdAt = {};
+    if (startDate) {
+      const start = new Date(String(startDate));
+      start.setHours(0, 0, 0, 0);
+      matchStage.createdAt.$gte = start;
+    }
+    if (endDate) {
+      const end = new Date(String(endDate));
+      end.setHours(23, 59, 59, 999);
+      matchStage.createdAt.$lte = end;
+    }
+  }
+
+  const [monthCategoryRows, monthTotalsRows, overallTotalsRows, overallCategoryRows] =
+    await Promise.all([
+      Payment.aggregate([
+        { $match: matchStage },
+        {
+          $group: {
+            _id: {
+              month: {
+                $dateToString: {
+                  format: '%Y-%m',
+                  date: '$createdAt',
+                },
+              },
+              category: { $ifNull: ['$subscriptionPlan', 'unknown'] },
+            },
+            income: { $sum: '$amount' },
+            totalPayments: { $sum: 1 },
+          },
+        },
+        { $sort: { '_id.month': 1, income: -1 } },
+        {
+          $project: {
+            _id: 0,
+            month: '$_id.month',
+            category: '$_id.category',
+            income: 1,
+            totalPayments: 1,
+          },
+        },
+      ]),
+      Payment.aggregate([
+        { $match: matchStage },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: '%Y-%m',
+                date: '$createdAt',
+              },
+            },
+            totalIncome: { $sum: '$amount' },
+            totalPayments: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+        {
+          $project: {
+            _id: 0,
+            month: '$_id',
+            totalIncome: 1,
+            totalPayments: 1,
+          },
+        },
+      ]),
+      Payment.aggregate([
+        { $match: matchStage },
+        {
+          $group: {
+            _id: null,
+            totalIncome: { $sum: '$amount' },
+            totalPayments: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            totalIncome: 1,
+            totalPayments: 1,
+          },
+        },
+      ]),
+      Payment.aggregate([
+        { $match: matchStage },
+        {
+          $group: {
+            _id: { $ifNull: ['$subscriptionPlan', 'unknown'] },
+            income: { $sum: '$amount' },
+            totalPayments: { $sum: 1 },
+          },
+        },
+        { $sort: { income: -1 } },
+        {
+          $project: {
+            _id: 0,
+            category: '$_id',
+            income: 1,
+            totalPayments: 1,
+          },
+        },
+      ]),
+    ]);
+
+  const monthTotalsMap = new Map(
+    monthTotalsRows.map((row: any) => [row.month, row])
+  );
+
+  const monthGroups = new Map<string, any[]>();
+  for (const row of monthCategoryRows as any[]) {
+    const list = monthGroups.get(row.month) || [];
+    const monthSummary = monthTotalsMap.get(row.month) || {
+      totalIncome: 0,
+      totalPayments: 0,
+    };
+
+    const percentageByAmount =
+      monthSummary.totalIncome > 0
+        ? Number(((row.income / monthSummary.totalIncome) * 100).toFixed(2))
+        : 0;
+    const percentageByCount =
+      monthSummary.totalPayments > 0
+        ? Number(
+            ((row.totalPayments / monthSummary.totalPayments) * 100).toFixed(2)
+          )
+        : 0;
+
+    list.push({
+      category: row.category,
+      income: row.income,
+      totalPayments: row.totalPayments,
+      percentageByAmount,
+      percentageByCount,
+    });
+
+    monthGroups.set(row.month, list);
+  }
+
+  const monthWise = monthTotalsRows.map((monthRow: any) => ({
+    month: monthRow.month,
+    totalIncome: monthRow.totalIncome,
+    totalPayments: monthRow.totalPayments,
+    categories: monthGroups.get(monthRow.month) || [],
+  }));
+
+  const overallSummary = overallTotalsRows[0] || {
+    totalIncome: 0,
+    totalPayments: 0,
+  };
+
+  const overallCategoryWise = (overallCategoryRows as any[]).map((row) => ({
+    category: row.category,
+    income: row.income,
+    totalPayments: row.totalPayments,
+    percentageByAmount:
+      overallSummary.totalIncome > 0
+        ? Number(((row.income / overallSummary.totalIncome) * 100).toFixed(2))
+        : 0,
+    percentageByCount:
+      overallSummary.totalPayments > 0
+        ? Number(
+            ((row.totalPayments / overallSummary.totalPayments) * 100).toFixed(
+              2
+            )
+          )
+        : 0,
+  }));
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Subscription income by category fetched successfully',
+    data: {
+      summary: overallSummary,
+      overallCategoryWise,
+      monthWise,
+    },
+  });
+});
+
+// ─── Manager KPI ────────────────────────────────────────────────────────────
+export const getManagerPaymentKPI = catchAsycn(async (_req, res) => {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  const monthEnd = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  );
+
+  const [monthlyIncomeAgg, activeEvents, activeLeagueIds, activeAmericanoLeagueIds] =
+    await Promise.all([
+      Payment.aggregate([
+        {
+          $match: {
+            status: 'success',
+            createdAt: { $gte: monthStart, $lte: monthEnd },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalMonthlyIncome: { $sum: '$amount' },
+            totalPayments: { $sum: 1 },
+          },
+        },
+      ]),
+      Event.countDocuments({
+        status: 'approved',
+        endDate: { $gte: now },
+      }),
+      Match.distinct('league', { matchStatus: { $ne: 'completed' } }),
+      AmericanoMatch.distinct('league', { matchStatus: { $ne: 'completed' } }),
+    ]);
+
+  const [activePublicLeagues, activePrivateLeagues, activeAmericanoLeagues] =
+    await Promise.all([
+      League.countDocuments({
+        _id: { $in: activeLeagueIds },
+        leagueType: 'public',
+      }),
+      League.countDocuments({
+        _id: { $in: activeLeagueIds },
+        leagueType: 'private',
+      }),
+      AmericanoLeague.countDocuments({
+        _id: { $in: activeAmericanoLeagueIds },
+      }),
+    ]);
+
+  const summary = monthlyIncomeAgg[0] || {
+    totalMonthlyIncome: 0,
+    totalPayments: 0,
+  };
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Manager KPI fetched successfully',
+    data: {
+      totalMonthlyIncome: summary.totalMonthlyIncome,
+      totalMonthlyPayments: summary.totalPayments,
+      activeEvents,
+      activePublicLeagues,
+      activePrivateAndAmericanoLeagues: activePrivateLeagues + activeAmericanoLeagues,
+      breakdown: {
+        activePrivateLeagues,
+        activeAmericanoLeagues,
+      },
+    },
   });
 });
