@@ -2,6 +2,19 @@ import catchAsycn from "../../utils/catchAsycn";
 import sendResponse from "../../utils/sendRespopnse";
 import { userServices } from "./user.service";
 
+/**
+ * Register a new user
+ * @body {
+ *   name: string,
+ *   email: string,
+ *   password: string,
+ *   phoneNumber: string,
+ *   gender: "Male" | "Female" | "Other",
+ *   playingLevel?: "Beginner" | "Intermediate" | "Intermediate high" | "Advance" | "Pro",
+ *   referredByName?: string (optional - name of referral person),
+ *   referredBy?: ObjectId (optional - id of referral person)
+ * }
+ */
 const createUser = catchAsycn(async (req, res) => {
   const result = await userServices.createUser(req.body);
   sendResponse(res, {

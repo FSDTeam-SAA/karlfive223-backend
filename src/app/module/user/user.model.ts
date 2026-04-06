@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     clubAffiliation: { type: String },
     birthday: { type: Date },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ReferralPerson",
+      default: null,
+    },
     refreshToken: { type: String, default: null },
     // ─── Subscription tracking ─────────────────────────────────────────────────
     isOrganizer: { type: Boolean, default: false },

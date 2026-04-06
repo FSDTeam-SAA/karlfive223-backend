@@ -1,5 +1,6 @@
 import express from "express";
 import { adminRouter } from "../module/admin/admin.routes";
+import { americanoRouter } from "../module/americano/americano.routes";
 import { authRouter } from "../module/auth/auth.routes";
 import { chatRouter } from "../module/chat/chat.route";
 import { contactRouter } from "../module/contact/contact.routes";
@@ -8,6 +9,7 @@ import { leagueRouter } from "../module/league/league.routes";
 import { matchRouter } from "../module/match/match.routes";
 import { notificationRouter } from "../module/notification/notification.route";
 import { paymentRouter } from "../module/payment/payment.route";
+import { referralRouter } from "../module/referral/referral.routes";
 import { reportRouter } from "../module/report/report.routes";
 import { standingRouter } from "../module/standing/standing.routes";
 import { subscriptionRouter } from "../module/subscription/subscription.routes";
@@ -19,6 +21,7 @@ const allRouter = [
   { path: "/user", name: userRouter },
   { path: "/auth", name: authRouter },
   { path: "/admin", name: adminRouter },
+  { path: "/americano", name: americanoRouter },
   { path: "/league", name: leagueRouter },
   { path: "/team", name: teamRouter },
   { path: "/match", name: matchRouter },
@@ -26,6 +29,7 @@ const allRouter = [
   { path: "/report", name: reportRouter },
   { path: "/standing", name: standingRouter },
   { path: "/payment", name: paymentRouter },
+  { path: "/referral", name: referralRouter },
   { path: "/notification", name: notificationRouter },
   { path: "/chat", name: chatRouter },
   { path: "/subscription", name: subscriptionRouter },

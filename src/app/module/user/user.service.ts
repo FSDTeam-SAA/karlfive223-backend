@@ -3,17 +3,48 @@ import config from "../../config";
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
 import { jwtHelper } from "../../helper/jwtHelper";
+import { referralService } from "../referral/referral.service";
 import { PLAN_DETAILS } from "../subscription/subscription.constant";
 import { subscriptionService } from "../subscription/subscription.service";
 import { IUser } from "./user.interface";
 import User from "./user.model";
 
-const createUser = async (payload: Partial<IUser>) => {
+type IUserRegistrationPayload = Partial<IUser> & {
+  referredByName?: string;
+};
+
+const createUser = async (payload: IUserRegistrationPayload) => {
   const existingUser = await User.findOne({ email: payload.email });
   if (existingUser) {
     throw new AppError(400, "User already exists");
   }
-  const newUser = await User.create(payload);
+
+  const createPayload: IUserRegistrationPayload = { ...payload };
+  let referralId: string | null = null;
+
+  if (createPayload.referredBy) {
+    const referral = await referralService.findReferralById(
+      String(createPayload.referredBy)
+    );
+    if (!referral) {
+      throw new AppError(400, "Invalid referral person");
+    }
+    referralId = String(referral._id);
+    createPayload.referredBy = referral._id;
+  } else if (createPayload.referredByName) {
+    const referral = await referralService.findReferralByName(
+      createPayload.referredByName
+    );
+    if (!referral) {
+      throw new AppError(400, "Invalid referral person");
+    }
+    referralId = String(referral._id);
+    createPayload.referredBy = referral._id;
+  }
+
+  delete createPayload.referredByName;
+
+  const newUser = await User.create(createPayload);
 
   if (!newUser) {
     throw new AppError(400, "User creation failed");
@@ -42,6 +73,11 @@ const createUser = async (payload: Partial<IUser>) => {
     config.jwt.refresh_secret as Secret,
     config.jwt.refresh_expires_in
   );
+
+  if (referralId) {
+    await referralService.increaseReferralJoinCount(referralId);
+  }
+
   newUser.refreshToken = refreshToken;
   await newUser.save();
 
@@ -55,9 +91,25 @@ const createUser = async (payload: Partial<IUser>) => {
   // await newUser.save();
 
   // Remove password before returning
-  const { password: _, ...result } = newUser.toObject();
+  const userObject = newUser.toObject();
+  const { password: _, ...result } = userObject;
 
-  return { result, accessToken, refreshToken };
+  // Populate referral person details if user joined via referral
+  let finalResult: any = result;
+  if (result.referredBy) {
+    const referralPerson = await referralService.findReferralById(String(result.referredBy));
+    if (referralPerson) {
+      finalResult = {
+        ...result,
+        referralPersonDetails: {
+          _id: referralPerson._id,
+          name: referralPerson.name,
+        },
+      };
+    }
+  }
+
+  return { result: finalResult, accessToken, refreshToken };
 };
 
 const getUserByEmail = async (email: string) => {

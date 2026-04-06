@@ -1,16 +1,17 @@
-import mongoose, { Types } from "mongoose";
 import { createServer } from "http";
+import mongoose, { Types } from "mongoose";
+import cron from "node-cron";
 import { Server as SocketIOServer } from "socket.io";
 import app from "./app";
 import config from "./app/config";
-import cron from "node-cron";
+import { setSocketInstance } from "./app/helper/socketHelper";
+import { americanoService } from "./app/module/americano/americano.service";
 import League from "./app/module/league/league.model";
 import Match from "./app/module/match/match.model";
-import Standing from "./app/module/standing/standing.model";
 import { Notification } from "./app/module/notification/notification.model";
-import Team from "./app/module/team/team.model";
 import { Payment } from "./app/module/payment/payment.model";
-import { setSocketInstance } from "./app/helper/socketHelper";
+import Standing from "./app/module/standing/standing.model";
+import Team from "./app/module/team/team.model";
 
 const port = config.port || 5000;
 
@@ -312,6 +313,14 @@ const server = async () => {
           if (notifications.length > 0) {
             await Notification.insertMany(notifications);
           }
+        }
+
+        const americanoCronResult =
+          await americanoService.autoGenerateFixturesForDueLeagues();
+        if (americanoCronResult.generatedCount > 0) {
+          console.log(
+            `🎾 Americano auto-generation: ${americanoCronResult.generatedCount}/${americanoCronResult.checkedCount} leagues generated`
+          );
         }
       } catch (err) {
         console.error("❌ Error in cron job:", err);

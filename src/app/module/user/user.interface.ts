@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 export interface IUser {
   name: string;
   email: string;
@@ -19,6 +21,7 @@ export interface IUser {
     | "Pro";
   clubAffiliation?: string;
   birthday?: Date;
+  referredBy?: Types.ObjectId;
   refreshToken?: string;
   // ─── Subscription tracking ───────────────────────────────────────────────────
   /** True after the user purchases / activates the Club plan */
