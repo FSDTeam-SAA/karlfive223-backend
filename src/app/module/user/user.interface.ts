@@ -32,4 +32,7 @@ export interface IUser {
   leaguesCreatedCount: number;
   /** How many private leagues this user has joined in the current billing period */
   leaguesJoinedCount: number;
+  // ─── Stripe Integration ──────────────────────────────────────────────────────
+  /** Stripe customer ID for auto-subscription recurring payments */
+  stripeCustomerId?: string;
 }

@@ -5,6 +5,7 @@ export interface IPayment {
   league: Types.ObjectId
   team: Types.ObjectId
   amount: number
+  stripeCustomerId: string
   status: 'pending' | 'success' | 'failed'
   transactionId: string
   type: 'subscription' | 'league'

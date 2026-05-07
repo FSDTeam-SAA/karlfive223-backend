@@ -1,15 +1,22 @@
-import express, { NextFunction, Request, Response } from "express";
-import cors from "cors";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+import express, { NextFunction, Request, Response } from "express";
 import morgan from "morgan";
-import router from "./app/routes/routes";
 import globalErrorHander from "./app/middlewares/globalError";
+import router from "./app/routes/routes";
 
 const app = express();
 
 // app works
 
 app.use(cors({ origin: true, credentials: true }));
+
+// Webhook raw body parsing - must be before json parsing
+app.post(
+  "/api/v1/recurring-subscription/webhook",
+  express.raw({ type: "application/json" })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
