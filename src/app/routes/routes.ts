@@ -2,6 +2,7 @@ import express from "express";
 import { adminRouter } from "../module/admin/admin.routes";
 import { americanoRouter } from "../module/americano/americano.routes";
 import { authRouter } from "../module/auth/auth.routes";
+import { autoSubscriptionRouter } from "../module/autoSubscription/autoSubscription.route";
 import { chatRouter } from "../module/chat/chat.route";
 import { contactRouter } from "../module/contact/contact.routes";
 import { eventRouter } from "../module/event/event.routes";
@@ -9,6 +10,7 @@ import { leagueRouter } from "../module/league/league.routes";
 import { matchRouter } from "../module/match/match.routes";
 import { notificationRouter } from "../module/notification/notification.route";
 import { paymentRouter } from "../module/payment/payment.route";
+import { recurringSubscriptionRouter } from "../module/recurringSubscription/recurringSubscription.route";
 import { referralRouter } from "../module/referral/referral.routes";
 import { reportRouter } from "../module/report/report.routes";
 import { standingRouter } from "../module/standing/standing.routes";
@@ -33,6 +35,8 @@ const allRouter = [
   { path: "/notification", name: notificationRouter },
   { path: "/chat", name: chatRouter },
   { path: "/subscription", name: subscriptionRouter },
+  { path: "/auto-subscription", name: autoSubscriptionRouter },
+  { path: "/recurring-subscription", name: recurringSubscriptionRouter },
   { path: "/event", name: eventRouter },
 ];
 

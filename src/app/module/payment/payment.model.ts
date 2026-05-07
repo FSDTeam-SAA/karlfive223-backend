@@ -12,6 +12,9 @@ const paymentSchema = new Schema<IPayment>({
     enum: ['free', 'basic', 'gold', 'club'],
     default: null,
   },
+      stripeCustomerId: {
+      type: String,
+    },
   amount: { type: Number },
   transactionId: { type: String },
   status: {

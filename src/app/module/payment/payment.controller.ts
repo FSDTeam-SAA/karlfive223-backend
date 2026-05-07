@@ -41,9 +41,21 @@ export const createPayment = catchAsycn(async (req, res) => {
   }
 
   try {
+    // let customerId = user.stripeCustomerId;
+    // if (!customerId) {
+    const user= await User.findById(userId);
+      const customer = await stripe.customers.create({
+        email: user!.email,
+        metadata: { userId },
+      });
+      const customerId = customer.id;
+      // await User.findByIdAndUpdate(userId, { stripeCustomerId: customerId });
+    // }
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
       currency: 'usd',
+      setup_future_usage: 'off_session',
+      customer: customerId,
       metadata: {
         userId,
         ...(league ? { league } : {}),
@@ -58,6 +70,7 @@ export const createPayment = catchAsycn(async (req, res) => {
       ...(league ? { league } : {}),
       ...(team ? { team } : {}),
       amount,
+      stripeCustomerId: customerId,
       transactionId: paymentIntent.id,
       status: 'pending',
       type: isSubscription ? 'subscription' : 'league',
@@ -79,7 +92,7 @@ export const createPayment = catchAsycn(async (req, res) => {
 
 // ─── Confirm Payment ──────────────────────────────────────────────────────────
 export const confirmPayment = catchAsycn(async (req, res) => {
-  const { paymentIntentId } = req.body;
+  const { paymentIntentId,paymentMethodId } = req.body;
 
   if (!paymentIntentId) {
     throw new AppError(400, 'paymentIntentId is required');
@@ -512,5 +525,42 @@ export const getManagerPaymentKPI = catchAsycn(async (_req, res) => {
         activeAmericanoLeagues,
       },
     },
+  });
+});
+
+// ─── Check User Subscription Active Status Using Token ─────────────────────
+export const checkUserSubscriptionStatus = catchAsycn(async (req, res) => {
+  const userId = req.user?.id || req.user?._id;
+
+  if (!userId) {
+    throw new AppError(401, 'User not authenticated');
+  }
+
+  // Find the latest active subscription for the user
+  const subscription = await Payment.findOne({
+    userId,
+    type: 'subscription',
+    status: 'success',
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  let isSubscriptionActive = false;
+
+  if (subscription) {
+    // Check if subscription is still valid (within expiry date)
+    const expiryDate = subscription.expiryDate as Date;
+    isSubscriptionActive = expiryDate > new Date();
+  }
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: isSubscriptionActive
+      ? 'User has active subscription'
+      : 'User does not have active subscription',
+    data:{
+      isActive: isSubscriptionActive,
+    }
   });
 });

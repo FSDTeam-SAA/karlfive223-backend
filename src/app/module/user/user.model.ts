@@ -57,6 +57,8 @@ const userSchema = new mongoose.Schema<IUser>(
     freeTrialUsed: { type: Boolean, default: false },
     leaguesCreatedCount: { type: Number, default: 0 },
     leaguesJoinedCount: { type: Number, default: 0 },
+    // ─── Stripe Integration ────────────────────────────────────────────────────
+    stripeCustomerId: { type: String, default: null },
   },
   { timestamps: true }
 );
