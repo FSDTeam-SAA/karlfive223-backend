@@ -3,6 +3,7 @@ import { userControllers } from "./user.controller";
 import auth from "../../middlewares/Auth";
 import { userrole } from "./user.constent";
 import { fileUploader } from "../../helper/fileUploded";
+import { createFCM } from "../fcm/fcm.controller";
 const router = express.Router();
 
 router.get(
@@ -37,6 +38,12 @@ router.delete(
   "/:id",
   auth(userrole.admin,userrole.manager, userrole.player),
   userControllers.deleteUser
+);
+
+
+router.post("/update-fcm-token",
+  auth(userrole.admin, userrole.manager, userrole.player),
+  createFCM
 );
 
 export const userRouter = router;
