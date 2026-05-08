@@ -176,6 +176,9 @@ ehthumbs_vista.db
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
+
+central.json
+
 # Windows Installer files
 *.cab
 *.msi

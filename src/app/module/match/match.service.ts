@@ -2,6 +2,7 @@ import AppError from "../../error/appError";
 import pagenation from "../../helper/pagenation";
 import { createAndSendNotifications } from "../../helper/socketHelper";
 import { IOption } from "../../interface";
+import { sendPushNotification } from "../../utils/sendPushNotification";
 import League from "../league/league.model";
 import { Notification } from "../notification/notification.model";
 import { rebuildLeagueStandingsForCompletedMatches } from "../standing/standing.service";
@@ -147,7 +148,7 @@ const updateMatch = async (
     const formattedDate = `${month} ${day}, ${year}, ${formattedTime}`;
 
     const message = `📅 Match date updated: ${teamOne.teamName} vs ${teamTwo.teamName} in ${league.leagueName} has been rescheduled to ${formattedDate}`;
-
+      sendPushNotification(userIds, "Match Rescheduled", message);
     // Create notifications in DB and send via Socket.IO
     await createAndSendNotifications(
       userIds, 
