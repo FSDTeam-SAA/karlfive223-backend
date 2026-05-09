@@ -564,3 +564,105 @@ export const checkUserSubscriptionStatus = catchAsycn(async (req, res) => {
     }
   });
 });
+
+export const webhookHandler = catchAsycn(async (req, res) => {
+  const {id,collection_method,customer,metadata, plan, status} = req.body.data.object as any;
+
+  console.log('Received webhook for collection_method:', collection_method, 'metadata:', metadata, 'plan:', plan);
+
+  console.log('Received webhook for event:', status);
+
+  console.log('Full webhook data:', JSON.stringify(req.body, null, 2));
+
+  if(collection_method === 'charge_automatically' && metadata?.type === 'subscription' && status === 'active'){
+    const userId = metadata.userId;
+    // const plan = plan;
+    // const planDetails = PLAN_DETAILS[plan];
+    if(userId && plan){
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 30);
+      await Payment.findOneAndUpdate(
+        { userId, type: 'subscription', subscriptionStatus: "active" },
+        { subscriptionStatus: 'past' }
+      );
+      await Payment.create({
+        userId,
+        amount: plan.price,
+        stripeCustomerId: customer,
+        transactionId: req.body.data.object.id,
+        status: 'success',
+        type: 'subscription',
+        subscriptionPlan: metadata.plan,
+        subscriptionId: id,
+        currency: plan.currency,
+        subscriptionStatus: status,
+        expiryDate,
+      });
+      await User.findByIdAndUpdate(userId, {
+        leaguesCreatedCount: 0,
+        leaguesJoinedCount: 0,
+        isOrganizer: plan === 'club',
+      });
+    }
+  }
+  else if(collection_method === 'charge_automatically' && metadata?.type === 'subscription' && status === 'canceled'){
+    const userId = metadata.userId;
+    const subscription = await Payment.findOne({
+      userId,
+      type: 'subscription',
+      subscriptionStatus: 'active',
+    }).sort({ createdAt: -1 });
+    if (subscription) {
+      subscription.subscriptionStatus = 'canceled';
+      await subscription.save();
+    }
+}
+
+  res.status(200).json({ received: true });
+})
+
+
+export const cancelSubscription = catchAsycn(async (req, res) => {
+  const userId = req.user?.id || req.user?._id;
+
+  if (!userId) {
+    throw new AppError(401, "User not authenticated");
+  }
+
+  // Find user
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  const subscription = await Payment.findOne({
+    userId,
+    type: 'subscription',
+    status: 'success',
+    subscriptionStatus: { $in: ['active', 'past_due'] },
+  }).sort({ createdAt: -1 });
+
+  // Check if subscription exists
+  if (!subscription?.subscriptionId) {
+    throw new AppError(400, "No active subscription found");
+  }
+
+  // Cancel Stripe subscription
+  const canceledSubscription = await stripe.subscriptions.cancel(
+    subscription.subscriptionId
+  );
+
+  // // Update user data
+  // user.subscriptionStatus = "canceled";
+  // user.subscriptionId = null;
+  // user.plan = "free";
+
+  // await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Subscription canceled successfully",
+    data: canceledSubscription,
+  });
+});

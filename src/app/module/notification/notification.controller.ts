@@ -4,6 +4,8 @@ import { Notification } from "./notification.model";
 import AppError from "../../error/appError";
 import { Types } from "mongoose";
 import { emitUnreadCount } from "../../helper/socketHelper";
+import User from "../user/user.model";
+import { sendPushNotification } from "../../utils/sendPushNotification";
 
 /***********************************
  * MARK SINGLE NOTIFICATION AS READ *
@@ -110,3 +112,28 @@ export const getUserNotifications = catchAsycn(
     })
   }
 )
+
+
+export const customNotification = catchAsycn(async(req,res)=>{
+  const {title, message } = req.body;
+  if( !title || !message){
+    throw new AppError(400, "title and message are required");
+  }
+  const user = await User.find({role: "player"}).select("_id");
+  const userIds = user.map((u) => u._id.toString());
+
+  console.log("Sending custom notification to users:", userIds);
+
+  sendPushNotification(
+    userIds,
+    title,
+    message
+  );
+
+  sendResponse(res,{
+    statusCode: 200,
+    message: "Notification sent to all users",
+    success: true,
+    data: null
+  })
+})

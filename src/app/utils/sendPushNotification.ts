@@ -14,9 +14,12 @@ export const sendPushNotification = async (
     //   fcmToken: { $exists: true, $ne: null },
     // }).select("fcmToken");
     const users = await FCM.find({
-      userId: { $in: userIds },
+      user: { $in: userIds },
       fcmToken: { $exists: true, $ne: null },
     }).select("fcmToken");
+    console.log(users)
+
+    console.log(`Found ${users} users with FCM tokens for notification.`);
 
     const tokens = users
       .map((u) => u.fcmToken)

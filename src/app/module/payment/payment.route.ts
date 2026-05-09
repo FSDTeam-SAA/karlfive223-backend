@@ -3,12 +3,14 @@ import auth from '../../middlewares/Auth'
 import { userrole } from '../user/user.constent'
 import {
     allPayment,
+    cancelSubscription,
     checkUserSubscriptionStatus,
     confirmPayment,
     createPayment,
     getManagerPaymentKPI,
     getSubscriptionIncomeCategoryWise,
     getSubscriptionIncomeDayMonth,
+    webhookHandler,
 } from './payment.controller'
 
 
@@ -16,6 +18,9 @@ const router = express.Router()
 
 // Create Payment
 router.post('/create-payment', createPayment)
+router.post('/webhook', webhookHandler)
+
+router.post('/cancel-subscription', auth(userrole.player, userrole.manager), cancelSubscription)
 
 // Confirm Payment
 router.post('/confirm-payment', confirmPayment)

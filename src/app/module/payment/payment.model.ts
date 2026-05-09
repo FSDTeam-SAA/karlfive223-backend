@@ -17,6 +17,12 @@ const paymentSchema = new Schema<IPayment>({
     },
   amount: { type: Number },
   transactionId: { type: String },
+  subscriptionId: { type: String }, // For Stripe subscription payments
+  subscriptionStatus: {
+    type: String,
+    enum: ['pending', 'active', 'canceled', 'past_due', 'unpaid', 'past'],
+    default: 'pending',
+  },
   status: {
     type: String,
     enum: ['pending', 'success', 'failed'],

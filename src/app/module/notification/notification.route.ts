@@ -1,5 +1,5 @@
 import express from 'express'
-import { getUserNotifications, markAllAsRead, markAsReadById } from './notification.controller'
+import { customNotification, getUserNotifications, markAllAsRead, markAsReadById } from './notification.controller'
 import Auth from '../../middlewares/Auth'
 
 const router = express.Router()
@@ -12,5 +12,7 @@ router.patch('/read/:notificationId', Auth('user', 'admin', 'player'), markAsRea
 
 // Get notifications for a user (must come LAST since it uses :userId parameter)
 router.get('/:userId', getUserNotifications)
+
+router.post("/send-notification", customNotification)
 
 export const notificationRouter = router

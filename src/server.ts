@@ -12,6 +12,7 @@ import { Notification } from "./app/module/notification/notification.model";
 import { Payment } from "./app/module/payment/payment.model";
 import Standing from "./app/module/standing/standing.model";
 import Team from "./app/module/team/team.model";
+import { sendPushNotification } from "./app/utils/sendPushNotification";
 
 const port = config.port || 5000;
 
@@ -93,7 +94,7 @@ const server = async () => {
 
     // Set up Socket.IO connections
     setSocketInstance(io);
-    
+
     io.on("connection", (socket) => {
       console.log(`✅ User connected: ${socket.id}`);
 
@@ -334,24 +335,52 @@ const server = async () => {
       try {
         const now = new Date();
 
+        const tenDaysLater = new Date();
+        tenDaysLater.setDate(tenDaysLater.getDate() + 10);
+
+        const startOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1
+        );
+
+        const endOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999
+        );
+
         // Find all subscriptions with status 'success' that have passed their expiry date
         const expiredSubscriptions = await Payment.find({
           type: "subscription",
           status: "success",
-          expiryDate: { $lte: now },
+          subscriptionStatus: { $in: ['canceled', 'past_due'] },
+          expiryDate: {
+            $gte: now,           // not expired yet
+            $lte: tenDaysLater,  // within next 10 days
+          },
+          updatedAt: {
+            $gte: startOfMonth,
+            $lte: endOfMonth,
+          },
         });
 
         if (expiredSubscriptions.length > 0) {
           // Update all expired subscriptions to 'pending'
-          await Payment.updateMany(
-            {
-              type: "subscription",
-              status: "success",
-              expiryDate: { $lte: now },
-            },
-            {
-              status: "pending",
-            }
+          const expiredIds = [
+            ...new Set(
+              expiredSubscriptions.map((sub) => sub.userId.toString())
+            ),
+          ];
+
+          await sendPushNotification(
+            expiredIds,
+            "Subscription Expired",
+            "Your subscription has been expired soon. Please renew to continue enjoying our services."
           );
 
           console.log(`✅ ${expiredSubscriptions.length} subscriptions expired and set to pending.`);
@@ -370,7 +399,7 @@ const server = async () => {
     cron.schedule("0 * * * *", async () => {
       try {
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        
+
         const result = await Notification.deleteMany({
           read: true,
           createdAt: { $lt: twentyFourHoursAgo }
