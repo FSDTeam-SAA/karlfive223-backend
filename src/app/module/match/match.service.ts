@@ -148,7 +148,7 @@ const updateMatch = async (
     const formattedDate = `${month} ${day}, ${year}, ${formattedTime}`;
 
     const message = `📅 Match date updated: ${teamOne.teamName} vs ${teamTwo.teamName} in ${league.leagueName} has been rescheduled to ${formattedDate}`;
-      sendPushNotification(userIds, "Match Rescheduled", message);
+      await sendPushNotification(userIds, "Match Rescheduled", message);
     // Create notifications in DB and send via Socket.IO
     await createAndSendNotifications(
       userIds, 
@@ -221,6 +221,8 @@ const updateMatch = async (
             read: false,
           }))
         );
+
+        await sendPushNotification(uniqueIds, "Match Draw", message);
       }
     } else if (match.winnerTeam) {
       // Send winner notifications
@@ -245,6 +247,7 @@ const updateMatch = async (
             read: false,
           }))
         );
+        await sendPushNotification(uniqueIds, "Match Won! 🏆", message);
       }
     }
 

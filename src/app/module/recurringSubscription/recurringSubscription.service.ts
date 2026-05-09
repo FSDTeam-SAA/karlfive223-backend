@@ -152,10 +152,11 @@ export const confirmRecurringPayment = async (
       default_payment_method: paymentMethodId,
       off_session: true,
       automatic_tax: { enabled: false },
-    //   metadata: {
-    //     // userId: subscription.userId.toString(),
-    //     plan,
-    //   },
+      metadata: {
+        userId: subscription.userId.toString(),
+        plan,
+        type: "subscription"
+      },
     });
 
     // Update subscription to active
