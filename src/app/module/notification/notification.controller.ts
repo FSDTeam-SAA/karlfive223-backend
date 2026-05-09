@@ -134,6 +134,6 @@ export const customNotification = catchAsycn(async(req,res)=>{
     statusCode: 200,
     message: "Notification sent to all users",
     success: true,
-    data: null
+    data: "success"
   })
 })
