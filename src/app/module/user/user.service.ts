@@ -3,6 +3,7 @@ import config from "../../config";
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
 import { jwtHelper } from "../../helper/jwtHelper";
+import { couponService } from "../coupon/coupon.service";
 import { referralService } from "../referral/referral.service";
 import { PLAN_DETAILS } from "../subscription/subscription.constant";
 import { subscriptionService } from "../subscription/subscription.service";
@@ -138,6 +139,7 @@ const getUserByEmail = async (email: string) => {
       isActive: activeSubscription.expiryDate 
         ? new Date(activeSubscription.expiryDate) > new Date()
         : false,
+      subscriptionStatus: activeSubscription.subscriptionStatus ?? null,
       maxJoinLeagues: planDetails?.maxJoinLeagues ?? 0,
       maxCreateLeagues: planDetails?.maxCreateLeagues ?? 0,
     };
@@ -145,7 +147,13 @@ const getUserByEmail = async (email: string) => {
     user1.subscription = null;
   }
 
+  user1.runningCoupon = await couponService.getRunningCoupon();
+
   return user1;
+};
+
+const getRunningCoupon = async () => {
+  return couponService.getRunningCoupon();
 };
 const getUserById = async (email: string) => {
   const user = await User.findById(email).select("-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp");
@@ -219,5 +227,6 @@ export const userServices = {
   gender,
   updatedProfile,
   getUserById,
+  getRunningCoupon,
   deleteUser,
 };

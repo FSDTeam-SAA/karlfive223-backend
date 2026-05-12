@@ -43,37 +43,41 @@ export const getSubscriptionHistory = catchAsycn(
 );
 
 // ─── POST /subscription/claim-free-trial ──────────────────────────────────────
-// New endpoint: Users claim their one-time 24hr free trial using an event OTP
+// New endpoint: Users claim free 30-day trial using event OTP or coupon code
 export const claimFreeTrialWithOtp = catchAsycn(
   async (req: Request, res: Response) => {
     const userId = req.user._id as string;
-    const { otp } = req.body;
+    const { code } = req.body;
 
-    if (!otp) {
+    if (!code) {
       sendResponse(res, {
         statusCode: 400,
         success: false,
-        message: 'OTP is required',
+        message: 'Code (OTP or coupon) is required',
       });
       return;
     }
 
-    const result = await subscriptionService.claimFreeTrialWithOtp(userId, otp);
+    const result = await subscriptionService.claimFreeTrialWithOtp(userId, code);
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: '24-hour free trial activated successfully using event OTP',
+      message: result.codeType === 'coupon' 
+        ? 'Coupon redeemed successfully - 30-day subscription activated'
+        : '30-day free trial activated successfully using event OTP',
       data: {
         subscription: result.freePayment,
+        codeType: result.codeType,
         event: result.event,
+        coupon: result.coupon,
       },
     });
   }
 );
 
 // ─── POST /subscription/activate-free-trial [DEPRECATED] ──────────────────────
-// This endpoint is deprecated. Users should now use /claim-free-trial with OTP.
-// Kept for backward compatibility.
+// This endpoint is deprecated. Users should now use /claim-free-trial with OTP or coupon.
+// Now grants 30-day free trial instead of 24 hours.
 export const activateFreeTrial = catchAsycn(
   async (req: Request, res: Response) => {
     const userId = req.user._id as string;
@@ -81,7 +85,7 @@ export const activateFreeTrial = catchAsycn(
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: '[DEPRECATED] 24-hour free trial activated. Please use /claim-free-trial with event OTP instead.',
+      message: '[DEPRECATED] 30-day free trial activated. Please use /claim-free-trial with event OTP or coupon instead.',
       data: freeTrial,
     });
   }

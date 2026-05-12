@@ -14,6 +14,10 @@ export interface IPayment {
   subscriptionId?: string // For Stripe subscription payments
   subscriptionStatus?: 'pending' | 'active' | 'canceled' | 'past_due' | 'unpaid' | 'past' // For Stripe subscription payments
   expiryDate?: Date
+  couponCode?: string
+  couponId?: Types.ObjectId
+  couponAppliedAt?: Date
+  couponRewardDays?: number
   createdAt?: Date
   updatedAt?: Date
 }

@@ -44,6 +44,16 @@ const getUserById = catchAsycn(async (req, res) => {
   });
 });
 
+const getRunningCoupon = catchAsycn(async (_req, res) => {
+  const result = await userServices.getRunningCoupon();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Running coupon fetched successfully',
+    data: result,
+  });
+});
+
 const playingLevel = catchAsycn(async (req, res) => {
   const result = await userServices.playingLevel(req.user?.email, req.body);
   sendResponse(res, {
@@ -103,5 +113,6 @@ export const userControllers = {
   gender,
   updatedProfile,
   getUserById,
+  getRunningCoupon,
   deleteUser
 };

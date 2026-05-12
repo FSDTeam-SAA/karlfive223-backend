@@ -5,6 +5,7 @@ import { authRouter } from "../module/auth/auth.routes";
 import { autoSubscriptionRouter } from "../module/autoSubscription/autoSubscription.route";
 import { chatRouter } from "../module/chat/chat.route";
 import { contactRouter } from "../module/contact/contact.routes";
+import { couponRouter } from "../module/coupon/coupon.routes";
 import { eventRouter } from "../module/event/event.routes";
 import { leagueRouter } from "../module/league/league.routes";
 import { matchRouter } from "../module/match/match.routes";
@@ -28,6 +29,7 @@ const allRouter = [
   { path: "/team", name: teamRouter },
   { path: "/match", name: matchRouter },
   { path: "/contact", name: contactRouter },
+  { path: "/coupon", name: couponRouter },
   { path: "/report", name: reportRouter },
   { path: "/standing", name: standingRouter },
   { path: "/payment", name: paymentRouter },

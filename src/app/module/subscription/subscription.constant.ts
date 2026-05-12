@@ -17,7 +17,7 @@ export const PLAN_DETAILS: Record<
     price: number; // USD
     maxJoinLeagues: number | null; // null = unlimited
     maxCreateLeagues: number | null; // null = unlimited
-    durationDays: number | null; // 1 = free trial (24 h), 30 = paid plans
+    durationDays: number | null; // duration of the subscription in days (30 = 1 month)
     /** Club plan marks the user as an organizer (isOrganizer = true on User) */
     isOrganizerPlan: boolean;
   }
@@ -27,7 +27,7 @@ export const PLAN_DETAILS: Record<
     price: 0,
     maxJoinLeagues: 1,       // can join 1 private league
     maxCreateLeagues: 0,     // cannot create any private league
-    durationDays: 1,         // 24 hours
+    durationDays: 30,        // 30 days (updated from 1 day / 24 hours)
     isOrganizerPlan: false,
   },
   basic: {

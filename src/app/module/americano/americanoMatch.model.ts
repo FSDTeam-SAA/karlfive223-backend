@@ -21,7 +21,6 @@ const americanoMatchSchema = new Schema<IAmericanoMatch>(
         },
       ],
     },
-    courtNumber: { type: Number },
     standingsApplied: { type: Boolean, default: false },
   },
   { timestamps: true }
