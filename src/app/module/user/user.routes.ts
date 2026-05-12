@@ -1,9 +1,9 @@
 import express from "express";
-import { userControllers } from "./user.controller";
-import auth from "../../middlewares/Auth";
-import { userrole } from "./user.constent";
 import { fileUploader } from "../../helper/fileUploded";
+import auth from "../../middlewares/Auth";
 import { createFCM } from "../fcm/fcm.controller";
+import { userrole } from "./user.constent";
+import { userControllers } from "./user.controller";
 const router = express.Router();
 
 router.get(
@@ -21,6 +21,12 @@ router.patch(
   userControllers.playingLevel
 );
 
+
+router.get(
+  "/running-coupon",
+  auth(userrole.admin, userrole.manager, userrole.player, userrole.referee),
+  userControllers.getRunningCoupon
+);
 router.patch(
   "/gender",
   auth(userrole.admin, userrole.manager, userrole.player),

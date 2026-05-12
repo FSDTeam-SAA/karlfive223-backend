@@ -29,6 +29,10 @@ const paymentSchema = new Schema<IPayment>({
     default: 'pending',
   },
   expiryDate: { type: Date }, // For subscriptions - 30 days from activation
+  couponCode: { type: String, default: null },
+  couponId: { type: Schema.Types.ObjectId, ref: 'Coupon', default: null },
+  couponAppliedAt: { type: Date, default: null },
+  couponRewardDays: { type: Number, default: null },
 },{
   timestamps: true
 })

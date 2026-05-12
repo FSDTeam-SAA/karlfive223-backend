@@ -559,9 +559,10 @@ export const checkUserSubscriptionStatus = catchAsycn(async (req, res) => {
     message: isSubscriptionActive
       ? 'User has active subscription'
       : 'User does not have active subscription',
-    data:{
+    data: {
       isActive: isSubscriptionActive,
-    }
+      subscriptionStatus: subscription ? subscription.subscriptionStatus : null,
+    },
   });
 });
 

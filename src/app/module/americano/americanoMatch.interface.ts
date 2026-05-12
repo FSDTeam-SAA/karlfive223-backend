@@ -6,7 +6,6 @@ export interface IAmericanoMatch extends Document {
   playerTwo: ObjectId;
   matchDateTime?: Date;
   matchStatus: "upcoming" | "live" | "completed" | "postponed";
-  courtNumber?: number;
   winnerPlayer?: ObjectId | null;
   matchScore?: {
     sets: Array<{

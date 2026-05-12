@@ -468,11 +468,8 @@ const listLeagues = async (params: any, options: IOption) => {
   const whereCondition = andCondition.length ? { $and: andCondition } : {};
 
   const data = await AmericanoLeague.find(whereCondition)
-    .populate("user", "name email profileImage")
-    .populate({
-      path: "players",
-      select: "name email profileImage phoneNumber playingLevel gender role",
-    })
+    .populate("user", "name email")
+    .populate("players", "name email")
     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 } as any)
     .skip(skip)
     .limit(limit);
@@ -487,11 +484,8 @@ const listLeagues = async (params: any, options: IOption) => {
 
 const getLeagueById = async (leagueId: string) => {
   const league = await AmericanoLeague.findById(leagueId)
-    .populate("user", "name email profileImage")
-    .populate({
-      path: "players",
-      select: "name email profileImage phoneNumber playingLevel gender role",
-    });
+    .populate("user", "name email")
+    .populate("players", "name email");
 
   if (!league) throw new AppError(404, "Americano league not found");
   return league;
@@ -533,11 +527,8 @@ const getMyLeagues = async (email: string, options: IOption) => {
   };
 
   const data = await AmericanoLeague.find(whereCondition)
-    .populate("user", "name email profileImage")
-    .populate({
-      path: "players",
-      select: "name email profileImage phoneNumber playingLevel gender role",
-    })
+    .populate("user", "name email")
+    .populate("players", "name email")
     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 } as any)
     .skip(skip)
     .limit(limit);
@@ -655,320 +646,6 @@ const submitMatchResult = async (
     .populate("winnerPlayer", "name email");
 };
 
-const getShareableOtp = async (leagueId: string) => {
-  const league = await AmericanoLeague.findById(leagueId).select("joinOtp leagueName");
-  if (!league) throw new AppError(404, "Americano league not found");
-
-  return {
-    leagueId,
-    leagueName: league.leagueName,
-    joinOtp: league.joinOtp,
-  };
-};
-
-const getLeaguePlayers = async (leagueId: string) => {
-  const league = await AmericanoLeague.findById(leagueId)
-    .select("players")
-    .populate({
-      path: "players",
-      select: "name email profileImage phoneNumber playingLevel gender role",
-    });
-  if (!league) throw new AppError(404, "Americano league not found");
-
-  return league.players;
-};
-
-const removePlayerFromLeague = async (
-  leagueId: string,
-  playerId: string,
-  currentUserId: string
-) => {
-  const league = await AmericanoLeague.findById(leagueId);
-  if (!league) throw new AppError(404, "Americano league not found");
-
-  if (league.user.toString() !== currentUserId.toString()) {
-    throw new AppError(403, "Only league owner can remove players");
-  }
-
-  league.players = league.players.filter(
-    (p) => toObjectIdString(p) !== playerId
-  );
-  await league.save();
-
-  // Rebuild standings since player count changed
-  await rebuildStandings(leagueId);
-
-  return league;
-};
-
-const updateLeague = async (
-  leagueId: string,
-  payload: Partial<IAmericanoLeague>,
-  files: { logo?: Express.Multer.File; banner?: Express.Multer.File },
-  currentUserId: string
-) => {
-  const league = await AmericanoLeague.findById(leagueId);
-  if (!league) throw new AppError(404, "Americano league not found");
-
-  if (league.user.toString() !== currentUserId.toString()) {
-    throw new AppError(403, "Only league owner can update league");
-  }
-
-  // Upload new logo if provided
-  if (files.logo) {
-    const uploadLogo = await fileUploader.uploadToCloudinary(files.logo);
-    if (!uploadLogo.secure_url) {
-      throw new AppError(400, "Failed to upload logo");
-    }
-    league.leagueLogo = uploadLogo.secure_url;
-  }
-
-  // Upload new banner if provided
-  if (files.banner) {
-    const uploadBanner = await fileUploader.uploadToCloudinary(files.banner);
-    if (!uploadBanner.secure_url) {
-      throw new AppError(400, "Failed to upload banner");
-    }
-    league.bannerImage = uploadBanner.secure_url;
-  }
-
-  // Update other fields
-  if (payload.leagueName) league.leagueName = payload.leagueName;
-  if (payload.description) league.description = payload.description;
-  if (payload.location) league.location = payload.location;
-  if (payload.price) league.price = payload.price;
-  if (payload.maxPlayers !== undefined) league.maxPlayers = payload.maxPlayers;
-  if (payload.matchPlay) league.matchPlay = payload.matchPlay as any;
-
-  await league.save();
-  return league;
-};
-
-const deleteLeague = async (leagueId: string, currentUserId: string) => {
-  const league = await AmericanoLeague.findById(leagueId);
-  if (!league) throw new AppError(404, "Americano league not found");
-
-  if (league.user.toString() !== currentUserId.toString()) {
-    throw new AppError(403, "Only league owner can delete league");
-  }
-
-  // Delete all matches
-  await AmericanoMatch.deleteMany({ league: leagueId });
-
-  // Delete all standings
-  await AmericanoStanding.deleteMany({ league: leagueId });
-
-  // Delete league
-  await AmericanoLeague.deleteOne({ _id: leagueId });
-};
-
-const getLeagueMatches = async (leagueId: string) => {
-  const league = await AmericanoLeague.findById(leagueId).select("_id");
-  if (!league) throw new AppError(404, "Americano league not found");
-
-  return AmericanoMatch.find({ league: leagueId })
-    .populate("playerOne", "name email profileImage")
-    .populate("playerTwo", "name email profileImage")
-    .populate("winnerPlayer", "name email profileImage")
-    .sort({ matchDateTime: 1, createdAt: 1 });
-};
-
-const getMatchScore = async (matchId: string) => {
-  const match = await AmericanoMatch.findById(matchId)
-    .populate("league", "leagueName")
-    .populate("playerOne", "name email profileImage")
-    .populate("playerTwo", "name email profileImage")
-    .populate("winnerPlayer", "name email profileImage");
-
-  if (!match) throw new AppError(404, "Americano match not found");
-
-  const sets = match.matchScore?.sets || [];
-  const playerOneTotalGames = sets.reduce(
-    (acc, set) => acc + (set.playerOneGames || 0),
-    0
-  );
-  const playerTwoTotalGames = sets.reduce(
-    (acc, set) => acc + (set.playerTwoGames || 0),
-    0
-  );
-
-  let playerOneSetsWon = 0;
-  let playerTwoSetsWon = 0;
-
-  for (const set of sets) {
-    if (set.playerOneGames > set.playerTwoGames) playerOneSetsWon += 1;
-    else if (set.playerTwoGames > set.playerOneGames) playerTwoSetsWon += 1;
-  }
-
-  const playerOne = match.playerOne as any;
-  const playerTwo = match.playerTwo as any;
-  const winner = match.winnerPlayer as any;
-
-  return {
-    matchId: toObjectIdString(match._id),
-    league: {
-      id: toObjectIdString(match.league),
-      leagueName: (match.league as any)?.leagueName || null,
-    },
-    matchStatus: match.matchStatus,
-    courtNumber: match.courtNumber || null,
-    playerOne: {
-      id: toObjectIdString(playerOne?._id || match.playerOne),
-      name: playerOne?.name || null,
-      email: playerOne?.email || null,
-      profileImage: playerOne?.profileImage || null,
-    },
-    playerTwo: {
-      id: toObjectIdString(playerTwo?._id || match.playerTwo),
-      name: playerTwo?.name || null,
-      email: playerTwo?.email || null,
-      profileImage: playerTwo?.profileImage || null,
-    },
-    winnerPlayer: winner
-      ? {
-          id: toObjectIdString(winner?._id || match.winnerPlayer),
-          name: winner?.name || null,
-          email: winner?.email || null,
-          profileImage: winner?.profileImage || null,
-        }
-      : null,
-    score: {
-      hasScore: sets.length > 0,
-      sets: sets.map((set, index) => ({
-        setNumber: index + 1,
-        playerOneGames: set.playerOneGames || 0,
-        playerTwoGames: set.playerTwoGames || 0,
-      })),
-      summary: {
-        totalSets: sets.length,
-        playerOneSetsWon,
-        playerTwoSetsWon,
-        playerOneTotalGames,
-        playerTwoTotalGames,
-      },
-    },
-  };
-};
-
-const editMatchScore = async (
-  matchId: string,
-  payload: Pick<IAmericanoMatch, "matchScore" | "winnerPlayer">,
-  currentUserId: string
-) => {
-  const match = await AmericanoMatch.findById(matchId)
-    .populate("league", "user")
-    .populate("playerOne", "name email")
-    .populate("playerTwo", "name email");
-  if (!match) throw new AppError(404, "Americano match not found");
-
-  if (match.matchStatus !== "completed") {
-    throw new AppError(400, "Only completed match scores can be corrected");
-  }
-
-  const leagueUser = (match.league as any)?.user?.toString?.();
-  if (!leagueUser || leagueUser !== currentUserId.toString()) {
-    throw new AppError(403, "Only league owner can correct match scores");
-  }
-
-  if (!payload.matchScore?.sets?.length) {
-    throw new AppError(400, "matchScore.sets is required");
-  }
-
-  match.matchScore = payload.matchScore;
-
-  // Recalculate winner based on new score
-  let p1SetsWon = 0;
-  let p2SetsWon = 0;
-  for (const set of payload.matchScore.sets) {
-    if (set.playerOneGames > set.playerTwoGames) p1SetsWon += 1;
-    else if (set.playerTwoGames > set.playerOneGames) p2SetsWon += 1;
-  }
-
-  if (payload.winnerPlayer !== undefined) {
-    match.winnerPlayer = payload.winnerPlayer;
-  } else if (p1SetsWon === p2SetsWon) {
-    match.winnerPlayer = null;
-  } else if (p1SetsWon > p2SetsWon) {
-    match.winnerPlayer = match.playerOne as any;
-  } else {
-    match.winnerPlayer = match.playerTwo as any;
-  }
-
-  await match.save();
-  await rebuildStandings(toObjectIdString(match.league));
-
-  return AmericanoMatch.findById(matchId)
-    .populate("playerOne", "name email")
-    .populate("playerTwo", "name email")
-    .populate("winnerPlayer", "name email");
-};
-
-const assignCourtNumber = async (
-  matchId: string,
-  courtNumber: number,
-  currentUserId: string
-) => {
-  const match = await AmericanoMatch.findById(matchId).populate("league", "user");
-  if (!match) throw new AppError(404, "Americano match not found");
-
-  const leagueUser = (match.league as any)?.user?.toString?.();
-  if (!leagueUser || leagueUser !== currentUserId.toString()) {
-    throw new AppError(403, "Only league owner can assign court numbers");
-  }
-
-  if (!courtNumber || courtNumber < 1) {
-    throw new AppError(400, "Valid court number is required");
-  }
-
-  match.courtNumber = courtNumber;
-  await match.save();
-
-  return AmericanoMatch.findById(matchId)
-    .populate("playerOne", "name email")
-    .populate("playerTwo", "name email")
-    .populate("winnerPlayer", "name email");
-};
-
-const updateMatch = async (
-  matchId: string,
-  payload: Partial<IAmericanoMatch>,
-  currentUserId: string
-) => {
-  const match = await AmericanoMatch.findById(matchId).populate("league", "user");
-  if (!match) throw new AppError(404, "Americano match not found");
-
-  const leagueUser = (match.league as any)?.user?.toString?.();
-  if (!leagueUser || leagueUser !== currentUserId.toString()) {
-    throw new AppError(403, "Only league owner can update matches");
-  }
-
-  if (payload.matchDateTime) match.matchDateTime = new Date(payload.matchDateTime);
-  if (payload.matchStatus) match.matchStatus = payload.matchStatus as any;
-  if (payload.courtNumber !== undefined) match.courtNumber = payload.courtNumber;
-
-  await match.save();
-
-  return AmericanoMatch.findById(matchId)
-    .populate("playerOne", "name email")
-    .populate("playerTwo", "name email")
-    .populate("winnerPlayer", "name email");
-};
-
-const deleteMatch = async (matchId: string, currentUserId: string) => {
-  const match = await AmericanoMatch.findById(matchId).populate("league", "user");
-  if (!match) throw new AppError(404, "Americano match not found");
-
-  const leagueUser = (match.league as any)?.user?.toString?.();
-  if (!leagueUser || leagueUser !== currentUserId.toString()) {
-    throw new AppError(403, "Only league owner can delete matches");
-  }
-
-  // Reset standings since match is being deleted
-  const leagueId = toObjectIdString(match.league);
-  await AmericanoMatch.deleteOne({ _id: matchId });
-  await rebuildStandings(leagueId);
-};
-
 export const americanoService = {
   createLeague,
   joinLeague,
@@ -982,15 +659,4 @@ export const americanoService = {
   submitMatchResult,
   rebuildStandings,
   autoGenerateFixturesForDueLeagues,
-  getShareableOtp,
-  getLeaguePlayers,
-  removePlayerFromLeague,
-  updateLeague,
-  deleteLeague,
-  getLeagueMatches,
-  getMatchScore,
-  editMatchScore,
-  assignCourtNumber,
-  updateMatch,
-  deleteMatch,
 };

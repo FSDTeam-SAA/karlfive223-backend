@@ -31,8 +31,8 @@ router.get(
   getSubscriptionHistory
 );
 
-// ─── Claim free trial with event OTP ──────────────────────────────────────────
-// New primary method: Users must have an OTP from an approved event
+// ─── Claim free trial with event OTP or coupon code ───────────────────────────
+// Accept either an event OTP or a manager-created coupon code (5 digits)
 router.post(
   '/claim-free-trial',
   auth('player', 'manager', 'admin', 'referee'),
