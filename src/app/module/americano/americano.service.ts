@@ -502,6 +502,17 @@ const getLeagueFixtures = async (leagueId: string) => {
     .sort({ matchDateTime: 1, createdAt: 1 });
 };
 
+const getLeagueMatches = async (leagueId: string) => {
+  const league = await AmericanoLeague.findById(leagueId).select("_id leagueName");
+  if (!league) throw new AppError(404, "Americano league not found");
+
+  return AmericanoMatch.find({ league: leagueId })
+    .populate("playerOne", "name email profileImage phoneNumber playingLevel gender role")
+    .populate("playerTwo", "name email profileImage phoneNumber playingLevel gender role")
+    .populate("winnerPlayer", "name email profileImage")
+    .sort({ matchDateTime: 1, createdAt: 1 });
+};
+
 const getLeagueStandings = async (leagueId: string) => {
   const league = await AmericanoLeague.findById(leagueId).select("_id");
   if (!league) throw new AppError(404, "Americano league not found");
@@ -655,6 +666,7 @@ export const americanoService = {
   getMyLeagues,
   getLeagueById,
   getLeagueFixtures,
+  getLeagueMatches,
   getLeagueStandings,
   submitMatchResult,
   rebuildStandings,
