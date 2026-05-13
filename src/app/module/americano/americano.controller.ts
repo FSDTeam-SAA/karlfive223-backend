@@ -126,6 +126,17 @@ const getAmericanoFixtures = catchAsycn(async (req: Request, res: Response) => {
   });
 });
 
+const getAmericanoMatches = catchAsycn(async (req: Request, res: Response) => {
+  const result = await americanoService.getLeagueMatches(req.params.leagueId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Americano matches fetched successfully",
+    data: result,
+  });
+});
+
 const getAmericanoStandings = catchAsycn(async (req: Request, res: Response) => {
   const result = await americanoService.getLeagueStandings(req.params.leagueId);
 
@@ -164,6 +175,7 @@ export const americanoController = {
   getMyAmericanoLeagues,
   getAmericanoLeagueById,
   getAmericanoFixtures,
+  getAmericanoMatches,
   getAmericanoStandings,
   submitAmericanoMatchResult,
 };

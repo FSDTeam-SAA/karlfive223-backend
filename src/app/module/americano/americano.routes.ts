@@ -53,6 +53,12 @@ router.get(
 );
 
 router.get(
+  "/:leagueId/matches",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.getAmericanoMatches
+);
+
+router.get(
   "/:leagueId/standings",
   auth(userrole.player, userrole.manager, userrole.admin),
   americanoController.getAmericanoStandings

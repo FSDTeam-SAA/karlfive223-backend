@@ -5,6 +5,16 @@
 			"label": "build",
 			"type": "shell",
 			"command": "npm run -s build && echo BUILD_OK"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build && echo BUILD_OK"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build && echo BUILD_OK"
 		}
 	]
 }
