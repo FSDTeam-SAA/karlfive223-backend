@@ -18,6 +18,7 @@
   "dependencies": {
     "@types/socket.io": "^3.0.1",
     "@types/stripe": "^8.0.416",
+    "amqplib": "^2.0.1",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",
