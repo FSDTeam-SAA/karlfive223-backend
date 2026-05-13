@@ -13,6 +13,8 @@ import { Payment } from "./app/module/payment/payment.model";
 import Standing from "./app/module/standing/standing.model";
 import Team from "./app/module/team/team.model";
 import { sendPushNotification } from "./app/utils/sendPushNotification";
+import { connectRabbitMQ } from "./app/utils/rabbitmq";
+import { startPushNotificationWorker } from "./app/utils/pushNotificationWorker";
 
 const port = config.port || 5000;
 
@@ -89,6 +91,9 @@ async function notifyUsers(userIds: Types.ObjectId[], title: string, message: st
 }
 const server = async () => {
   try {
+      await connectRabbitMQ();
+
+  await startPushNotificationWorker();
     const connectmongodb = await mongoose.connect(config.database_url as string);
     console.log(`✅ Database is connected: ${connectmongodb.connection.host}`);
 
