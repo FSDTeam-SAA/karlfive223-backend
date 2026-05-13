@@ -1,7 +1,7 @@
 import express from 'express'
-import { customNotification, getUserNotifications, markAllAsRead, markAsReadById } from './notification.controller'
 import auth from '../../middlewares/Auth'
 import { userrole } from '../user/user.constent'
+import { customNotification, getUserNotifications, markAllAsRead, markAsReadById } from './notification.controller'
 
 const router = express.Router()
 
