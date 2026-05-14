@@ -13,6 +13,7 @@ const americanoLeagueSchema = new mongoose.Schema<IAmericanoLeague>(
     leagueLogo: { type: String },
     bannerImage: { type: String },
     players: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    
     maxPlayers: { type: Number, default: 0 },
     fixturesGenerated: { type: Boolean, default: false },
     matchPlay: {
