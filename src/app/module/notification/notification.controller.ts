@@ -6,6 +6,7 @@ import { Types } from "mongoose";
 import { emitUnreadCount } from "../../helper/socketHelper";
 import User from "../user/user.model";
 import { sendPushNotification } from "../../utils/sendPushNotification";
+import { sendSubscriptionNotification } from "./subscribe_notify";
 
 /***********************************
  * MARK SINGLE NOTIFICATION AS READ *
@@ -124,11 +125,13 @@ export const customNotification = catchAsycn(async(req,res)=>{
 
   console.log("Sending custom notification to users:", userIds);
 
-  sendPushNotification(
-    userIds,
-    title,
-    message
-  );
+  // sendPushNotification(
+  //   userIds,
+  //   title,
+  //   message
+  // );
+
+  await sendSubscriptionNotification(title, message);
 
   sendResponse(res,{
     statusCode: 200,

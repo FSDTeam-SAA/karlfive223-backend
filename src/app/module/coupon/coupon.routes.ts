@@ -23,6 +23,7 @@ router.get(
   couponControllers.getAllCouponsByStatus
 );
 
+
 router.patch(
   '/:couponId/stop',
   auth(userrole.admin, userrole.manager),
