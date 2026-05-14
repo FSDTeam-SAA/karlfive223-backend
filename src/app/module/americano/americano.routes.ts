@@ -76,4 +76,85 @@ router.get(
   americanoController.getAmericanoLeagueById
 );
 
+// Share OTP (get joinOtp for sharing)
+router.get(
+  "/:leagueId/share-otp",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.shareLeagueOtp
+);
+
+// Get all players in a league
+router.get(
+  "/:leagueId/players",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.getLeaguePlayers
+);
+
+// Remove player from league
+router.delete(
+  "/:leagueId/players/:playerId",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.removePlayerFromLeague
+);
+
+// Edit/Update league
+router.patch(
+  "/:leagueId",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  fileUploader.upload.fields([
+    { name: "logo", maxCount: 1 },
+    { name: "banner", maxCount: 1 },
+  ]),
+  americanoController.updateAmericanoLeague
+);
+
+// Delete league
+router.delete(
+  "/:leagueId",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.deleteAmericanoLeague
+);
+
+// Get all matches for a league
+router.get(
+  "/:leagueId/matches",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.getLeagueMatches
+);
+
+// Get score for a specific match
+router.get(
+  "/matches/:matchId/score",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.getAmericanoMatchScore
+);
+
+// Edit match score
+router.patch(
+  "/matches/:matchId/edit-score",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.editAmericanoMatchScore
+);
+
+// Assign court number to match
+router.patch(
+  "/matches/:matchId/assign-court",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.assignCourtNumberToMatch
+);
+
+// Update match details
+router.patch(
+  "/matches/:matchId",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.updateAmericanoMatch
+);
+
+// Delete match
+router.delete(
+  "/matches/:matchId",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.deleteAmericanoMatch
+);
+
 export const americanoRouter = router;
