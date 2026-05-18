@@ -3,12 +3,12 @@ import Auth from '../../middlewares/Auth';
 import validateRequest from '../../middlewares/requestValidation';
 import * as controller from './dualAmericano.controller';
 import {
-  createDualAmericanoZodSchema,
-  updateDualAmericanoZodSchema,
-  registerPairZodSchema,
-  submitScoreZodSchema,
-  assignCourtZodSchema,
-  sendMessageZodSchema,
+    assignCourtZodSchema,
+    createDualAmericanoZodSchema,
+    registerPairZodSchema,
+    sendMessageZodSchema,
+    submitScoreZodSchema,
+    updateDualAmericanoZodSchema,
 } from './dualAmericano.validation';
 
 const router = Router();
