@@ -109,6 +109,8 @@ export const confirmRecurringPayment = async (
       throw new AppError(400, `Payment status is ${paymentIntent.status}`);
     }
 
+    console.log('Payment intent retrieved:', paymentIntent );
+
     // Find subscription record
     const subscription = await Payment.findOne({
       transactionId: paymentIntentId,
@@ -129,7 +131,7 @@ export const confirmRecurringPayment = async (
     // const plan = subscription.plan as SubscriptionPlanType;
 
     // Get price ID from environment
-    const plan= "basic"
+    const plan= paymentIntent.metadata.plan as string;
     const priceIdMap: Record<string, string | undefined> = {
       basic: process.env.STRIPE_PRICE_ID_BASIC,
       gold: process.env.STRIPE_PRICE_ID_GOLD,
@@ -158,6 +160,17 @@ export const confirmRecurringPayment = async (
         type: "subscription"
       },
     });
+
+
+          const planDetails = plan ;
+    
+          if (planDetails) {
+            await User.findByIdAndUpdate(subscription.userId, {
+              leaguesCreatedCount: 0,
+              leaguesJoinedCount: 0,
+              isOrganizer: plan === 'club',
+            });
+          }
 
     // Update subscription to active
     // subscription.status = 'active';
