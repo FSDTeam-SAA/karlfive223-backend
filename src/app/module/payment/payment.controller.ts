@@ -40,6 +40,8 @@ export const createPayment = catchAsycn(async (req, res) => {
     }
   }
 
+  console.log("asdasdasdasd", plan)
+
   try {
     // let customerId = user.stripeCustomerId;
     // if (!customerId) {
@@ -60,7 +62,8 @@ export const createPayment = catchAsycn(async (req, res) => {
         userId,
         ...(league ? { league } : {}),
         ...(team ? { team } : {}),
-        ...(plan ? { plan } : {}),
+        // ...(plan ? { plan } : {}),
+        plan,
         type: isSubscription ? 'subscription' : 'league',
       },
     });
@@ -599,10 +602,11 @@ export const webhookHandler = catchAsycn(async (req, res) => {
         subscriptionStatus: status,
         expiryDate,
       });
+      console.log("Subscription payment recorded for user:", userId, "plan:", plan);
       await User.findByIdAndUpdate(userId, {
         leaguesCreatedCount: 0,
         leaguesJoinedCount: 0,
-        isOrganizer: plan === 'club',
+        isOrganizer: metadata.plan === 'club',
       });
     }
   }
