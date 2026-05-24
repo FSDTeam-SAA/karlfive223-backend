@@ -6,6 +6,7 @@ import matchController, { generateMatchesForLeague } from "./match.controller";
 const router = express.Router();
 
 router.post("/generate-match", generateMatchesForLeague)
+router.post("/:leagueId/generate-match", generateMatchesForLeague)
 router.post("/create" , matchController.createMatch);
 router.get("/all-match", matchController.getAllMatches);
 router.get("/team-fixtures", matchController.getTeamFixturesByLeague);
