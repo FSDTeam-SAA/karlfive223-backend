@@ -15,6 +15,7 @@ import {
     ISubmitMatchScore,
 } from './dualAmericano.interface';
 import DualAmericano from './dualAmericano.model';
+import User from '../user/user.model';
 import { canPlayMoreRounds, generateDualAmericanoRound, recommendedRounds } from './dualAmericano.pairing';
 
 // Create event
@@ -91,6 +92,61 @@ export const getAll = async (filters: any = {}, page = 1, limit = 20) => {
 
 export const getById = async (id: string) => {
   return DualAmericano.findById(id);
+};
+
+export const getAllMatchesByEvent = async (dualId: string) => {
+  const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
+  if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
+
+  const pairMap = new Map(
+    dual.registeredPairs.map((pair) => [pair._id.toString(), pair]),
+  );
+
+  return dual.rounds.map((round) => ({
+    roundNumber: round.roundNumber,
+    status: round.status,
+    matches: round.matches.map((match) => {
+      const pair1 = pairMap.get(match.pair1.toString());
+      const pair2 = pairMap.get(match.pair2.toString());
+
+      return {
+        _id: match._id,
+        court: match.court,
+        status: match.status,
+        score: match.score,
+        winner: match.winner,
+        startTime: match.startTime,
+        endTime: match.endTime,
+        pair1,
+        pair2,
+      };
+    }),
+  }));
+};
+
+export const getPlayersByEvent = async (dualId: string) => {
+  const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
+  if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
+
+  const playerIds = Array.from(
+    new Set([
+      ...(dual.registeredPlayers ?? []).map((id) => id.toString()),
+      ...dual.registeredPairs.flatMap((pair) => [
+        pair.player1.toString(),
+        pair.player2.toString(),
+      ]),
+    ]),
+  );
+
+  const players = await User.find(
+    { _id: { $in: playerIds.map((id) => new Types.ObjectId(id)) } },
+    { _id: 1, name: 1, email: 1, profileImage: 1 },
+  ).lean();
+
+  return {
+    totalPlayers: players.length,
+    players,
+  };
 };
 
 export const getByClub = async (clubId: string) => {
