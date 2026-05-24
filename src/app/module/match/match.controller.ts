@@ -7,8 +7,10 @@ import { jwtHelper } from "../../helper/jwtHelper";
 import pick from "../../helper/pike";
 import catchAsycn from "../../utils/catchAsycn";
 import sendResponse from "../../utils/sendRespopnse";
+import { generateRoundRobin } from "../../helper/roundRobin";
 import League from "../league/league.model";
 import Match from "./match.model";
+import Standing from "../standing/standing.model";
 import matchService from "./match.service";
 
 const getCurrentUserIdFromRequest = (req: Request) => {
@@ -39,42 +41,75 @@ const getCurrentUserIdFromRequest = (req: Request) => {
 
 
 export const generateMatchesForLeague = catchAsycn(async (req: Request, res: Response) => {
-  const { leagueId } = req.params;
+  // leagueId can come from route param, query string, or body
+  const leagueId =
+    req.params.leagueId ||
+    (req.query.leagueId as string) ||
+    req.body?.leagueId;
+
+  if (!leagueId) throw new AppError(400, "leagueId is required");
 
   const league = await League.findById(leagueId).populate("addTeams");
   if (!league) throw new AppError(404, "League not found");
 
-  const existingMatches = await Match.find({ league: league._id });
-  if (existingMatches.length > 0) {
-    throw new AppError(400, "Matches already created for this league");
+  const hasCompletedMatch = await Match.exists({ league: league._id, matchStatus: "completed" });
+  if (hasCompletedMatch) {
+    throw new AppError(400, "Cannot regenerate fixtures — completed matches exist");
   }
 
-  const teams = league.addTeams as mongoose.Types.ObjectId[];
-  const matches = [];
+  // Clear any previously generated (bad) fixtures and standings before regenerating
+  await Match.deleteMany({ league: league._id });
+  await Standing.deleteMany({ league: league._id });
 
-  // Use league start date or current date as default
+  const rawTeams = league.addTeams as mongoose.Types.ObjectId[];
+
+  // Deduplicate to prevent duplicate matches
+  const teamSeen = new Set<string>();
+  const teams = rawTeams.filter((t: any) => {
+    const key = t._id ? t._id.toString() : t.toString();
+    if (teamSeen.has(key)) return false;
+    teamSeen.add(key);
+    return true;
+  });
+
+  if (teams.length < 2) throw new AppError(400, "At least 2 teams are required");
+
+  // Seed one standing row per unique team (visible in table from the start with 0 points)
+  await Standing.insertMany(teams.map((t: any) => ({
+    team: t._id ?? t,
+    league: league._id,
+  })));
+
   const defaultMatchDate = league.startDate ? new Date(league.startDate) : new Date();
 
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      matches.push({
-        teamOne: teams[i],
-        teamTwo: teams[j],
-        matchDateTime: defaultMatchDate,
-        matchVenue: null,
-        league: league._id,
-        matchStatus: "upcoming",
-      });
-    }
-  }
+  let play = 1;
+  const mp = (league.matchPlay || "").toLowerCase();
+  if (mp === "twice") play = 2;
+  if (mp === "thrice") play = 3;
+
+  const fixtures = generateRoundRobin(teams, play);
+  const matches = fixtures.map((f: { slotA: any; slotB: any }) => ({
+    teamOne: f.slotA._id ?? f.slotA,
+    teamTwo: f.slotB._id ?? f.slotB,
+    matchDateTime: defaultMatchDate,
+    matchVenue: null,
+    league: league._id,
+    matchStatus: "upcoming",
+  }));
 
   await Match.insertMany(matches);
+
+  // Return populated matches so frontend gets the same shape as the all-match endpoint
+  const savedMatches = await Match.find({ league: league._id })
+    .populate("teamOne")
+    .populate("teamTwo")
+    .sort({ createdAt: 1 });
 
   return sendResponse(res, {
     statusCode: 201,
     success: true,
     message: `Matches generated for league: ${league.leagueName}`,
-    data: matches,
+    data: savedMatches,
   });
 });
 
