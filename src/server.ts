@@ -15,6 +15,7 @@ import Team from "./app/module/team/team.model";
 import { sendPushNotification } from "./app/utils/sendPushNotification";
 import { connectRabbitMQ } from "./app/utils/rabbitmq";
 import { startPushNotificationWorker } from "./app/utils/pushNotificationWorker";
+import { dualAmericanoCron } from "./app/module/dualAmericano/dualAmericano.cron";
 
 const port = config.port || 5000;
 
@@ -419,6 +420,8 @@ const server = async () => {
         console.error("❌ Error in notification cleanup cron job:", err);
       }
     });
+
+    dualAmericanoCron();
   } catch (error: any) {
     console.error("❌ MongoDB connection error:", error.message);
     process.exit(1);
