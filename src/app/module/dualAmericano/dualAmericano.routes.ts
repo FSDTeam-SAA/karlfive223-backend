@@ -23,6 +23,12 @@ router.get('/', controller.getAll);
 // Single event full details
 router.get('/:id', controller.getById);
 
+// Single event all matches
+router.get('/:id/matches', controller.getAllMatchesByEvent);
+
+// Single event players list
+router.get('/:id/players', controller.getPlayersByEvent);
+
 // All events for a specific club
 router.get('/club/:clubId', controller.getByClub);
 

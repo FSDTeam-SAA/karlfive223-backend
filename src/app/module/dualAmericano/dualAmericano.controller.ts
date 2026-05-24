@@ -23,6 +23,16 @@ export const getById = async (req: Request, res: Response) => {
   return sendResponse(res, { statusCode: 200, success: true, message: 'Dual Americano', data });
 };
 
+export const getAllMatchesByEvent = async (req: Request, res: Response) => {
+  const data = await service.getAllMatchesByEvent(req.params.id);
+  return sendResponse(res, { statusCode: 200, success: true, message: 'Event matches', data });
+};
+
+export const getPlayersByEvent = async (req: Request, res: Response) => {
+  const data = await service.getPlayersByEvent(req.params.id);
+  return sendResponse(res, { statusCode: 200, success: true, message: 'Event players', data });
+};
+
 export const getByClub = async (req: Request, res: Response) => {
   const data = await service.getByClub(req.params.clubId);
   return sendResponse(res, { statusCode: 200, success: true, message: 'Dual Americano by club', data });
