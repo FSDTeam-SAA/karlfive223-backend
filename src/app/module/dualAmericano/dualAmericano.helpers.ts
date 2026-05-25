@@ -1,48 +1,53 @@
 import { Types } from 'mongoose';
 import { IDualAmericano, IDualAmericanoPair } from './dualAmericano.interface';
 
-function shuffle<T>(arr: T[]): T[] {
-  const copy = [...arr];
-
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
+/**
+ * Builds ALL C(N,2) possible partner-pair combinations from every individual
+ * player found in registeredPlayers OR already in registeredPairs.
+ *
+ * After this call:
+ *   dual.registeredPairs  → C(N,2) pair documents (one per unique partner combo)
+ *   dual.pairCount        → N  (number of individual players, used by canPlayMoreRounds)
+ *   dual.pairStandings    → one standing row per partner-pair combination
+ *
+ * Called at auto-start AND manual start to set up the Dual Americano rotation.
+ * Replaces any previously stored registeredPairs so the rotation is always clean.
+ */
+export const formPairsFromPlayers = (dual: IDualAmericano): IDualAmericanoPair[] => {
+  // Collect individual player IDs from both sources
+  const playerSet = new Set<string>();
+  for (const p of dual.registeredPlayers ?? []) {
+    playerSet.add(p.toString());
+  }
+  for (const pair of dual.registeredPairs ?? []) {
+    playerSet.add(pair.player1.toString());
+    playerSet.add(pair.player2.toString());
   }
 
-  return copy;
-}
+  const players = Array.from(playerSet);
+  if (players.length < 2) throw new Error('Not enough players to create pairs');
 
-export const formPairsFromPlayers = (dual: IDualAmericano) => {
-  if (!dual.registeredPlayers || dual.registeredPlayers.length < 2) {
-    throw new Error('Not enough players to create pairs');
+  // All C(N,2) partner combinations
+  const allPairs: IDualAmericanoPair[] = [];
+  for (let i = 0; i < players.length; i++) {
+    for (let j = i + 1; j < players.length; j++) {
+      allPairs.push({
+        _id: new Types.ObjectId(),
+        player1: new Types.ObjectId(players[i]),
+        player2: new Types.ObjectId(players[j]),
+        pairName: null,
+        joinedAt: new Date(),
+      } as IDualAmericanoPair);
+    }
   }
 
-  if (dual.registeredPairs?.length) return dual.registeredPairs;
+  dual.registeredPairs = allPairs as any;
+  // pairCount = individual player count (consumed by canPlayMoreRounds)
+  dual.pairCount = players.length;
 
-  const shuffledPlayers = shuffle(
-    dual.registeredPlayers.map((p) => p.toString()),
-  );
-
-  const pairs: IDualAmericanoPair[] = [];
-
-  for (let i = 0; i < shuffledPlayers.length; i += 2) {
-    if (!shuffledPlayers[i + 1]) break;
-
-    pairs.push({
-      _id: new Types.ObjectId(),
-      player1: new Types.ObjectId(shuffledPlayers[i]),
-      player2: new Types.ObjectId(shuffledPlayers[i + 1]),
-      pairName: null,
-      joinedAt: new Date(),
-    } as IDualAmericanoPair);
-  }
-
-  dual.registeredPairs = pairs;
-  dual.pairCount = pairs.length;
-
-  dual.pairStandings = pairs.map((pair) => ({
+  dual.pairStandings = allPairs.map(pair => ({
     pair: pair._id,
-    pairName: pair.pairName ?? null,
+    pairName: null,
     player1: pair.player1,
     player2: pair.player2,
     matchesPlayed: 0,
@@ -58,5 +63,5 @@ export const formPairsFromPlayers = (dual: IDualAmericano) => {
     rankScore: 0,
   })) as any;
 
-  return pairs;
+  return allPairs;
 };

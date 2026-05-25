@@ -10,6 +10,7 @@ import { eventRouter } from "../module/event/event.routes";
 import { leagueRouter } from "../module/league/league.routes";
 import { matchRouter } from "../module/match/match.routes";
 import { notificationRouter } from "../module/notification/notification.route";
+import { DualAmericanoRoutes } from "../module/dualAmericano/dualAmericano.routes";
 import { paymentRouter } from "../module/payment/payment.route";
 import { recurringSubscriptionRouter } from "../module/recurringSubscription/recurringSubscription.route";
 import { referralRouter } from "../module/referral/referral.routes";
@@ -25,6 +26,7 @@ const allRouter = [
   { path: "/auth", name: authRouter },
   { path: "/admin", name: adminRouter },
   { path: "/americano", name: americanoRouter },
+  { path: "/dual-americano", name: DualAmericanoRoutes },
   { path: "/league", name: leagueRouter },
   { path: "/team", name: teamRouter },
   { path: "/match", name: matchRouter },

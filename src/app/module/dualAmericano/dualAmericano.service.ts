@@ -11,16 +11,18 @@ import {
     DualAmericanoStatus,
     IDualAmericano,
     IDualAmericanoMatch,
-    IDualAmericanoPair,
     ISubmitMatchScore,
 } from './dualAmericano.interface';
 import DualAmericano from './dualAmericano.model';
 import User from '../user/user.model';
-import { canPlayMoreRounds, generateDualAmericanoRound, recommendedRounds } from './dualAmericano.pairing';
+import { formPairsFromPlayers } from './dualAmericano.helpers';
+import { canPlayMoreRounds, generateDualAmericanoRound, maxPossibleRounds, recommendedRounds } from './dualAmericano.pairing';
 
 // Create event
 export const createDualAmericano = async (payload: any, createdBy: string) => {
-  const defaultRounds = recommendedRounds(payload.maxPairs, payload.numberOfCourts);
+  // Estimate player count from maxPairs so recommendedRounds uses the right formula
+  const estimatedPlayers = payload.maxPairs * 2;
+  const defaultRounds = recommendedRounds(estimatedPlayers, payload.numberOfCourts);
   const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
   return DualAmericano.create({
     ...payload,
@@ -57,27 +59,6 @@ export const joinByCode = async (dualId: string, userId: string, code: string) =
   return dual;
 };
 
-// Create fixed pairs from registeredPlayers (called automatically on start if no registeredPairs)
-function formPairsFromPlayers(dual: IDualAmericano): void {
-  const players = [...(dual.registeredPlayers ?? [])].map(p => p.toString());
-  if (players.length < 4) return;
-  // shuffle
-  for (let i = players.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [players[i], players[j]] = [players[j], players[i]];
-  }
-  const pairs: IDualAmericanoPair[] = [] as any;
-  while (players.length >= 2 && pairs.length < dual.maxPairs) {
-    const p1 = players.shift()!;
-    const p2 = players.shift()!;
-    const pair: IDualAmericanoPair = { _id: new Types.ObjectId(), player1: new Types.ObjectId(p1), player2: new Types.ObjectId(p2), pairName: null, joinedAt: new Date() } as any;
-    pairs.push(pair);
-    dual.pairStandings.push({ pair: pair._id as any, pairName: null, player1: pair.player1 as any, player2: pair.player2 as any, matchesPlayed: 0, matchesWon: 0, matchesLost: 0, matchesDrawn: 0, totalPoints: 0, totalPointsAgainst: 0, pointsDifference: 0, wins: 0, losses: 0, draws: 0, rankScore: 0 } as any);
-  }
-  dual.registeredPairs = pairs as any;
-  dual.pairCount = dual.registeredPairs.length;
-}
-
 // List events with optional filters
 export const getAll = async (filters: any = {}, page = 1, limit = 20) => {
   const query: any = { isDeleted: false };
@@ -99,7 +80,7 @@ export const getAllMatchesByEvent = async (dualId: string) => {
   if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
 
   const pairMap = new Map(
-    dual.registeredPairs.map((pair) => [pair._id.toString(), pair]),
+    dual.registeredPairs.map((pair) => [pair._id!.toString(), pair]),
   );
 
   return dual.rounds.map((round) => ({
@@ -190,7 +171,7 @@ export const registerPair = async (dualId: string, payload: { player1Id: string;
   // ensure players are not already in any pair
   const already = dual.registeredPairs.find(p => p.player1.toString() === payload.player1Id || p.player2.toString() === payload.player1Id || p.player1.toString() === payload.player2Id || p.player2.toString() === payload.player2Id);
   if (already) throw new AppError(httpStatus.CONFLICT, 'One of the players is already in a pair');
-  const pair: IDualAmericanoPair = {
+  const pair: any = {
     _id: new Types.ObjectId(),
     player1: new Types.ObjectId(payload.player1Id),
     player2: new Types.ObjectId(payload.player2Id),
@@ -232,11 +213,15 @@ export const startDualAmericano = async (dualId: string, requesterId: string) =>
   if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
   if (dual.createdBy.toString() !== requesterId) throw new AppError(httpStatus.FORBIDDEN, 'Only organizer can start');
   if (dual.status !== 'upcoming') throw new AppError(httpStatus.BAD_REQUEST, 'Not in upcoming status');
-  // if pairs not created manually, form pairs from registered players
-  if ((!dual.registeredPairs || dual.registeredPairs.length === 0) && (dual.registeredPlayers && dual.registeredPlayers.length >= 4)) {
-    formPairsFromPlayers(dual as IDualAmericano);
-  }
-  if (dual.pairCount < 2) throw new AppError(httpStatus.BAD_REQUEST, 'Need at least 2 pairs');
+
+  // Always build all C(N,2) partner-pair combinations for the Dual Americano rotation
+  formPairsFromPlayers(dual as IDualAmericano);
+
+  if (dual.pairCount < 4) throw new AppError(httpStatus.BAD_REQUEST, 'Need at least 4 players (2 pairs) to start');
+
+  // Recalculate from actual player count
+  dual.numberOfRounds = maxPossibleRounds(dual.pairCount, dual.numberOfCourts);
+
   dual.status = DualAmericanoStatus.ACTIVE;
   dual.startedAt = new Date();
   _appendNextRound(dual);
@@ -255,16 +240,19 @@ export const generateNextRound = async (dualId: string, requesterId: string) => 
     if (pending && pending.length > 0) throw new AppError(httpStatus.BAD_REQUEST, `Round ${dual.currentRound} has ${pending.length} unscored matches`);
   }
   if (dual.currentRound >= dual.numberOfRounds) throw new AppError(httpStatus.BAD_REQUEST, 'All rounds complete');
-  if (!canPlayMoreRounds(dual.pairCount, dual.usedMatchups.length, dual.numberOfCourts)) throw new AppError(httpStatus.BAD_REQUEST, 'All matchups exhausted');
+  if (!canPlayMoreRounds(dual.pairCount, dual.usedMatchups.length, dual.numberOfCourts)) throw new AppError(httpStatus.BAD_REQUEST, 'All partner combinations exhausted');
   _appendNextRound(dual);
   await dual.save();
   return dual;
 };
 
 function _appendNextRound(dual: IDualAmericano): void {
-  const previousByes = dual.rounds.flatMap(r => r.byePairs ?? []).map(p => p as Types.ObjectId);
-  const registeredPairIds = dual.registeredPairs.map(p => p._id as Types.ObjectId);
-  const result = generateDualAmericanoRound(registeredPairIds, dual.usedMatchups, previousByes, dual.numberOfCourts);
+  const result = generateDualAmericanoRound(
+    dual.registeredPairs as any,
+    dual.usedMatchups,
+    [],
+    dual.numberOfCourts,
+  );
   const newRoundNumber = dual.currentRound + 1;
   const matches = result.matches.map(m => ({
     court: m.court,

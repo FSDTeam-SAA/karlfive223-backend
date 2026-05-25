@@ -1,10 +1,11 @@
 import { Types } from 'mongoose';
-import DualAmericano from './dualAmericano.model';
-import { DualAmericanoStatus } from './dualAmericano.interface';
 import { formPairsFromPlayers } from './dualAmericano.helpers';
+import { DualAmericanoStatus } from './dualAmericano.interface';
+import DualAmericano from './dualAmericano.model';
 import {
-  generateDualAmericanoRound,
   canPlayMoreRounds,
+  generateDualAmericanoRound,
+  maxPossibleRounds,
 } from './dualAmericano.pairing';
 
 export const autoStartDualAmericanoEvents = async () => {
@@ -13,65 +14,57 @@ export const autoStartDualAmericanoEvents = async () => {
   const upcomingEvents = await DualAmericano.find({
     isDeleted: false,
     status: DualAmericanoStatus.UPCOMING,
-    startDate: { $lte: now },
+    scheduledAt: { $lte: now },
   });
 
   for (const dual of upcomingEvents) {
     try {
       console.log(`Auto starting Dual Americano ${dual._id}`);
 
-      /**
-       * Auto create pairs from players
-       */
-      if (!dual.registeredPairs?.length) {
-        formPairsFromPlayers(dual);
-      }
-
-      if (dual.pairCount < 2) {
-        console.log(
-          `Skipping ${dual._id}: not enough pairs`
-        );
-        continue;
-      }
-
-      /**
-       * reset in case rerun happens
-       */
+      // Reset state so a re-triggered cron always starts clean
       dual.rounds = [];
       dual.usedMatchups = [];
       dual.currentRound = 0;
+      dual.pairStandings = [];
 
-      let previousByes: Types.ObjectId[] = [];
+      // Build all C(N,2) partner-pair combinations from individual players.
+      // Works whether players registered individually (registeredPlayers) or as
+      // fixed pairs (registeredPairs) — formPairsFromPlayers merges both sources.
+      try {
+        formPairsFromPlayers(dual as any);
+      } catch (e: any) {
+        console.log(`Skipping ${dual._id}: ${e.message}`);
+        continue;
+      }
 
-      /**
-       * generate ALL rounds
-       */
-      for (let i = 0; i < dual.numberOfRounds; i++) {
-        const canContinue = canPlayMoreRounds(
-          dual.pairCount,
-          dual.usedMatchups.length,
+      // Need at least 4 individual players (= 2 pairs on 1 court)
+      if (dual.pairCount < 4) {
+        console.log(`Skipping ${dual._id}: need at least 4 players, found ${dual.pairCount}`);
+        continue;
+      }
+
+      // Derive the number of rounds from actual player count
+      dual.numberOfRounds = maxPossibleRounds(dual.pairCount, dual.numberOfCourts);
+      console.log(
+        `${dual.pairCount} players → ${dual.registeredPairs.length} partner combos → ${dual.numberOfRounds} rounds`,
+      );
+
+      // Pre-generate ALL rounds upfront
+      let generatedRounds = 0;
+      while (canPlayMoreRounds(dual.pairCount, dual.usedMatchups.length, dual.numberOfCourts)) {
+        const result = generateDualAmericanoRound(
+          dual.registeredPairs as any,
+          dual.usedMatchups,
+          [],
           dual.numberOfCourts,
         );
 
-        if (!canContinue) {
-          console.log(
-            `Stopping round generation early for ${dual._id} — all matchups exhausted`
-          );
+        if (result.matches.length === 0) {
+          console.log(`Round ${generatedRounds + 1}: no matches could be formed, stopping early`);
           break;
         }
 
-        const registeredPairIds = dual.registeredPairs.map(
-          (p) => p._id as Types.ObjectId,
-        );
-
-        const result = generateDualAmericanoRound(
-          registeredPairIds,
-          dual.usedMatchups,
-          previousByes,
-          dual.numberOfCourts,
-        );
-
-        const matches = result.matches.map((m) => ({
+        const matches = result.matches.map(m => ({
           court: m.court,
           pair1: new Types.ObjectId(m.pair1),
           pair2: new Types.ObjectId(m.pair2),
@@ -81,26 +74,24 @@ export const autoStartDualAmericanoEvents = async () => {
         }));
 
         dual.rounds.push({
-          roundNumber: i + 1,
+          roundNumber: generatedRounds + 1,
           matches,
           status: 'pending',
-          byePairs: result.byePairs.map(
-            (id) => new Types.ObjectId(id),
-          ),
+          byePairs: result.byePairs.map(id => new Types.ObjectId(id)),
         } as any);
 
-        /**
-         * store used matchups
-         */
         for (const key of result.newMatchupKeys) {
           if (!dual.usedMatchups.includes(key)) {
             dual.usedMatchups.push(key);
           }
         }
 
-        previousByes = result.byePairs.map(
-          (id) => new Types.ObjectId(id),
-        );
+        generatedRounds++;
+      }
+
+      if (generatedRounds === 0) {
+        console.log(`Skipping ${dual._id}: could not generate any rounds`);
+        continue;
       }
 
       dual.currentRound = 1;
@@ -108,15 +99,9 @@ export const autoStartDualAmericanoEvents = async () => {
       dual.startedAt = now;
 
       await dual.save();
-
-      console.log(
-        `Dual Americano started with ${dual.rounds.length} rounds`
-      );
+      console.log(`✅ Dual Americano ${dual._id} started with ${dual.rounds.length} rounds`);
     } catch (error) {
-      console.error(
-        `Auto-start failed for Dual ${dual._id}`,
-        error,
-      );
+      console.error(`Auto-start failed for Dual ${dual._id}`, error);
     }
   }
 };

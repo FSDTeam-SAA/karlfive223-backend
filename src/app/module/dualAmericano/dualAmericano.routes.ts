@@ -3,12 +3,11 @@ import Auth from '../../middlewares/Auth';
 import validateRequest from '../../middlewares/requestValidation';
 import * as controller from './dualAmericano.controller';
 import {
-    assignCourtZodSchema,
-    createDualAmericanoZodSchema,
-    registerPairZodSchema,
-    sendMessageZodSchema,
-    submitScoreZodSchema,
-    updateDualAmericanoZodSchema,
+  assignCourtZodSchema,
+  registerPairZodSchema,
+  sendMessageZodSchema,
+  submitScoreZodSchema,
+  updateDualAmericanoZodSchema
 } from './dualAmericano.validation';
 
 const router = Router();
@@ -48,15 +47,14 @@ router.get('/:id/pairs/:pairId/stats', controller.pairStats);
 // Create a Dual Americano event
 router.post(
   '/',
-  Auth('admin', 'organizer', 'user'),
-  validateRequest(createDualAmericanoZodSchema),
+  Auth('manager', 'organizer', 'user'),
   controller.create,
 );
 
 // Update event config (before start only)
 router.patch(
   '/:id',
-  Auth('admin', 'organizer', 'user'),
+  Auth('manager', 'organizer', 'user'),
   validateRequest(updateDualAmericanoZodSchema),
   controller.update,
 );
@@ -64,7 +62,7 @@ router.patch(
 // Soft delete
 router.delete(
   '/:id',
-  Auth('admin', 'organizer', 'user'),
+  Auth('manager', 'organizer', 'user'),
   controller.remove,
 );
 
@@ -84,8 +82,7 @@ router.post(
 // Single-player join via join code
 router.post(
   '/:id/join',
-  Auth('user'),
-  validateRequest(require('./dualAmericano.validation').joinByCodeZodSchema),
+  Auth('player'),
   controller.joinByCode,
 );
 
