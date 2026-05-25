@@ -134,6 +134,28 @@ export const getByClub = async (clubId: string) => {
   return DualAmericano.find({ club: clubId, isDeleted: false }).sort({ createdAt: -1 });
 };
 
+// Events where the caller is creator or registered player
+export const getMyEvents = async (userId: string, filters: { status?: string; league?: string } = {}, page = 1, limit = 20) => {
+  const uid = new Types.ObjectId(userId);
+  const query: any = {
+    isDeleted: false,
+    $or: [
+      { createdBy: uid },
+      { registeredPlayers: uid },
+      { 'registeredPairs.player1': uid },
+      { 'registeredPairs.player2': uid },
+    ],
+  };
+  if (filters.status) query.status = filters.status;
+  if (filters.league) query.league = new Types.ObjectId(filters.league);
+  const skip = (page - 1) * limit;
+  const [items, total] = await Promise.all([
+    DualAmericano.find(query).skip(skip).limit(limit).sort({ createdAt: -1 }),
+    DualAmericano.countDocuments(query),
+  ]);
+  return { items, total, page, limit };
+};
+
 export const updateDualAmericano = async (id: string, payload: any, requesterId: string) => {
   const dual = await DualAmericano.findOne({ _id: id, isDeleted: false });
   if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');

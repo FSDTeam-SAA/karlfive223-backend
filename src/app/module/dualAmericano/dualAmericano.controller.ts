@@ -38,6 +38,13 @@ export const getByClub = async (req: Request, res: Response) => {
   return sendResponse(res, { statusCode: 200, success: true, message: 'Dual Americano by club', data });
 };
 
+export const getMyEvents = async (req: Request, res: Response) => {
+  const { status, league, page = 1, limit = 20 } = req.query as any;
+  const userId = req.user._id.toString();
+  const data = await service.getMyEvents(userId, { status, league }, Number(page), Number(limit));
+  return sendResponse(res, { statusCode: 200, success: true, message: 'My Dual Americano events', data });
+};
+
 export const joinByCode = async (req: Request, res: Response) => {
   const { code } = req.body;
   const updated = await service.joinByCode(req.params.id, req.user._id.toString(), code);

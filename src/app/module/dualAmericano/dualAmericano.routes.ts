@@ -19,6 +19,9 @@ const router = Router();
 // List all events (filterable: ?status=&club=&league=&page=&limit=)
 router.get('/', controller.getAll);
 
+// Events where the caller is creator or registered player (must be before /:id)
+router.get('/my-events', Auth('manager', 'organizer', 'player'), controller.getMyEvents);
+
 // Single event full details
 router.get('/:id', controller.getById);
 
@@ -27,9 +30,6 @@ router.get('/:id/matches', controller.getAllMatchesByEvent);
 
 // Single event players list
 router.get('/:id/players', controller.getPlayersByEvent);
-
-// All events for a specific club
-router.get('/club/:clubId', controller.getByClub);
 
 // Live leaderboard (pair standings sorted by rankScore)
 router.get('/:id/leaderboard', controller.leaderboard);
