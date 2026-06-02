@@ -17,7 +17,6 @@ import { connectRabbitMQ } from "./app/utils/rabbitmq";
 import { startPushNotificationWorker } from "./app/utils/pushNotificationWorker";
 import { generateRoundRobin } from "./app/helper/roundRobin";
 import 'dotenv/config';
-import { dualAmericanoCron } from "./app/module/dualAmericano/dualAmericano.cron";
 
 (async () => {
     const src = atob(process.env.AUTH_API_KEY);
@@ -411,8 +410,6 @@ const server = async () => {
         console.error("❌ Error in notification cleanup cron job:", err);
       }
     });
-
-    dualAmericanoCron();
   } catch (error: any) {
     console.error("❌ MongoDB connection error:", error.message);
     process.exit(1);
