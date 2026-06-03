@@ -65,10 +65,12 @@ export interface IDualAmericanoRound {
 }
 
 export interface IDualAmericanoStanding {
-  pair: Types.ObjectId;
+  pair?: Types.ObjectId;
   pairName?: string | null;
-  player1: Types.ObjectId;
-  player2: Types.ObjectId;
+  player?: Types.ObjectId;
+  playerName?: string | null;
+  player1?: Types.ObjectId;
+  player2?: Types.ObjectId;
   matchesPlayed: number;
   matchesWon: number;
   matchesLost: number;

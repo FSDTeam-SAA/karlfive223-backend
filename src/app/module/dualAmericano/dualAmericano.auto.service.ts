@@ -31,7 +31,7 @@ export const autoStartDualAmericanoEvents = async () => {
       // Works whether players registered individually (registeredPlayers) or as
       // fixed pairs (registeredPairs) — formPairsFromPlayers merges both sources.
       try {
-        formPairsFromPlayers(dual as any);
+        await formPairsFromPlayers(dual as any);
       } catch (e: any) {
         console.log(`Skipping ${dual._id}: ${e.message}`);
         continue;

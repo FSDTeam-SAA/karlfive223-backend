@@ -42,10 +42,12 @@ const pairSchema = new Schema({
 }, { _id: true });
 
 const pairStandingSchema = new Schema({
-  pair: { type: Schema.Types.ObjectId, required: true },
+  pair: { type: Schema.Types.ObjectId, default: null },
   pairName: { type: String, default: null },
-  player1: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  player2: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  player: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  playerName: { type: String, default: null },
+  player1: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  player2: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   matchesPlayed: { type: Number, default: 0 },
   matchesWon: { type: Number, default: 0 },
   matchesLost: { type: Number, default: 0 },

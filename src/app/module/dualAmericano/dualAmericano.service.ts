@@ -193,25 +193,54 @@ export const registerPair = async (dualId: string, payload: { player1Id: string;
   // ensure players are not already in any pair
   const already = dual.registeredPairs.find(p => p.player1.toString() === payload.player1Id || p.player2.toString() === payload.player1Id || p.player1.toString() === payload.player2Id || p.player2.toString() === payload.player2Id);
   if (already) throw new AppError(httpStatus.CONFLICT, 'One of the players is already in a pair');
+
+  let pairName = payload.pairName;
+  if (!pairName) {
+    const users = await User.find(
+      { _id: { $in: [new Types.ObjectId(payload.player1Id), new Types.ObjectId(payload.player2Id)] } },
+      { _id: 1, name: 1 }
+    ).lean();
+
+    const u1 = users.find(u => u._id.toString() === payload.player1Id.toString());
+    const u2 = users.find(u => u._id.toString() === payload.player2Id.toString());
+
+    const getFirstName = (name: string): string => {
+      if (!name) return 'Player';
+      const parts = name.trim().split(/\s+/);
+      const first = parts[0] || 'Player';
+      return first.charAt(0).toUpperCase() + first.slice(1);
+    };
+
+    const p1Name = u1 ? getFirstName(u1.name) : 'Player 1';
+    const p2Name = u2 ? getFirstName(u2.name) : 'Player 2';
+
+    pairName = `${p1Name} & ${p2Name}`;
+  }
+
   const pair: any = {
     _id: new Types.ObjectId(),
     player1: new Types.ObjectId(payload.player1Id),
     player2: new Types.ObjectId(payload.player2Id),
-    pairName: payload.pairName ?? null,
+    pairName: pairName,
     joinedAt: new Date(),
   } as any;
   dual.registeredPairs.push(pair as any);
   dual.pairCount = dual.registeredPairs.length;
-  // add one standing row for the pair
-  dual.pairStandings.push({
-    pair: pair._id as any,
-    pairName: pair.pairName ?? null,
-    player1: pair.player1 as any,
-    player2: pair.player2 as any,
-    matchesPlayed: 0, matchesWon: 0, matchesLost: 0, matchesDrawn: 0,
-    totalPoints: 0, totalPointsAgainst: 0, pointsDifference: 0,
-    wins: 0, losses: 0, draws: 0, rankScore: 0,
-  } as any);
+
+  const addPlayerStanding = (playerId: any) => {
+    const exists = dual.pairStandings.some((s: any) => (s.player ?? s.pair)?.toString() === playerId.toString());
+    if (!exists) {
+      dual.pairStandings.push({
+        player: playerId,
+        matchesPlayed: 0, matchesWon: 0, matchesLost: 0, matchesDrawn: 0,
+        totalPoints: 0, totalPointsAgainst: 0, pointsDifference: 0,
+        wins: 0, losses: 0, draws: 0, rankScore: 0,
+      } as any);
+    }
+  };
+  addPlayerStanding(pair.player1);
+  addPlayerStanding(pair.player2);
+
   await dual.save();
   return dual;
 };
@@ -222,8 +251,16 @@ export const unregisterPair = async (dualId: string, pairId: string, requesterId
   if (dual.status !== 'upcoming') throw new AppError(httpStatus.BAD_REQUEST, 'Cannot remove pair after start');
   const idx = dual.registeredPairs.findIndex(p => p._id?.toString() === pairId);
   if (idx === -1) throw new AppError(httpStatus.NOT_FOUND, 'Pair not found');
+  const pairToRemove = dual.registeredPairs[idx];
   dual.registeredPairs.splice(idx, 1);
-  dual.pairStandings = dual.pairStandings.filter(s => s.pair.toString() !== pairId);
+  if (pairToRemove) {
+    const p1Id = pairToRemove.player1.toString();
+    const p2Id = pairToRemove.player2.toString();
+    dual.pairStandings = dual.pairStandings.filter(s => {
+      const pid = (s.player ?? s.pair)?.toString();
+      return pid !== p1Id && pid !== p2Id;
+    });
+  }
   dual.pairCount = dual.registeredPairs.length;
   await dual.save();
   return dual;
@@ -237,7 +274,7 @@ export const startDualAmericano = async (dualId: string, requesterId: string) =>
   if (dual.status !== 'upcoming') throw new AppError(httpStatus.BAD_REQUEST, 'Not in upcoming status');
 
   // Always build all C(N,2) partner-pair combinations for the Dual Americano rotation
-  formPairsFromPlayers(dual as IDualAmericano);
+  await formPairsFromPlayers(dual as IDualAmericano);
 
   if (dual.pairCount < 4) throw new AppError(httpStatus.BAD_REQUEST, 'Need at least 4 players (2 pairs) to start');
 
@@ -303,7 +340,7 @@ export const submitMatchScore = async (dualId: string, roundNumber: number, payl
   const pair2 = dual.registeredPairs.find(p => p._id?.toString() === match.pair2.toString());
   if (!pair1 || !pair2) throw new AppError(httpStatus.NOT_FOUND, 'Pair not found');
   const participantIds = [pair1.player1.toString(), pair1.player2.toString(), pair2.player1.toString(), pair2.player2.toString()];
-  if (!participantIds.includes(requesterId) && dual.createdBy.toString() !== requesterId) throw new AppError(httpStatus.FORBIDDEN, 'Only participants or organizer can submit scores');
+  if (!participantIds.includes(requesterId)) throw new AppError(httpStatus.FORBIDDEN, 'Only players of this match can submit the score');
   const totalPair1 = payload.set1Pair1 + (payload.set2Pair1 ?? 0) + (payload.set3Pair1 ?? 0);
   const totalPair2 = payload.set1Pair2 + (payload.set2Pair2 ?? 0) + (payload.set3Pair2 ?? 0);
   const winner: 1 | 2 | null = totalPair1 > totalPair2 ? 1 : totalPair2 > totalPair1 ? 2 : null;
@@ -344,8 +381,13 @@ function _revertPairStandings(dual: IDualAmericano, match: IDualAmericanoMatch):
   const p1Score = score.totalPointsPair1;
   const p2Score = score.totalPointsPair2;
   const isDraw = winner === null;
-  const revert = (pairId: any, scored: number, conceded: number, wasWinner: boolean) => {
-    const s = dual.pairStandings.find(st => st.pair.toString() === pairId.toString());
+
+  const p1Doc = dual.registeredPairs.find(p => p._id!.toString() === pair1.toString());
+  const p2Doc = dual.registeredPairs.find(p => p._id!.toString() === pair2.toString());
+  if (!p1Doc || !p2Doc) return;
+
+  const revertPlayerStanding = (playerId: any, scored: number, conceded: number, wasWinner: boolean) => {
+    const s = dual.pairStandings.find((st: any) => (st.player ?? st.pair).toString() === playerId.toString());
     if (!s) return;
     s.matchesPlayed -= 1;
     s.totalPoints -= scored;
@@ -356,8 +398,12 @@ function _revertPairStandings(dual: IDualAmericano, match: IDualAmericanoMatch):
     else { s.matchesLost -= 1; s.losses -= 1; }
     s.rankScore = parseFloat((s.wins * 3 + s.draws * 1 + s.pointsDifference * 0.01).toFixed(4));
   };
-  revert(pair1, p1Score, p2Score, winner === 1);
-  revert(pair2, p2Score, p1Score, winner === 2);
+
+  revertPlayerStanding(p1Doc.player1, p1Score, p2Score, winner === 1);
+  revertPlayerStanding(p1Doc.player2, p1Score, p2Score, winner === 1);
+
+  revertPlayerStanding(p2Doc.player1, p2Score, p1Score, winner === 2);
+  revertPlayerStanding(p2Doc.player2, p2Score, p1Score, winner === 2);
 }
 
 // Edit/update an existing match score (supports organizer edits of completed matches)
@@ -372,11 +418,8 @@ export const updateMatchScore = async (dualId: string, roundNumber: number, payl
   const pair2 = dual.registeredPairs.find(p => p._id?.toString() === match.pair2.toString());
   if (!pair1 || !pair2) throw new AppError(httpStatus.NOT_FOUND, 'Pair not found');
   const participantIds = [pair1.player1.toString(), pair1.player2.toString(), pair2.player1.toString(), pair2.player2.toString()];
-  const isOrganizer = dual.createdBy.toString() === requesterId;
-  if (!participantIds.includes(requesterId) && !isOrganizer) throw new AppError(httpStatus.FORBIDDEN, 'Only participants or organizer can edit scores');
-  // if match already completed, and organizer is editing, revert previous standings first
+  if (!participantIds.includes(requesterId)) throw new AppError(httpStatus.FORBIDDEN, 'Only players of this match can edit the score');
   if (match.status === DualAmericanoMatchStatus.COMPLETED) {
-    if (!isOrganizer) throw new AppError(httpStatus.FORBIDDEN, 'Only organizer can edit a completed match');
     _revertPairStandings(dual, match);
   }
   const totalPair1 = payload.set1Pair1 + (payload.set2Pair1 ?? 0) + (payload.set3Pair1 ?? 0);
@@ -411,22 +454,48 @@ export const getRoundDetails = async (dualId: string, roundNumber: number) => {
   if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
   const round = dual.rounds.find(r => r.roundNumber === roundNumber);
   if (!round) throw new AppError(httpStatus.NOT_FOUND, `Round ${roundNumber} not found`);
-  return round;
+
+  const pairMap = new Map(
+    dual.registeredPairs.map((pair) => [pair._id!.toString(), pair]),
+  );
+
+  return {
+    _id: round._id,
+    roundNumber: round.roundNumber,
+    status: round.status,
+    byePairs: round.byePairs,
+    matches: round.matches.map((match) => {
+      const pair1 = pairMap.get(match.pair1.toString());
+      const pair2 = match.pair2 ? pairMap.get(match.pair2.toString()) : null;
+
+      return {
+        _id: match._id,
+        court: match.court,
+        status: match.status,
+        score: match.score,
+        winner: match.winner,
+        startTime: match.startTime,
+        endTime: match.endTime,
+        pair1,
+        pair2,
+      };
+    }),
+  };
 };
 
 export const getPairStats = async (dualId: string, pairId: string) => {
   const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
   if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
-  const stat = dual.pairStandings.find(s => s.pair.toString() === pairId);
-  if (!stat) throw new AppError(httpStatus.NOT_FOUND, 'Pair standings not found');
+  const stat = dual.pairStandings.find((s: any) => (s.player ?? s.pair).toString() === pairId.toString());
+  if (!stat) throw new AppError(httpStatus.NOT_FOUND, 'Player stats not found');
   return stat;
 };
 
 export const getMyPairStats = async (dualId: string, userId: string) => {
   const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
   if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
-  const stat = dual.pairStandings.find(s => s.player1.toString() === userId || s.player2.toString() === userId);
-  if (!stat) throw new AppError(httpStatus.NOT_FOUND, 'You are not in a pair for this event');
+  const stat = dual.pairStandings.find((s: any) => (s.player ?? s.pair).toString() === userId.toString());
+  if (!stat) throw new AppError(httpStatus.NOT_FOUND, 'You do not have stats for this event');
   return stat;
 };
 
@@ -451,8 +520,13 @@ function _updatePairStandings(dual: IDualAmericano, match: IDualAmericanoMatch):
   const p1Score = score?.totalPointsPair1 ?? 0;
   const p2Score = score?.totalPointsPair2 ?? 0;
   const isDraw = winner === null;
-  const updateStanding = (pairId: any, scored: number, conceded: number, isWinner: boolean) => {
-    const s = dual.pairStandings.find(st => st.pair.toString() === pairId.toString());
+
+  const p1Doc = dual.registeredPairs.find(p => p._id!.toString() === pair1.toString());
+  const p2Doc = dual.registeredPairs.find(p => p._id!.toString() === pair2.toString());
+  if (!p1Doc || !p2Doc) return;
+
+  const updatePlayerStanding = (playerId: any, scored: number, conceded: number, isWinner: boolean) => {
+    const s = dual.pairStandings.find((st: any) => (st.player ?? st.pair).toString() === playerId.toString());
     if (!s) return;
     s.matchesPlayed += 1;
     s.totalPoints += scored;
@@ -463,8 +537,12 @@ function _updatePairStandings(dual: IDualAmericano, match: IDualAmericanoMatch):
     else { s.matchesLost += 1; s.losses += 1; }
     s.rankScore = parseFloat((s.wins * 3 + s.draws * 1 + s.pointsDifference * 0.01).toFixed(4));
   };
-  updateStanding(pair1, p1Score, p2Score, winner === 1);
-  updateStanding(pair2, p2Score, p1Score, winner === 2);
+
+  updatePlayerStanding(p1Doc.player1, p1Score, p2Score, winner === 1);
+  updatePlayerStanding(p1Doc.player2, p1Score, p2Score, winner === 1);
+
+  updatePlayerStanding(p2Doc.player1, p2Score, p1Score, winner === 2);
+  updatePlayerStanding(p2Doc.player2, p2Score, p1Score, winner === 2);
 }
 
 export const completeDualAmericano = async (dualId: string, requesterId: string) => {
