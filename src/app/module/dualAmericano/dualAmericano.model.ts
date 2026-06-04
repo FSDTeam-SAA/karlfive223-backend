@@ -64,8 +64,8 @@ const pairStandingSchema = new Schema({
 const dualSchema = new Schema<IDualAmericano>({
   name: { type: String, required: true, trim: true },
   description: { type: String, trim: true, default: null },
-  club: { type: Schema.Types.ObjectId, ref: 'Club', required: true },
-  league: { type: Schema.Types.ObjectId, ref: 'League', default: null },
+  // club: { type: Schema.Types.ObjectId, ref: 'Club', required: true },
+  // league: { type: Schema.Types.ObjectId, ref: 'League', default: null },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   numberOfCourts: { type: Number, required: true, min: 1 },
   maxPairs: { type: Number, required: true, min: 2 },

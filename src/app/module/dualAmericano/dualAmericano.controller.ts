@@ -47,7 +47,7 @@ export const getMyEvents = async (req: Request, res: Response) => {
 
 export const joinByCode = async (req: Request, res: Response) => {
   const { code } = req.body;
-  const updated = await service.joinByCode(req.params.id, req.user._id.toString(), code);
+  const updated = await service.joinByCode(req.params.id, req.user._id.toString(), req.params.id);
   return sendResponse(res, { statusCode: 200, success: true, message: 'Joined event', data: updated });
 };
 
