@@ -27,8 +27,8 @@ export const createDualAmericano = async (payload: any, createdBy: string) => {
   return DualAmericano.create({
     ...payload,
     createdBy: new Types.ObjectId(createdBy),
-    club: new Types.ObjectId(payload.club),
-    league: payload.league ? new Types.ObjectId(payload.league) : null,
+    // club: new Types.ObjectId(payload.club),
+    // league: payload.league ? new Types.ObjectId(payload.league) : null,
     numberOfRounds: payload.numberOfRounds ?? defaultRounds,
     pointsPerSet: payload.pointsPerSet ?? 21,
     setsPerMatch: payload.setsPerMatch ?? 1,
@@ -46,7 +46,7 @@ export const createDualAmericano = async (payload: any, createdBy: string) => {
 
 // Player joins by code (single-player registration)
 export const joinByCode = async (dualId: string, userId: string, code: string) => {
-  const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
+  const dual = await DualAmericano.findOne({ joinCode: code, isDeleted: false });
   if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
   if (dual.status !== DualAmericanoStatus.UPCOMING) throw new AppError(httpStatus.BAD_REQUEST, 'Registration closed');
   if (!dual.joinCode || dual.joinCode !== code) throw new AppError(httpStatus.FORBIDDEN, 'Invalid join code');
