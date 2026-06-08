@@ -148,3 +148,58 @@ export const complete = async (req: Request, res: Response) => {
   const done = await service.completeDualAmericano(req.params.id, req.user._id.toString());
   return sendResponse(res, { statusCode: 200, success: true, message: 'Dual Americano completed', data: done });
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATCH DATE ASSIGNMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const assignMatchDateTime = async (req: Request, res: Response) => {
+  const { matchDateTime } = req.body;
+  const updated = await service.assignMatchDateTime(
+    req.params.id,
+    Number(req.params.roundNumber),
+    req.params.matchId,
+    matchDateTime,
+    req.user._id.toString(),
+  );
+  return sendResponse(res, { statusCode: 200, success: true, message: 'Match date assigned', data: updated });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PER-MATCH CHAT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const createOrGetMatchChat = async (req: Request, res: Response) => {
+  const chat = await service.createOrGetMatchChat(
+    req.params.id,
+    Number(req.params.roundNumber),
+    req.params.matchId,
+    req.user._id.toString(),
+  );
+  return sendResponse(res, { statusCode: 200, success: true, message: 'Chat ready', data: chat });
+};
+
+export const sendMatchChatMessage = async (req: Request, res: Response) => {
+  const { message } = req.body;
+  const msg = await service.sendMatchChatMessage(
+    req.params.id,
+    req.params.chatId,
+    message,
+    req.user._id.toString(),
+  );
+  return sendResponse(res, { statusCode: 200, success: true, message: 'Message sent', data: msg });
+};
+
+export const getMatchChat = async (req: Request, res: Response) => {
+  const chat = await service.getMatchChat(
+    req.params.id,
+    req.params.chatId,
+    req.user._id.toString(),
+  );
+  return sendResponse(res, { statusCode: 200, success: true, message: 'Chat retrieved', data: chat });
+};
+
+export const getMyDualAmericanoChats = async (req: Request, res: Response) => {
+  const chats = await service.getMyDualAmericanoChats(req.params.id, req.user._id.toString());
+  return sendResponse(res, { statusCode: 200, success: true, message: 'My chats', data: chats });
+};

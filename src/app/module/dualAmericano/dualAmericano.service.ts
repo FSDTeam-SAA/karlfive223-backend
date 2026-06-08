@@ -14,9 +14,12 @@ import {
     ISubmitMatchScore,
 } from './dualAmericano.interface';
 import DualAmericano from './dualAmericano.model';
+import { DualAmericanoChat } from './dualAmericanoChat.model';
 import User from '../user/user.model';
 import { formPairsFromPlayers } from './dualAmericano.helpers';
 import { canPlayMoreRounds, generateDualAmericanoRound, maxPossibleRounds, recommendedRounds } from './dualAmericano.pairing';
+import { createAndSendNotifications } from '../../helper/socketHelper';
+import { sendPushNotification } from '../../utils/sendPushNotification';
 
 // Create event
 export const createDualAmericano = async (payload: any, createdBy: string) => {
@@ -96,6 +99,7 @@ export const getAllMatchesByEvent = async (dualId: string) => {
         status: match.status,
         score: match.score,
         winner: match.winner,
+        matchDateTime: match.matchDateTime,
         startTime: match.startTime,
         endTime: match.endTime,
         pair1,
@@ -474,6 +478,7 @@ export const getRoundDetails = async (dualId: string, roundNumber: number) => {
         status: match.status,
         score: match.score,
         winner: match.winner,
+        matchDateTime: match.matchDateTime,
         startTime: match.startTime,
         endTime: match.endTime,
         pair1,
@@ -555,4 +560,239 @@ export const completeDualAmericano = async (dualId: string, requesterId: string)
   dual.pairStandings.sort((a, b) => b.rankScore !== a.rankScore ? b.rankScore - a.rankScore : b.pointsDifference - a.pointsDifference);
   await dual.save();
   return dual;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATCH DATE ASSIGNMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const assignMatchDateTime = async (
+  dualId: string,
+  roundNumber: number,
+  matchId: string,
+  matchDateTime: string,
+  requesterId: string,
+) => {
+  const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
+  if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
+
+  const round = dual.rounds.find(r => r.roundNumber === roundNumber);
+  if (!round) throw new AppError(httpStatus.NOT_FOUND, `Round ${roundNumber} not found`);
+
+  const match = round.matches.find(m => m._id?.toString() === matchId) as any;
+  if (!match) throw new AppError(httpStatus.NOT_FOUND, 'Match not found');
+
+  const pair1Doc = dual.registeredPairs.find(p => p._id?.toString() === match.pair1.toString());
+  const pair2Doc = dual.registeredPairs.find(p => p._id?.toString() === match.pair2.toString());
+
+  const matchPlayerIds = [
+    pair1Doc?.player1?.toString(),
+    pair1Doc?.player2?.toString(),
+    pair2Doc?.player1?.toString(),
+    pair2Doc?.player2?.toString(),
+  ].filter(Boolean);
+
+  const isOrganizer = dual.createdBy.toString() === requesterId;
+  const isMatchPlayer = matchPlayerIds.includes(requesterId);
+  if (!isOrganizer && !isMatchPlayer) throw new AppError(httpStatus.FORBIDDEN, 'Only match participants or the organizer can assign match date');
+
+  const oldDateTime = match.matchDateTime;
+  const newDateTime = new Date(matchDateTime);
+
+  const dateChanged = !oldDateTime || new Date(oldDateTime).getTime() !== newDateTime.getTime();
+
+  match.matchDateTime = newDateTime;
+  dual.markModified('rounds');
+  await dual.save();
+
+  if (dateChanged) {
+    const userIds = [
+      pair1Doc?.player1,
+      pair1Doc?.player2,
+      pair2Doc?.player1,
+      pair2Doc?.player2,
+    ].filter(Boolean) as Types.ObjectId[];
+
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const d = newDateTime;
+    const month = monthNames[d.getUTCMonth()];
+    const day = d.getUTCDate();
+    const year = d.getUTCFullYear();
+    let hours = d.getUTCHours();
+    const minutes = d.getUTCMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const formattedDate = `${month} ${day}, ${year}, ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+
+    const pair1Name = pair1Doc?.pairName ?? 'Pair 1';
+    const pair2Name = pair2Doc?.pairName ?? 'Pair 2';
+    const message = `📅 Match rescheduled: ${pair1Name} vs ${pair2Name} in "${dual.name}" (Round ${roundNumber}) has been set to ${formattedDate}`;
+
+    await sendPushNotification(userIds.map(id => id.toString()), 'Match Rescheduled', message);
+    await createAndSendNotifications(userIds, 'Match Rescheduled', message, 'match');
+  }
+
+  return dual;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PER-MATCH CHAT BETWEEN PAIRS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const createOrGetMatchChat = async (
+  dualId: string,
+  roundNumber: number,
+  matchId: string,
+  requesterId: string,
+) => {
+  const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
+  if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
+
+  const round = dual.rounds.find(r => r.roundNumber === roundNumber);
+  if (!round) throw new AppError(httpStatus.NOT_FOUND, `Round ${roundNumber} not found`);
+
+  const match = round.matches.find(m => m._id?.toString() === matchId);
+  if (!match) throw new AppError(httpStatus.NOT_FOUND, 'Match not found');
+
+  const pair1Doc = dual.registeredPairs.find(p => p._id?.toString() === match.pair1.toString());
+  const pair2Doc = dual.registeredPairs.find(p => p._id?.toString() === match.pair2.toString());
+  if (!pair1Doc || !pair2Doc) throw new AppError(httpStatus.NOT_FOUND, 'Pairs not found');
+
+  const participantIds = [
+    pair1Doc.player1.toString(),
+    pair1Doc.player2.toString(),
+    pair2Doc.player1.toString(),
+    pair2Doc.player2.toString(),
+  ];
+
+  if (!participantIds.includes(requesterId) && dual.createdBy.toString() !== requesterId) {
+    throw new AppError(httpStatus.FORBIDDEN, 'You are not a participant of this match');
+  }
+
+  let chat = await DualAmericanoChat.findOne({ dualAmericano: dualId, matchId });
+
+  if (!chat) {
+    chat = await DualAmericanoChat.create({
+      name: `${pair1Doc.pairName ?? 'Pair 1'} vs ${pair2Doc.pairName ?? 'Pair 2'}`,
+      dualAmericano: new Types.ObjectId(dualId),
+      matchId: new Types.ObjectId(matchId),
+      roundNumber,
+      pair1: pair1Doc._id,
+      pair2: pair2Doc._id,
+    });
+  }
+
+  return chat;
+};
+
+export const sendMatchChatMessage = async (
+  dualId: string,
+  chatId: string,
+  message: string,
+  requesterId: string,
+) => {
+  const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
+  if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
+
+  const chat = await DualAmericanoChat.findById(chatId);
+  if (!chat) throw new AppError(httpStatus.NOT_FOUND, 'Chat not found');
+  if (chat.dualAmericano.toString() !== dualId) throw new AppError(httpStatus.FORBIDDEN, 'Chat does not belong to this event');
+
+  const matchInRound = dual.rounds
+    .flatMap(r => r.matches)
+    .find(m => m._id?.toString() === chat.matchId.toString());
+  if (!matchInRound) throw new AppError(httpStatus.NOT_FOUND, 'Match not found');
+
+  const pair1Doc = dual.registeredPairs.find(p => p._id?.toString() === matchInRound.pair1.toString());
+  const pair2Doc = dual.registeredPairs.find(p => p._id?.toString() === matchInRound.pair2.toString());
+
+  const participantIds = [
+    pair1Doc?.player1?.toString(),
+    pair1Doc?.player2?.toString(),
+    pair2Doc?.player1?.toString(),
+    pair2Doc?.player2?.toString(),
+  ].filter(Boolean);
+
+  if (!participantIds.includes(requesterId) && dual.createdBy.toString() !== requesterId) {
+    throw new AppError(httpStatus.FORBIDDEN, 'You are not authorized to send messages in this chat');
+  }
+
+  const newMsg = {
+    text: message,
+    sender: new Types.ObjectId(requesterId),
+    date: new Date(),
+    read: false,
+  };
+  chat.messages.push(newMsg as any);
+  await chat.save();
+
+  const saved = await DualAmericanoChat.findById(chatId)
+    .select({ messages: { $slice: -1 } })
+    .populate('messages.sender', 'name profileImage');
+
+  // Notify other participants via socket
+  const otherIds = participantIds.filter(id => id !== requesterId) as string[];
+  if (otherIds.length > 0) {
+    const sender = await User.findById(requesterId, 'name').lean();
+    const senderName = (sender as any)?.name ?? 'A player';
+    const notifMsg = `💬 New message from ${senderName} in "${chat.name}" chat`;
+    await createAndSendNotifications(otherIds, 'New Chat Message', notifMsg, 'general');
+  }
+
+  return saved?.messages[0];
+};
+
+export const getMatchChat = async (
+  dualId: string,
+  chatId: string,
+  requesterId: string,
+) => {
+  const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
+  if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
+
+  const chat = await DualAmericanoChat.findById(chatId).populate('messages.sender', 'name profileImage');
+  if (!chat) throw new AppError(httpStatus.NOT_FOUND, 'Chat not found');
+  if (chat.dualAmericano.toString() !== dualId) throw new AppError(httpStatus.FORBIDDEN, 'Chat does not belong to this event');
+
+  const matchInRound = dual.rounds
+    .flatMap(r => r.matches)
+    .find(m => m._id?.toString() === chat.matchId.toString());
+
+  const pair1Doc = dual.registeredPairs.find(p => p._id?.toString() === (matchInRound?.pair1?.toString() ?? ''));
+  const pair2Doc = dual.registeredPairs.find(p => p._id?.toString() === (matchInRound?.pair2?.toString() ?? ''));
+
+  const participantIds = [
+    pair1Doc?.player1?.toString(),
+    pair1Doc?.player2?.toString(),
+    pair2Doc?.player1?.toString(),
+    pair2Doc?.player2?.toString(),
+  ].filter(Boolean);
+
+  if (!participantIds.includes(requesterId) && dual.createdBy.toString() !== requesterId) {
+    throw new AppError(httpStatus.FORBIDDEN, 'You are not authorized to view this chat');
+  }
+
+  return chat;
+};
+
+export const getMyDualAmericanoChats = async (dualId: string, requesterId: string) => {
+  const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
+  if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
+
+  const uid = new Types.ObjectId(requesterId);
+
+  const myPairs = dual.registeredPairs.filter(
+    p => p.player1.toString() === requesterId || p.player2.toString() === requesterId,
+  );
+  const myPairIds = myPairs.map(p => p._id);
+
+  const chats = await DualAmericanoChat.find({
+    dualAmericano: new Types.ObjectId(dualId),
+    $or: [{ pair1: { $in: myPairIds } }, { pair2: { $in: myPairIds } }],
+  })
+    .select({ messages: { $slice: -1 } })
+    .populate('messages.sender', 'name profileImage')
+    .sort({ updatedAt: -1 });
+
+  return chats;
 };
