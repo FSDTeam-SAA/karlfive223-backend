@@ -52,6 +52,7 @@ export interface IDualAmericanoMatch {
   score?: IDualAmericanoMatchScore | null;
   winner?: 1 | 2 | null;
   status: DualAmericanoMatchStatus;
+  matchDateTime?: Date | null;
   startTime?: Date;
   endTime?: Date;
 }

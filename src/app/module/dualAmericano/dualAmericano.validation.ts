@@ -70,3 +70,15 @@ export const sendMessageZodSchema = z.object({
     content: z.string().min(1).max(1000),
   }),
 });
+
+export const assignMatchDateTimeZodSchema = z.object({
+  body: z.object({
+    matchDateTime: z.string().min(1, { message: 'matchDateTime is required' }),
+  }),
+});
+
+export const sendMatchChatMessageZodSchema = z.object({
+  body: z.object({
+    message: z.string().min(1).max(2000),
+  }),
+});

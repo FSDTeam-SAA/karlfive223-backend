@@ -4,8 +4,10 @@ import validateRequest from '../../middlewares/requestValidation';
 import * as controller from './dualAmericano.controller';
 import {
     assignCourtZodSchema,
+    assignMatchDateTimeZodSchema,
     createDualAmericanoZodSchema,
     registerPairZodSchema,
+    sendMatchChatMessageZodSchema,
     sendMessageZodSchema,
     submitScoreZodSchema,
     updateDualAmericanoZodSchema,
@@ -199,6 +201,51 @@ router.get(
   '/:id/messages',
   Auth('admin', 'manager', 'player'),
   controller.getMessages,
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATCH DATE ASSIGNMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Organizer assigns a date/time to a specific match
+router.patch(
+  '/:id/rounds/:roundNumber/matches/:matchId/assign-date',
+  Auth('admin', 'manager', 'player'),
+  // validateRequest(assignMatchDateTimeZodSchema),
+  controller.assignMatchDateTime,
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PER-MATCH CHAT (between the two pairs playing each other)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Get all chats for the current user in this event
+router.get(
+  '/:id/my-chats',
+  Auth('admin', 'manager', 'player'),
+  controller.getMyDualAmericanoChats,
+);
+
+// Create or retrieve the chat room for a specific match
+router.post(
+  '/:id/rounds/:roundNumber/matches/:matchId/chat',
+  Auth('admin', 'manager', 'player'),
+  controller.createOrGetMatchChat,
+);
+
+// Send a message to a match chat
+router.post(
+  '/:id/chats/:chatId/send-message',
+  Auth('admin', 'manager', 'player'),
+  // validateRequest(sendMatchChatMessageZodSchema),
+  controller.sendMatchChatMessage,
+);
+
+// Get full chat (all messages) for a match
+router.get(
+  '/:id/chats/:chatId',
+  Auth('admin', 'manager', 'player'),
+  controller.getMatchChat,
 );
 
 export const DualAmericanoRoutes = router;
