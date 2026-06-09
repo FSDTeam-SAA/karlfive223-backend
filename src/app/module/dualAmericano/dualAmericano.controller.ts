@@ -82,13 +82,13 @@ export const nextRound = async (req: Request, res: Response) => {
 
 export const submitScore = async (req: Request, res: Response) => {
   const payload = req.body;
-  const updated = await service.submitMatchScore(req.params.id, Number(req.params.roundNumber), payload, req.user._id.toString());
-  return sendResponse(res, { statusCode: 200, success: true, message: 'Score submitted', data: updated });
+  const updated = await service.saveMatchScore(req.params.id, Number(req.params.roundNumber), payload, req.user._id.toString());
+  return sendResponse(res, { statusCode: 200, success: true, message: 'Score saved', data: updated });
 };
 
 export const updateScore = async (req: Request, res: Response) => {
   const payload = req.body;
-  const updated = await service.updateMatchScore(req.params.id, Number(req.params.roundNumber), payload, req.user._id.toString());
+  const updated = await service.saveMatchScore(req.params.id, Number(req.params.roundNumber), payload, req.user._id.toString());
   return sendResponse(res, { statusCode: 200, success: true, message: 'Score updated', data: updated });
 };
 
@@ -147,6 +147,15 @@ export const cancel = async (req: Request, res: Response) => {
 export const complete = async (req: Request, res: Response) => {
   const done = await service.completeDualAmericano(req.params.id, req.user._id.toString());
   return sendResponse(res, { statusCode: 200, success: true, message: 'Dual Americano completed', data: done });
+};
+
+export const getMatchScore = async (req: Request, res: Response) => {
+  const data = await service.getMatchScore(
+    req.params.id,
+    Number(req.params.roundNumber),
+    req.params.matchId,
+  );
+  return sendResponse(res, { statusCode: 200, success: true, message: 'Match score', data });
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -330,24 +330,46 @@ function _appendNextRound(dual: IDualAmericano): void {
   }
 }
 
-export const submitMatchScore = async (dualId: string, roundNumber: number, payload: ISubmitMatchScore, requesterId: string) => {
+// Single upsert function used by both POST (first submit) and PATCH (edit) routes.
+// Score is always saved. Standings are only updated when isComplete: true is passed.
+// If the match was previously completed, its old standings are reverted first.
+// This mirrors how updateMatch works in the regular league module.
+export const saveMatchScore = async (dualId: string, roundNumber: number, payload: ISubmitMatchScore, requesterId: string) => {
   const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
   if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
-  if (dual.status !== 'active') throw new AppError(httpStatus.BAD_REQUEST, 'Not active');
+  if (dual.status !== 'active') throw new AppError(httpStatus.BAD_REQUEST, 'Event is not active');
+
   const round = dual.rounds.find(r => r.roundNumber === roundNumber);
   if (!round) throw new AppError(httpStatus.NOT_FOUND, `Round ${roundNumber} not found`);
+
   const match = round.matches.find(m => m._id?.toString() === payload.matchId) as IDualAmericanoMatch | undefined;
   if (!match) throw new AppError(httpStatus.NOT_FOUND, 'Match not found');
-  if (match.status === DualAmericanoMatchStatus.COMPLETED) throw new AppError(httpStatus.CONFLICT, 'Already scored');
-  // find pairs in registry
+
   const pair1 = dual.registeredPairs.find(p => p._id?.toString() === match.pair1.toString());
   const pair2 = dual.registeredPairs.find(p => p._id?.toString() === match.pair2.toString());
   if (!pair1 || !pair2) throw new AppError(httpStatus.NOT_FOUND, 'Pair not found');
+
+  const isOrganizer = dual.createdBy.toString() === requesterId;
   const participantIds = [pair1.player1.toString(), pair1.player2.toString(), pair2.player1.toString(), pair2.player2.toString()];
-  if (!participantIds.includes(requesterId)) throw new AppError(httpStatus.FORBIDDEN, 'Only players of this match can submit the score');
+  if (!isOrganizer && !participantIds.includes(requesterId)) {
+    throw new AppError(httpStatus.FORBIDDEN, 'Only match participants or the organizer can submit the score');
+  }
+
+  const wasAlreadyCompleted = match.status === DualAmericanoMatchStatus.COMPLETED;
+
+  // If match was previously completed, revert its standings before applying new data
+  if (wasAlreadyCompleted) {
+    _revertPairStandings(dual, match);
+    match.status = DualAmericanoMatchStatus.PENDING;
+  }
+
   const totalPair1 = payload.set1Pair1 + (payload.set2Pair1 ?? 0) + (payload.set3Pair1 ?? 0);
   const totalPair2 = payload.set1Pair2 + (payload.set2Pair2 ?? 0) + (payload.set3Pair2 ?? 0);
   const winner: 1 | 2 | null = totalPair1 > totalPair2 ? 1 : totalPair2 > totalPair1 ? 2 : null;
+
+  // Always save the score — visible regardless of completion status.
+  // Setting status to IN_PROGRESS ensures Mongoose detects a real subdoc
+  // change and flushes the score to DB even when isComplete is false.
   match.score = {
     set1Pair1: payload.set1Pair1, set1Pair2: payload.set1Pair2,
     set2Pair1: payload.set2Pair1 ?? 0, set2Pair2: payload.set2Pair2 ?? 0,
@@ -355,14 +377,54 @@ export const submitMatchScore = async (dualId: string, roundNumber: number, payl
     totalPointsPair1: totalPair1, totalPointsPair2: totalPair2,
   } as any;
   match.winner = winner;
-  match.status = DualAmericanoMatchStatus.COMPLETED;
-  match.endTime = new Date();
-  _updatePairStandings(dual, match);
-  const allDone = round.matches.every(m => m.status === 'completed');
-  if (allDone) round.status = DualAmericanoRoundStatus.COMPLETED;
+  match.status = DualAmericanoMatchStatus.IN_PROGRESS;
+
+  // Only mark complete and update standings when explicitly requested
+  if (payload.isComplete === true) {
+    match.status = DualAmericanoMatchStatus.COMPLETED;
+    match.endTime = new Date();
+    _updatePairStandings(dual, match);
+
+    const allDone = round.matches.every(m => m.status === DualAmericanoMatchStatus.COMPLETED);
+    if (allDone) round.status = DualAmericanoRoundStatus.COMPLETED;
+  }
+
+  dual.markModified('rounds');
   await dual.save();
+
+  // Send notifications only when completing for the first time or re-completing
+  if (payload.isComplete === true) {
+    const allPlayerIds = [pair1.player1, pair1.player2, pair2.player1, pair2.player2] as Types.ObjectId[];
+    const pair1Name = pair1.pairName ?? 'Pair 1';
+    const pair2Name = pair2.pairName ?? 'Pair 2';
+
+    if (winner === null) {
+      const msg = `🤝 Match draw: ${pair1Name} vs ${pair2Name} in "${dual.name}" (Round ${roundNumber}) — ${totalPair1}-${totalPair2}`;
+      await sendPushNotification(allPlayerIds.map(id => id.toString()), 'Match Draw', msg);
+      await createAndSendNotifications(allPlayerIds, 'Match Draw', msg, 'match');
+    } else {
+      const winPair = winner === 1 ? pair1Name : pair2Name;
+      const losePair = winner === 1 ? pair2Name : pair1Name;
+      const winScore = winner === 1 ? totalPair1 : totalPair2;
+      const loseScore = winner === 1 ? totalPair2 : totalPair1;
+      const winnerIds = (winner === 1 ? [pair1.player1, pair1.player2] : [pair2.player1, pair2.player2]) as Types.ObjectId[];
+      const loserIds = (winner === 1 ? [pair2.player1, pair2.player2] : [pair1.player1, pair1.player2]) as Types.ObjectId[];
+
+      const winMsg = `🏆 Match won! ${winPair} beat ${losePair} in "${dual.name}" (Round ${roundNumber}) — ${winScore}-${loseScore}`;
+      const loseMsg = `📉 Match result: ${winPair} beat ${losePair} in "${dual.name}" (Round ${roundNumber}) — ${winScore}-${loseScore}`;
+
+      await sendPushNotification(winnerIds.map(id => id.toString()), 'Match Won! 🏆', winMsg);
+      await createAndSendNotifications(winnerIds, 'Match Won! 🏆', winMsg, 'match');
+      await sendPushNotification(loserIds.map(id => id.toString()), 'Match Result', loseMsg);
+      await createAndSendNotifications(loserIds, 'Match Result', loseMsg, 'match');
+    }
+  }
+
   return dual;
 };
+
+// Keep old names as aliases so the controller doesn't need changing
+export const submitMatchScore = saveMatchScore;
 
 // Assign court to a match
 export const assignCourt = async (dualId: string, roundNumber: number, matchId: string, court: number, requesterId: string) => {
@@ -410,39 +472,68 @@ function _revertPairStandings(dual: IDualAmericano, match: IDualAmericanoMatch):
   revertPlayerStanding(p2Doc.player2, p2Score, p1Score, winner === 2);
 }
 
-// Edit/update an existing match score (supports organizer edits of completed matches)
-export const updateMatchScore = async (dualId: string, roundNumber: number, payload: ISubmitMatchScore, requesterId: string) => {
+// Alias used by the PATCH route — same logic as saveMatchScore
+export const updateMatchScore = saveMatchScore;
+
+// Get a single match's score with enriched pair/player info
+export const getMatchScore = async (dualId: string, roundNumber: number, matchId: string) => {
   const dual = await DualAmericano.findOne({ _id: dualId, isDeleted: false });
   if (!dual) throw new AppError(httpStatus.NOT_FOUND, 'Dual Americano not found');
+
   const round = dual.rounds.find(r => r.roundNumber === roundNumber);
   if (!round) throw new AppError(httpStatus.NOT_FOUND, `Round ${roundNumber} not found`);
-  const match = round.matches.find(m => m._id?.toString() === payload.matchId) as IDualAmericanoMatch | undefined;
+
+  const match = round.matches.find(m => m._id?.toString() === matchId);
   if (!match) throw new AppError(httpStatus.NOT_FOUND, 'Match not found');
-  const pair1 = dual.registeredPairs.find(p => p._id?.toString() === match.pair1.toString());
-  const pair2 = dual.registeredPairs.find(p => p._id?.toString() === match.pair2.toString());
-  if (!pair1 || !pair2) throw new AppError(httpStatus.NOT_FOUND, 'Pair not found');
-  const participantIds = [pair1.player1.toString(), pair1.player2.toString(), pair2.player1.toString(), pair2.player2.toString()];
-  if (!participantIds.includes(requesterId)) throw new AppError(httpStatus.FORBIDDEN, 'Only players of this match can edit the score');
-  if (match.status === DualAmericanoMatchStatus.COMPLETED) {
-    _revertPairStandings(dual, match);
-  }
-  const totalPair1 = payload.set1Pair1 + (payload.set2Pair1 ?? 0) + (payload.set3Pair1 ?? 0);
-  const totalPair2 = payload.set1Pair2 + (payload.set2Pair2 ?? 0) + (payload.set3Pair2 ?? 0);
-  const winner: 1 | 2 | null = totalPair1 > totalPair2 ? 1 : totalPair2 > totalPair1 ? 2 : null;
-  match.score = {
-    set1Pair1: payload.set1Pair1, set1Pair2: payload.set1Pair2,
-    set2Pair1: payload.set2Pair1 ?? 0, set2Pair2: payload.set2Pair2 ?? 0,
-    set3Pair1: payload.set3Pair1 ?? 0, set3Pair2: payload.set3Pair2 ?? 0,
-    totalPointsPair1: totalPair1, totalPointsPair2: totalPair2,
-  } as any;
-  match.winner = winner;
-  match.status = DualAmericanoMatchStatus.COMPLETED;
-  match.endTime = new Date();
-  _updatePairStandings(dual, match);
-  const allDone = round.matches.every(m => m.status === DualAmericanoMatchStatus.COMPLETED);
-  if (allDone) round.status = DualAmericanoRoundStatus.COMPLETED;
-  await dual.save();
-  return dual;
+
+  const pair1Doc = dual.registeredPairs.find(p => p._id?.toString() === match.pair1.toString());
+  const pair2Doc = dual.registeredPairs.find(p => p._id?.toString() === match.pair2.toString());
+
+  const allPlayerIds = [
+    pair1Doc?.player1, pair1Doc?.player2,
+    pair2Doc?.player1, pair2Doc?.player2,
+  ].filter(Boolean);
+
+  const users = await User.find({ _id: { $in: allPlayerIds } }).select('name profileImage');
+  const userMap = new Map(users.map(u => [u._id.toString(), u]));
+
+  const buildPairInfo = (pairDoc: any) => {
+    if (!pairDoc) return null;
+    const p1 = userMap.get(pairDoc.player1.toString());
+    const p2 = userMap.get(pairDoc.player2.toString());
+    return {
+      _id: pairDoc._id,
+      pairName: pairDoc.pairName ?? null,
+      player1: { _id: pairDoc.player1, name: (p1 as any)?.name ?? null, profileImage: (p1 as any)?.profileImage ?? null },
+      player2: { _id: pairDoc.player2, name: (p2 as any)?.name ?? null, profileImage: (p2 as any)?.profileImage ?? null },
+    };
+  };
+
+  const score = match.score;
+  return {
+    _id: match._id,
+    court: match.court,
+    matchDateTime: match.matchDateTime,
+    status: match.status,
+    isComplete: match.status === DualAmericanoMatchStatus.COMPLETED,
+    startTime: match.startTime,
+    endTime: match.endTime,
+    winner: match.winner,
+    score: score
+      ? {
+          set1Pair1: score.set1Pair1,
+          set1Pair2: score.set1Pair2,
+          set2Pair1: score.set2Pair1 ?? 0,
+          set2Pair2: score.set2Pair2 ?? 0,
+          set3Pair1: score.set3Pair1 ?? 0,
+          set3Pair2: score.set3Pair2 ?? 0,
+          totalPointsPair1: score.totalPointsPair1,
+          totalPointsPair2: score.totalPointsPair2,
+        }
+      : null,
+    pair1: buildPairInfo(pair1Doc),
+    pair2: buildPairInfo(pair2Doc),
+  };
 };
 
 // List leaderboard (pairStandings sorted)
