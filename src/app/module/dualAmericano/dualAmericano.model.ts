@@ -64,7 +64,7 @@ const pairStandingSchema = new Schema({
 
 const dualSchema = new Schema<IDualAmericano>({
   name: { type: String, required: true, trim: true },
-  description: { type: String, trim: true, default: null },
+  description: { type: String, trim: true, required: true },
   // club: { type: Schema.Types.ObjectId, ref: 'Club', required: true },
   // league: { type: Schema.Types.ObjectId, ref: 'League', default: null },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -85,7 +85,7 @@ const dualSchema = new Schema<IDualAmericano>({
   pairStandings: { type: [pairStandingSchema], default: [] },
   usedMatchups: { type: [String], default: [] },
   status: { type: String, enum: Object.values(DualAmericanoStatus), default: DualAmericanoStatus.UPCOMING },
-  scheduledAt: { type: Date, default: null },
+  scheduledAt: { type: Date, required: true },
   startedAt: { type: Date, default: null },
   completedAt: { type: Date, default: null },
   isDeleted: { type: Boolean, default: false },

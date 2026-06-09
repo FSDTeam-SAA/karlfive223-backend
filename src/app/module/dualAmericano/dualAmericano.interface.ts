@@ -87,26 +87,26 @@ export interface IDualAmericanoStanding {
 
 export interface IDualAmericano extends Document {
   name: string;
-  description?: string;
+  description: string;
   club: Types.ObjectId;
   league?: Types.ObjectId;
   createdBy: Types.ObjectId;
   numberOfCourts: number;
-  maxPairs: number; // number of pairs allowed
+  maxPairs: number;
   pointsPerSet: number;
   setsPerMatch: number;
   numberOfRounds: number;
-  registeredPairs: IDualAmericanoPair[]; // subdocs (created after pairing)
-  registeredPlayers: Types.ObjectId[]; // players register individually
+  registeredPairs: IDualAmericanoPair[];
+  registeredPlayers: Types.ObjectId[];
   pairCount: number;
-  joinCode?: string; // code/OTP to join event
+  joinCode?: string;
   rounds: IDualAmericanoRound[];
   messages?: { sender: Types.ObjectId; content: string; createdAt: Date }[];
   currentRound: number;
   pairStandings: IDualAmericanoStanding[];
-  usedMatchups: string[]; // canonical matchup keys between pairIds
+  usedMatchups: string[];
   status: DualAmericanoStatus;
-  scheduledAt?: Date;
+  scheduledAt: Date;
   startedAt?: Date;
   completedAt?: Date;
   isDeleted: boolean;
@@ -116,7 +116,7 @@ export interface IDualAmericano extends Document {
 
 export interface ICreateDualAmericano {
   name: string;
-  description?: string;
+  description: string;
   club: string;
   league?: string;
   numberOfCourts: number;
@@ -124,7 +124,7 @@ export interface ICreateDualAmericano {
   pointsPerSet?: number;
   setsPerMatch?: number;
   numberOfRounds?: number;
-  scheduledAt?: string;
+  scheduledAt: string;
 }
 
 export interface IRegisterPair {
