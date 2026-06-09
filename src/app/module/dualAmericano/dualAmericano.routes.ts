@@ -178,6 +178,13 @@ router.post(
   controller.assignCourt,
 );
 
+// Get score details for a specific match
+router.get(
+  '/:id/rounds/:roundNumber/matches/:matchId/score',
+  Auth('admin', 'manager', 'player'),
+  controller.getMatchScore,
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // AUTHENTICATED: MY STATS & MESSAGING
 // ─────────────────────────────────────────────────────────────────────────────

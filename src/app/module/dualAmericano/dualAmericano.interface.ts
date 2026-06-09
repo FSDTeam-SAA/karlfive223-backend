@@ -141,4 +141,5 @@ export interface ISubmitMatchScore {
   set2Pair2?: number;
   set3Pair1?: number;
   set3Pair2?: number;
+  isComplete?: boolean;
 }
