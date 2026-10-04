@@ -10,7 +10,7 @@ const autoSubscriptionSchema = new Schema<IAutoSubscription>({
   },
   status: {
     type: String,
-    enum: ['pending', 'active', 'canceled', 'failed', 'suspended'],
+    enum: ['pending', 'trialing', 'active', 'canceled', 'failed', 'suspended'],
     default: 'pending',
   },
   stripeSubscriptionId: { type: String, sparse: true}, // Sparse for pending records

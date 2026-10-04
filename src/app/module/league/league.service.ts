@@ -218,7 +218,7 @@ const getAllLeaguesfree = async (params: any, options: IOption,)  => {
 };
 
 const getLeagueById = async (id: string) => {
-  const result = await League.findById(id);
+  const result = await League.findById(id).populate("addTeams");
   if (!result) throw new AppError(404, "No league found");
   return result;
 };

@@ -1,7 +1,8 @@
 import AppError from "../../error/appError";
 import { createAndSendNotifications } from "../../helper/socketHelper";
 import User from "../user/user.model";
-import { EVENT_OTP_CONFIG, EVENT_STATUS } from "./event.constant";
+import { EVENT_STATUS } from "./event.constant";
+// import { EVENT_OTP_CONFIG } from "./event.constant"; // Legacy free-trial OTP flow disabled.
 import Event from "./event.model";
 
 // ─── Create Event (Club Users Only) ──────────────────────────────────────────
@@ -56,12 +57,9 @@ const createEvent = async (
   const managerIds = managers.map((m) => m._id);
 
   if (managerIds.length > 0) {
-    await createAndSendNotifications(
-      managerIds,
-      "New Event Request",
-      `📋 ${user.name} from ${payload.organizationName} has submitted a new event: "${payload.eventName}" for approval.`,
-      "event"
-    );
+    const title = "New Event Request";
+    const message = `📋 ${user.name} from ${payload.organizationName} has submitted a new event: "${payload.eventName}" for approval.`;
+    await createAndSendNotifications(managerIds, title, message, "event");
   }
 
   return event;
@@ -137,16 +135,15 @@ const approveEvent = async (eventId: string, managerEmail: string) => {
     throw new AppError(400, `Event is already ${event.status}`);
   }
 
-  // Generate OTP and set expiry to event end date
+  /* LEGACY FREE-SUBSCRIPTION OTP — DISABLED
   const otp = EVENT_OTP_CONFIG.generateOtp();
-  
-  // OTP is valid until the event ends
   const otpExpiry = new Date(event.endDate);
+  */
 
   // Update event
   event.status = EVENT_STATUS.APPROVED;
-  event.otp = otp;
-  event.otpExpiry = otpExpiry;
+  // event.otp = otp; // Legacy free-subscription OTP — disabled.
+  // event.otpExpiry = otpExpiry;
   event.approvedBy = manager._id as any;
   event.approvalDate = new Date();
 
@@ -157,12 +154,9 @@ const approveEvent = async (eventId: string, managerEmail: string) => {
   // Send notification to event creator about approval
   const creator = event.createdBy as any;
   if (creator && creator._id) {
-    await createAndSendNotifications(
-      [creator._id],
-      "Event Approved! 🎉",
-      `✅ Your event "${event.eventName}" has been approved! OTP: ${otp}. Valid until ${event.endDate.toLocaleDateString()}. Share this OTP with participants to claim free trials.`,
-      "success"
-    );
+    const title = "Event Approved! 🎉";
+    const message = `✅ Your event "${event.eventName}" has been approved.`;
+    await createAndSendNotifications([creator._id], title, message, "success");
   }
 
   return event;
@@ -204,18 +198,15 @@ const declineEvent = async (
   const creator = event.createdBy as any;
   if (creator && creator._id) {
     const reasonText = declineReason ? ` Reason: ${declineReason}` : "";
-    await createAndSendNotifications(
-      [creator._id],
-      "Event Declined",
-      `❌ Your event "${event.eventName}" has been declined.${reasonText}`,
-      "warning"
-    );
+    const title = "Event Declined";
+    const message = `❌ Your event "${event.eventName}" has been declined.${reasonText}`;
+    await createAndSendNotifications([creator._id], title, message, "warning");
   }
 
   return event;
 };
 
-// ─── Validate Event OTP ──────────────────────────────────────────────────────
+/* LEGACY FREE-SUBSCRIPTION OTP VALIDATION — DISABLED
 const validateEventOtp = async (otp: string) => {
   const event = await Event.findOne({ otp, status: EVENT_STATUS.APPROVED });
 
@@ -236,6 +227,7 @@ const incrementOtpUsage = async (eventId: string) => {
     $inc: { otpUsedCount: 1 },
   });
 };
+*/
 
 export const eventService = {
   createEvent,
@@ -244,6 +236,6 @@ export const eventService = {
   getSingleEvent,
   approveEvent,
   declineEvent,
-  validateEventOtp,
-  incrementOtpUsage,
+  // validateEventOtp, // Legacy free-subscription OTP — disabled.
+  // incrementOtpUsage,
 };

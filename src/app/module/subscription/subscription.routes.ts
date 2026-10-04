@@ -1,8 +1,6 @@
 import express from 'express';
 import auth from '../../middlewares/Auth';
 import {
-    activateFreeTrial,
-    claimFreeTrialWithOtp,
     expireSubscriptions,
     getAllSubscriptions,
     getMySubscription,
@@ -31,21 +29,11 @@ router.get(
   getSubscriptionHistory
 );
 
-// ─── Claim free trial with event OTP or coupon code ───────────────────────────
-// Accept either an event OTP or a manager-created coupon code (5 digits)
-router.post(
-  '/claim-free-trial',
-  auth('player', 'manager', 'admin', 'referee'),
-  claimFreeTrialWithOtp
-);
-
-// ─── [DEPRECATED] Activate free trial without OTP ─────────────────────────────
-// This endpoint is deprecated and kept only for backward compatibility
-router.post(
-  '/activate-free-trial',
-  auth('player', 'manager', 'admin', 'referee'),
-  activateFreeTrial
-);
+/* LEGACY OTP/coupon routes — DISABLED. Do not re-enable without replacing the
+ * Stripe trial lifecycle with an equivalent saved-payment-method flow.
+router.post('/claim-free-trial', auth('player', 'manager', 'admin', 'referee'), claimFreeTrialWithOtp);
+router.post('/activate-free-trial', auth('player', 'manager', 'admin', 'referee'), activateFreeTrial);
+*/
 
 // ─── Admin only ────────────────────────────────────────────────────────────────
 router.get('/all', auth('admin'), getAllSubscriptions);

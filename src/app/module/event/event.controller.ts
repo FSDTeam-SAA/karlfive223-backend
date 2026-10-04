@@ -73,7 +73,7 @@ export const approveEvent = catchAsycn(async (req, res) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Event approved successfully. OTP generated.",
+    message: "Event approved successfully.",
     data: result,
   });
 });

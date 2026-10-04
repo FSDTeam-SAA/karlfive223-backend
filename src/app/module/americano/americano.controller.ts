@@ -312,6 +312,22 @@ const updateAmericanoMatch = catchAsycn(async (req: Request, res: Response) => {
   });
 });
 
+const rescheduleAmericanoMatch = catchAsycn(async (req: Request, res: Response) => {
+  const currentUserId = req.user?._id || req.user?.id;
+  const result = await americanoService.rescheduleMatch(
+    req.params.matchId,
+    req.body.matchDateTime,
+    currentUserId
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Match date updated successfully",
+    data: result,
+  });
+});
+
 const deleteAmericanoMatch = catchAsycn(async (req: Request, res: Response) => {
   const currentUserId = req.user?._id || req.user?.id;
   await americanoService.deleteMatch(req.params.matchId, currentUserId);
@@ -346,5 +362,6 @@ export const americanoController = {
   editAmericanoMatchScore,
   assignCourtNumberToMatch,
   updateAmericanoMatch,
+  rescheduleAmericanoMatch,
   deleteAmericanoMatch,
 };

@@ -64,9 +64,15 @@ const createTeam = async (
 
   // ─── Subscription enforcement for private leagues ──────────────────────────
   if (leagueDoc.leagueType === "private") {
-    // Both the team owner and the co-player need valid subscriptions
-    await enforceJoinLeagueLimit(String(user._id), String(league2));
-    await enforceJoinLeagueLimit(String(player._id), String(league2));
+    // Both the team owner and the co-player need valid subscriptions —
+    // checked separately so the error tells the applicant exactly which
+    // one of them is missing a plan.
+    await enforceJoinLeagueLimit(String(user._id), String(league2), "You");
+    await enforceJoinLeagueLimit(
+      String(player._id),
+      String(league2),
+      "Your co-player"
+    );
   }
 
   const result = await Team.create({

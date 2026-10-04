@@ -3,7 +3,7 @@ import { Document } from 'mongoose';
 export interface IRecurringSubscription extends Document {
   userId: string;
   plan: 'basic' | 'gold' | 'club';
-  status: 'pending' | 'active' | 'failed' | 'canceled' | 'past_due';
+  status: 'pending' | 'trialing' | 'active' | 'failed' | 'canceled' | 'past_due';
   
   // Stripe IDs
   stripeCustomerId: string;
@@ -16,8 +16,8 @@ export interface IRecurringSubscription extends Document {
   billingPeriodStart: Date;
   billingPeriodEnd: Date;
   
-  // Initial payment
-  initialPaymentIntentId: string;
+  // Card-collection SetupIntent. It must never charge the first month.
+  initialSetupIntentId: string;
   
   // Failure tracking
   failureCount: number;
@@ -27,6 +27,9 @@ export interface IRecurringSubscription extends Document {
   // Dates
   canceledAt?: Date;
   cancelReason?: string;
+  cancelAtPeriodEnd?: boolean;
+  trialStart?: Date;
+  trialEnd?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +41,7 @@ export interface ICreateRecurringSubscriptionPayload {
 }
 
 export interface IConfirmRecurringSubscriptionPayload {
-  paymentIntentId: string;
-  paymentMethodId: string;
+  userId: string;
+  setupIntentId: string;
+  paymentMethodId?: string;
 }

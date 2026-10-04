@@ -38,6 +38,9 @@ const matchSchema = new Schema<IMatch>(
     },
     // ✅ prevents double-counting if match is edited multiple times
     standingsApplied: { type: Boolean, default: false },
+    // How many times a completed match's score has been corrected — capped
+    // at 2 by editCompletedMatchScore.
+    scoreEditCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

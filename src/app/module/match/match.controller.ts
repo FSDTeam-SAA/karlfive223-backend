@@ -352,6 +352,37 @@ const assignCourtNumber = catchAsycn(async (req: Request, res: Response) => {
   });
 });
 
+const rescheduleMatch = catchAsycn(async (req: Request, res: Response) => {
+  const { matchDateTime } = req.body;
+  const currentUserId = getCurrentUserIdFromRequest(req);
+
+  if (!matchDateTime) {
+    throw new AppError(400, "matchDateTime is required");
+  }
+
+  const result = await matchService.rescheduleMatch(
+    req.params.id,
+    matchDateTime,
+    currentUserId
+  );
+
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Match not found",
+      data: null,
+    });
+  }
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Match date updated successfully",
+    data: result,
+  });
+});
+
 const deleteMatch = catchAsycn(async (req: Request, res: Response) => {
   const result = await matchService.deleteMatch(req.params.id);
 
@@ -409,6 +440,7 @@ export default {
   editCompletedMatchScore,
   updateMatch,
   assignCourtNumber,
+  rescheduleMatch,
   deleteMatch,
   getPlayerNextMatches,
   getTeamFixturesByLeague,

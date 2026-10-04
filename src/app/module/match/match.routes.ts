@@ -26,6 +26,11 @@ router.patch(
 	auth(userrole.player, userrole.manager, userrole.admin),
 	matchController.assignCourtNumber
 );
+router.patch(
+	"/:id/reschedule",
+	auth(userrole.player, userrole.manager, userrole.admin),
+	matchController.rescheduleMatch
+);
 router.get("/:id", matchController.getSingleMatch);
 router.patch("/:id",   matchController.updateMatch);
 router.delete("/:id", matchController.deleteMatch);

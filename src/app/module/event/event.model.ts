@@ -37,6 +37,7 @@ const eventSchema = new Schema<IEvent>(
       enum: ["pending", "approved", "declined"],
       default: "pending",
     },
+    /* Legacy free-subscription OTP storage — disabled.
     otp: {
       type: String,
       default: null,
@@ -45,6 +46,14 @@ const eventSchema = new Schema<IEvent>(
       type: Date,
       default: null,
     },
+    otpUsedCount: {
+      type: Number,
+      default: 0,
+    },
+    */
+    // approvedBy/approvalDate/declineReason are NOT part of the legacy OTP
+    // flow — approveEvent()/declineEvent() in event.service.ts still set
+    // these on every request, so they must stay active.
     approvedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -58,10 +67,6 @@ const eventSchema = new Schema<IEvent>(
       type: String,
       default: null,
     },
-    otpUsedCount: {
-      type: Number,
-      default: 0,
-    },
   },
   {
     timestamps: true,
@@ -70,7 +75,7 @@ const eventSchema = new Schema<IEvent>(
 
 // Index for efficient queries
 eventSchema.index({ createdBy: 1, status: 1 });
-eventSchema.index({ otp: 1 });
+// eventSchema.index({ otp: 1 }); // Legacy free-subscription OTP index — disabled.
 
 const Event = mongoose.model<IEvent>("Event", eventSchema);
 

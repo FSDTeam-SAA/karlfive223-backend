@@ -15,7 +15,8 @@ import { handleRecurringSubscriptionWebhook } from './recurringSubscription.webh
 
 // ─── Create Payment Intent for Recurring Subscription ──────────────────────
 export const createRecurringPayment = catchAsycn(async (req, res) => {
-  const { userId, plan='basic', amount } = req.body;
+  const { plan='basic', amount } = req.body;
+  const userId = String(req.user?._id || req.user?.id || '');
 
   if (!userId || !plan || !amount) {
     throw new AppError(400, 'userId, plan, and amount are required');
@@ -37,17 +38,19 @@ export const createRecurringPayment = catchAsycn(async (req, res) => {
 
 // ─── Confirm Payment and Activate Subscription ──────────────────────────────
 export const confirmRecurringPaymentHandler = catchAsycn(async (req, res) => {
-  const { paymentIntentId, paymentMethodId } = req.body;
+  const { setupIntentId, paymentMethodId } = req.body;
+  const userId = String(req.user?._id || req.user?.id || '');
 
-  if (!paymentIntentId || !paymentMethodId) {
+  if (!setupIntentId) {
     throw new AppError(
       400,
-      'paymentIntentId and paymentMethodId are required'
+      'setupIntentId is required'
     );
   }
 
   const result = await confirmRecurringPayment({
-    paymentIntentId,
+    userId,
+    setupIntentId,
     paymentMethodId,
   });
 
@@ -61,7 +64,7 @@ export const confirmRecurringPaymentHandler = catchAsycn(async (req, res) => {
 
 // ─── Get Subscription Status ────────────────────────────────────────────────
 export const getSubscriptionStatus = catchAsycn(async (req, res) => {
-  const { userId } = req.params;
+  const userId = String(req.user?._id || req.user?.id || '');
 
   if (!userId) {
     throw new AppError(400, 'userId is required');
@@ -81,7 +84,7 @@ export const getSubscriptionStatus = catchAsycn(async (req, res) => {
 
 // ─── Get Subscription History ──────────────────────────────────────────────
 export const getSubscriptionHistory = catchAsycn(async (req, res) => {
-  const { userId } = req.params;
+  const userId = String(req.user?._id || req.user?.id || '');
 
   if (!userId) {
     throw new AppError(400, 'userId is required');
@@ -99,7 +102,8 @@ export const getSubscriptionHistory = catchAsycn(async (req, res) => {
 
 // ─── Cancel Subscription ────────────────────────────────────────────────────
 export const cancelSubscriptionHandler = catchAsycn(async (req, res) => {
-  const { userId, reason } = req.body;
+  const { reason } = req.body;
+  const userId = String(req.user?._id || req.user?.id || '');
 
   if (!userId) {
     throw new AppError(400, 'userId is required');
@@ -117,10 +121,11 @@ export const cancelSubscriptionHandler = catchAsycn(async (req, res) => {
 
 // ─── Get Available Plans ────────────────────────────────────────────────────
 export const getPlans = catchAsycn(async (_req, res) => {
-  const plans = Object.entries(PLAN_DETAILS).map(([key, value]) => ({
+  const plans = Object.entries(PLAN_DETAILS).filter(([key]) => key !== 'free').map(([key, value]) => ({
     id: key,
     name: key.charAt(0).toUpperCase() + key.slice(1),
     price: value.price,
+    firstMonthFree: true,
   }));
 
   sendResponse(res, {

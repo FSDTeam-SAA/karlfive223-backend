@@ -22,11 +22,11 @@ router.post('/webhook', handleWebhook);
 router.get('/plans', getPlans);
 
 // User routes
-router.post('/create-payment', createRecurringPayment);
-router.post('/confirm-payment', confirmRecurringPaymentHandler);
-router.get('/status/:userId', getSubscriptionStatus);
-router.get('/history/:userId', getSubscriptionHistory);
-router.post('/cancel', cancelSubscriptionHandler);
+router.post('/create-payment', auth(userrole.player, userrole.manager, userrole.admin, userrole.referee), createRecurringPayment);
+router.post('/confirm-payment', auth(userrole.player, userrole.manager, userrole.admin, userrole.referee), confirmRecurringPaymentHandler);
+router.get('/status/:userId', auth(userrole.player, userrole.manager, userrole.admin, userrole.referee), getSubscriptionStatus);
+router.get('/history/:userId', auth(userrole.player, userrole.manager, userrole.admin, userrole.referee), getSubscriptionHistory);
+router.post('/cancel', auth(userrole.player, userrole.manager, userrole.admin, userrole.referee), cancelSubscriptionHandler);
 
 // Admin routes
 router.get('/all', auth(userrole.manager), getAllSubscriptions);

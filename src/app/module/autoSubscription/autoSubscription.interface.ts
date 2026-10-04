@@ -4,7 +4,7 @@ import { SubscriptionPlanType } from '../subscription/subscription.constant'
 export interface IAutoSubscription {
   userId: Types.ObjectId
   plan: SubscriptionPlanType | 'basic' | 'gold' | 'club'
-  status: 'pending' | 'active' | 'canceled' | 'failed' | 'suspended'
+  status: 'pending' | 'trialing' | 'active' | 'canceled' | 'failed' | 'suspended'
   
   // Stripe identifiers
   stripeSubscriptionId: string

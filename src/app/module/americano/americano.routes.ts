@@ -150,6 +150,13 @@ router.patch(
   americanoController.updateAmericanoMatch
 );
 
+// Reschedule a match — the match's two players or the league owner only
+router.patch(
+  "/matches/:matchId/reschedule",
+  auth(userrole.player, userrole.manager, userrole.admin),
+  americanoController.rescheduleAmericanoMatch
+);
+
 // Delete match
 router.delete(
   "/matches/:matchId",

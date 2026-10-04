@@ -49,7 +49,13 @@ import { getChannel } from "../utils/rabbitmq";
 export const sendPushNotification = async (
   userIds: string[],
   title: string,
-  body: string
+  body: string,
+  // Mirrors the in-app Notification document's entityType/relatedId (see
+  // createAndSendNotifications) so a tapped push opens the same screen a
+  // tapped in-app notification would. Omit for pushes with nothing to
+  // navigate to — the message is then sent with no `data` block, same as
+  // before this was added.
+  target?: { entityType?: string; relatedId?: string }
 ) => {
   try {
     const channel = getChannel();
@@ -58,6 +64,9 @@ export const sendPushNotification = async (
       userIds,
       title,
       body,
+      ...(target?.entityType && target?.relatedId
+        ? { entityType: target.entityType, relatedId: String(target.relatedId) }
+        : {}),
     };
 
     channel.sendToQueue(

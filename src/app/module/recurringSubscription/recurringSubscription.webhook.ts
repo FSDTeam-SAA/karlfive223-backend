@@ -4,6 +4,7 @@ import {
     handleInvoicePaidWebhook,
     handleInvoicePaymentFailedWebhook,
     handleSubscriptionDeletedWebhook,
+    handleSubscriptionUpdatedWebhook,
 } from './recurringSubscription.service';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
@@ -15,12 +16,18 @@ export const handleRecurringSubscriptionWebhook = async (
   body: Buffer,
   signature: string
 ) => {
-  const webhookSecret = process.env.STRIPE_RECURRING_WEBHOOK_SECRET;
+  // Reuse the existing Stripe webhook secret when a dedicated one for this
+  // route hasn't been provisioned yet, per "use the existing Stripe
+  // configuration and environment variables". If the Stripe Dashboard
+  // endpoint for this route is registered separately, set
+  // STRIPE_RECURRING_WEBHOOK_SECRET to its own signing secret instead.
+  const webhookSecret =
+    process.env.STRIPE_RECURRING_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
     throw new AppError(
       500,
-      'STRIPE_RECURRING_WEBHOOK_SECRET not configured'
+      'STRIPE_RECURRING_WEBHOOK_SECRET (or STRIPE_WEBHOOK_SECRET) not configured'
     );
   }
 
@@ -39,6 +46,10 @@ export const handleRecurringSubscriptionWebhook = async (
 
   // Handle different event types
   switch (event.type) {
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated':
+      await handleSubscriptionUpdatedWebhook(event);
+      break;
     case 'invoice.paid':
       await handleInvoicePaidWebhook(event);
       break;

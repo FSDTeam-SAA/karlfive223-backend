@@ -19,7 +19,6 @@ import User from '../user/user.model';
 import { formPairsFromPlayers } from './dualAmericano.helpers';
 import { canPlayMoreRounds, generateDualAmericanoRound, maxPossibleRounds, recommendedRounds } from './dualAmericano.pairing';
 import { createAndSendNotifications } from '../../helper/socketHelper';
-import { sendPushNotification } from '../../utils/sendPushNotification';
 
 // Create event
 export const createDualAmericano = async (payload: any, createdBy: string) => {
@@ -400,8 +399,10 @@ export const saveMatchScore = async (dualId: string, roundNumber: number, payloa
 
     if (winner === null) {
       const msg = `🤝 Match draw: ${pair1Name} vs ${pair2Name} in "${dual.name}" (Round ${roundNumber}) — ${totalPair1}-${totalPair2}`;
-      await sendPushNotification(allPlayerIds.map(id => id.toString()), 'Match Draw', msg);
-      await createAndSendNotifications(allPlayerIds, 'Match Draw', msg, 'match');
+      await createAndSendNotifications(allPlayerIds, 'Match Draw', msg, 'match', {
+        entityType: 'dualAmericanoEvent',
+        relatedId: dual._id as Types.ObjectId,
+      });
     } else {
       const winPair = winner === 1 ? pair1Name : pair2Name;
       const losePair = winner === 1 ? pair2Name : pair1Name;
@@ -413,10 +414,9 @@ export const saveMatchScore = async (dualId: string, roundNumber: number, payloa
       const winMsg = `🏆 Match won! ${winPair} beat ${losePair} in "${dual.name}" (Round ${roundNumber}) — ${winScore}-${loseScore}`;
       const loseMsg = `📉 Match result: ${winPair} beat ${losePair} in "${dual.name}" (Round ${roundNumber}) — ${winScore}-${loseScore}`;
 
-      await sendPushNotification(winnerIds.map(id => id.toString()), 'Match Won! 🏆', winMsg);
-      await createAndSendNotifications(winnerIds, 'Match Won! 🏆', winMsg, 'match');
-      await sendPushNotification(loserIds.map(id => id.toString()), 'Match Result', loseMsg);
-      await createAndSendNotifications(loserIds, 'Match Result', loseMsg, 'match');
+      const target = { entityType: 'dualAmericanoEvent' as const, relatedId: dual._id as Types.ObjectId };
+      await createAndSendNotifications(winnerIds, 'Match Won! 🏆', winMsg, 'match', target);
+      await createAndSendNotifications(loserIds, 'Match Result', loseMsg, 'match', target);
     }
   }
 
@@ -719,8 +719,10 @@ export const assignMatchDateTime = async (
     const pair2Name = pair2Doc?.pairName ?? 'Pair 2';
     const message = `📅 Match rescheduled: ${pair1Name} vs ${pair2Name} in "${dual.name}" (Round ${roundNumber}) has been set to ${formattedDate}`;
 
-    await sendPushNotification(userIds.map(id => id.toString()), 'Match Rescheduled', message);
-    await createAndSendNotifications(userIds, 'Match Rescheduled', message, 'match');
+    await createAndSendNotifications(userIds, 'Match Rescheduled', message, 'match', {
+      entityType: 'dualAmericanoEvent',
+      relatedId: dual._id as Types.ObjectId,
+    });
   }
 
   return dual;
@@ -827,7 +829,12 @@ export const sendMatchChatMessage = async (
     const sender = await User.findById(requesterId, 'name').lean();
     const senderName = (sender as any)?.name ?? 'A player';
     const notifMsg = `💬 New message from ${senderName} in "${chat.name}" chat`;
-    await createAndSendNotifications(otherIds, 'New Chat Message', notifMsg, 'general');
+    // No dedicated Dual Americano chat screen in the app yet — route to the
+    // event itself, which is where the chat lives.
+    await createAndSendNotifications(otherIds, 'New Chat Message', notifMsg, 'general', {
+      entityType: 'dualAmericanoEvent',
+      relatedId: dual._id as Types.ObjectId,
+    });
   }
 
   return saved?.messages[0];

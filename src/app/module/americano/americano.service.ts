@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 import AppError from "../../error/appError";
 import { fileUploader } from "../../helper/fileUploded";
 import pagenation from "../../helper/pagenation";
+import { createAndSendNotifications } from "../../helper/socketHelper";
 import { IOption } from "../../interface";
-import { Notification } from "../notification/notification.model";
 import User from "../user/user.model";
 import { IAmericanoLeague } from "./americanoLeague.interface";
 import AmericanoLeague from "./americanoLeague.model";
@@ -365,20 +365,17 @@ const generateFixturesForLeague = async (league: IAmericanoLeague & any) => {
   league.fixturesGenerated = true;
   await league.save();
 
-  const uniquePlayerIds = [
-    ...new Set(playerIds.map((player: mongoose.Types.ObjectId) => player.toString())),
+  const uniquePlayerIds: string[] = [
+    ...new Set<string>(playerIds.map((player: mongoose.Types.ObjectId) => player.toString())),
   ];
 
   if (uniquePlayerIds.length > 0) {
-    await Notification.insertMany(
-      uniquePlayerIds.map((userId) => ({
-        userId,
-        title: "🎾 Americano Fixtures Generated",
-        message: `Your fixtures for ${league.leagueName} (${matchesToInsert.length} matches) are now ready. Starting on ${new Date(league.startDate).toLocaleDateString()}.`,
-        type: "league",
-        read: false,
-      }))
-    );
+    const title = "🎾 Americano Fixtures Generated";
+    const message = `Your fixtures for ${league.leagueName} (${matchesToInsert.length} matches) are now ready. Starting on ${new Date(league.startDate).toLocaleDateString()}.`;
+    await createAndSendNotifications(uniquePlayerIds, title, message, "league", {
+      entityType: "americanoLeague",
+      relatedId: leagueId,
+    });
   }
 
   return {
@@ -607,48 +604,43 @@ const submitMatchResult = async (
   const isDraw = match.winnerPlayer === null;
 
   if (isDraw) {
-    // Send draw notifications to both players
-    const notifications = [
-      {
-        userId: toObjectIdString(playerOne._id),
-        title: "Match Draw",
-        message: `🤝 Your match vs ${playerTwo.name} in ${leagueName} ended in a draw (${p1Goals}-${p2Goals})`,
-        type: "match",
-        read: false,
-      },
-      {
-        userId: toObjectIdString(playerTwo._id),
-        title: "Match Draw",
-        message: `🤝 Your match vs ${playerOne.name} in ${leagueName} ended in a draw (${p2Goals}-${p1Goals})`,
-        type: "match",
-        read: false,
-      },
-    ];
-    await Notification.insertMany(notifications);
+    // Send draw notifications to both players — each gets their own
+    // opponent's name in the message, so these go out individually rather
+    // than as one broadcast.
+    const p1Id = toObjectIdString(playerOne._id);
+    const p2Id = toObjectIdString(playerTwo._id);
+    const p1Message = `🤝 Your match vs ${playerTwo.name} in ${leagueName} ended in a draw (${p1Goals}-${p2Goals})`;
+    const p2Message = `🤝 Your match vs ${playerOne.name} in ${leagueName} ended in a draw (${p2Goals}-${p1Goals})`;
+
+    const leagueId = toObjectIdString(league._id);
+    await createAndSendNotifications([p1Id], "Match Draw", p1Message, "match", {
+      entityType: "americanoLeague",
+      relatedId: leagueId,
+    });
+    await createAndSendNotifications([p2Id], "Match Draw", p2Message, "match", {
+      entityType: "americanoLeague",
+      relatedId: leagueId,
+    });
   } else if (match.winnerPlayer) {
     // Send winner/loser notifications
     const winnerId = toObjectIdString(match.winnerPlayer);
     const isP1Winner = toObjectIdString(playerOne._id) === winnerId;
     const winner = isP1Winner ? playerOne : playerTwo;
     const loser = isP1Winner ? playerTwo : playerOne;
+    const loserId = toObjectIdString(loser._id);
 
-    const notifications = [
-      {
-        userId: winnerId,
-        title: "Match Won! 🏆",
-        message: `🏆 You won vs ${loser.name} in ${leagueName}! (${isP1Winner ? p1Goals : p2Goals}-${isP1Winner ? p2Goals : p1Goals})`,
-        type: "success",
-        read: false,
-      },
-      {
-        userId: toObjectIdString(loser._id),
-        title: "Match Lost",
-        message: `📉 You lost vs ${winner.name} in ${leagueName}. (${isP1Winner ? p2Goals : p1Goals}-${isP1Winner ? p1Goals : p2Goals})`,
-        type: "match",
-        read: false,
-      },
-    ];
-    await Notification.insertMany(notifications);
+    const winMessage = `🏆 You won vs ${loser.name} in ${leagueName}! (${isP1Winner ? p1Goals : p2Goals}-${isP1Winner ? p2Goals : p1Goals})`;
+    const loseMessage = `📉 You lost vs ${winner.name} in ${leagueName}. (${isP1Winner ? p2Goals : p1Goals}-${isP1Winner ? p1Goals : p2Goals})`;
+    const leagueId = toObjectIdString(league._id);
+
+    await createAndSendNotifications([winnerId], "Match Won! 🏆", winMessage, "success", {
+      entityType: "americanoLeague",
+      relatedId: leagueId,
+    });
+    await createAndSendNotifications([loserId], "Match Lost", loseMessage, "match", {
+      entityType: "americanoLeague",
+      relatedId: leagueId,
+    });
   }
 
   return AmericanoMatch.findById(matchId)
@@ -944,6 +936,61 @@ const updateMatch = async (
     .populate("winnerPlayer", "name email");
 };
 
+// Reschedule a match's date/time. Unlike courtNumber (league-owner only),
+// the date is something the two players actually playing the match need to
+// be able to agree on between themselves — so this allows either the league
+// owner *or* either of the two players in this specific match, and nobody
+// else in the league.
+const rescheduleMatch = async (
+  matchId: string,
+  matchDateTime: string,
+  currentUserId: string
+) => {
+  const match = await AmericanoMatch.findById(matchId)
+    .populate("league", "user leagueName")
+    .populate("playerOne", "name")
+    .populate("playerTwo", "name");
+  if (!match) throw new AppError(404, "Americano match not found");
+
+  const league = match.league as any;
+  const leagueUser = league?.user?.toString?.();
+  const isOrganizer = !!leagueUser && leagueUser === currentUserId.toString();
+  const matchPlayerIds = [match.playerOne, match.playerTwo]
+    .filter(Boolean)
+    .map((v: any) => v.toString());
+  const isMatchPlayer = matchPlayerIds.includes(currentUserId.toString());
+
+  if (!isOrganizer && !isMatchPlayer) {
+    throw new AppError(
+      403,
+      "Only the players in this match or the league owner can change its date."
+    );
+  }
+
+  if (!matchDateTime) throw new AppError(400, "matchDateTime is required");
+
+  match.matchDateTime = new Date(matchDateTime);
+  await match.save();
+
+  const playerOne = match.playerOne as any;
+  const playerTwo = match.playerTwo as any;
+  const leagueName = league?.leagueName || "Americano League";
+  const message = `📅 Match date updated: ${playerOne.name} vs ${playerTwo.name} in ${leagueName} has a new date.`;
+  const notifyIds = matchPlayerIds;
+  if (leagueUser) notifyIds.push(leagueUser);
+  const uniqueNotifyIds = [...new Set(notifyIds)];
+
+  await createAndSendNotifications(uniqueNotifyIds, "Match Rescheduled", message, "match", {
+    entityType: "americanoLeague",
+    relatedId: toObjectIdString(league._id),
+  });
+
+  return AmericanoMatch.findById(matchId)
+    .populate("playerOne", "name email")
+    .populate("playerTwo", "name email")
+    .populate("winnerPlayer", "name email");
+};
+
 const deleteMatch = async (matchId: string, currentUserId: string) => {
   const match = await AmericanoMatch.findById(matchId).populate("league", "user");
   if (!match) throw new AppError(404, "Americano match not found");
@@ -982,5 +1029,6 @@ export const americanoService = {
   editMatchScore,
   assignCourtNumber,
   updateMatch,
+  rescheduleMatch,
   deleteMatch,
 };

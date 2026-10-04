@@ -2,9 +2,7 @@ import AppError from "../../error/appError";
 import pagenation from "../../helper/pagenation";
 import { createAndSendNotifications } from "../../helper/socketHelper";
 import { IOption } from "../../interface";
-import { sendPushNotification } from "../../utils/sendPushNotification";
 import League from "../league/league.model";
-import { Notification } from "../notification/notification.model";
 import { rebuildLeagueStandingsForCompletedMatches } from "../standing/standing.service";
 import Team from "../team/team.model";
 import { IMatch } from "./match.interface";
@@ -148,13 +146,13 @@ const updateMatch = async (
     const formattedDate = `${month} ${day}, ${year}, ${formattedTime}`;
 
     const message = `📅 Match date updated: ${teamOne.teamName} vs ${teamTwo.teamName} in ${league.leagueName} has been rescheduled to ${formattedDate}`;
-      await sendPushNotification(userIds, "Match Rescheduled", message);
-    // Create notifications in DB and send via Socket.IO
+    // Create notifications in DB, send via Socket.IO, and push.
     await createAndSendNotifications(
-      userIds, 
-      "Match Rescheduled", 
-      message, 
-      "match"
+      userIds,
+      "Match Rescheduled",
+      message,
+      "match",
+      { entityType: "normalLeague", relatedId: league._id }
     );
   }
 
@@ -212,17 +210,10 @@ const updateMatch = async (
 
       if (allUserIds.length) {
         const uniqueIds = [...new Set(allUserIds.map((id) => id.toString()))];
-        await Notification.insertMany(
-          uniqueIds.map((uid) => ({
-            userId: uid,
-            title: "Match Draw",
-            message,
-            type: "match",
-            read: false,
-          }))
-        );
-
-        await sendPushNotification(uniqueIds, "Match Draw", message);
+        await createAndSendNotifications(uniqueIds, "Match Draw", message, "match", {
+          entityType: "normalLeague",
+          relatedId: league._id,
+        });
       }
     } else if (match.winnerTeam) {
       // Send winner notifications
@@ -238,16 +229,10 @@ const updateMatch = async (
       // bulk insert notifications (fast)
       if (winnerUserIds.length) {
         const uniqueIds = [...new Set(winnerUserIds.map((id) => id.toString()))];
-        await Notification.insertMany(
-          uniqueIds.map((uid) => ({
-            userId: uid,
-            title: "Match Won! 🏆",
-            message,
-            type: "success",
-            read: false,
-          }))
-        );
-        await sendPushNotification(uniqueIds, "Match Won! 🏆", message);
+        await createAndSendNotifications(uniqueIds, "Match Won! 🏆", message, "success", {
+          entityType: "normalLeague",
+          relatedId: league._id,
+        });
       }
     }
 
@@ -281,11 +266,20 @@ const editCompletedMatchScore = async (
     );
   }
 
+  const editsUsed = existingMatch.scoreEditCount || 0;
+  if (editsUsed >= 2) {
+    throw new AppError(
+      400,
+      "This match's score has already been corrected the maximum number of times (2)."
+    );
+  }
+
   await ensureLeagueOwnerCanManageMatch(existingMatch.league, currentUserId);
 
   const updatePayload: Partial<IMatch> = {
     matchStatus: "completed",
     matchScore: payload.matchScore,
+    scoreEditCount: editsUsed + 1,
   };
 
   if (payload.winnerTeam !== undefined) {
@@ -293,6 +287,81 @@ const editCompletedMatchScore = async (
   }
 
   return updateMatch(id, updatePayload, currentUserId);
+};
+
+// --- Reschedule a match's date/time ---
+// Unlike courtNumber (league-owner only, via ensureLeagueOwnerCanManageMatch),
+// the date is something the two teams actually playing the match need to be
+// able to agree on between themselves — so this allows either the league
+// owner *or* any of the four people on the two teams in this specific match,
+// and nobody else in the league.
+const rescheduleMatch = async (
+  id: string,
+  matchDateTime: string,
+  currentUserId?: string
+) => {
+  const match = await Match.findById(id).populate("teamOne teamTwo league");
+  if (!match) return null;
+
+  if (!currentUserId) {
+    throw new AppError(401, "Authentication required to reschedule this match.");
+  }
+
+  const league = match.league as any;
+  const teamOne = match.teamOne as any;
+  const teamTwo = match.teamTwo as any;
+
+  const isOrganizer = league?.user?.toString() === currentUserId.toString();
+  const matchPlayerIds = [teamOne?.user, teamOne?.player, teamTwo?.user, teamTwo?.player]
+    .filter(Boolean)
+    .map((v: any) => v.toString());
+  const isMatchPlayer = matchPlayerIds.includes(currentUserId.toString());
+
+  if (!isOrganizer && !isMatchPlayer) {
+    throw new AppError(
+      403,
+      "Only the players in this match or the league owner can change its date."
+    );
+  }
+
+  const oldDateTime = match.matchDateTime;
+  const newDateTime = new Date(matchDateTime);
+  const dateChanged =
+    !oldDateTime || new Date(oldDateTime).getTime() !== newDateTime.getTime();
+
+  match.matchDateTime = newDateTime as any;
+  await match.save();
+
+  if (dateChanged) {
+    const userIds = [teamOne?.user, teamOne?.player, teamTwo?.user, teamTwo?.player].filter(
+      Boolean
+    );
+    const leagueName = league?.leagueName || "League";
+
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ];
+    const d = newDateTime;
+    const month = monthNames[d.getUTCMonth()];
+    const day = d.getUTCDate();
+    const year = d.getUTCFullYear();
+    let hours = d.getUTCHours();
+    const minutes = d.getUTCMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    const formattedDate = `${month} ${day}, ${year}, ${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")} ${ampm}`;
+
+    const message = `📅 Match date updated: ${teamOne.teamName} vs ${teamTwo.teamName} in ${leagueName} has been rescheduled to ${formattedDate}`;
+    await createAndSendNotifications(userIds, "Match Rescheduled", message, "match", {
+      entityType: "normalLeague",
+      relatedId: league._id,
+    });
+  }
+
+  return match.populate("teamOne teamTwo league matchVenue referee winnerTeam");
 };
 
 // --- Queries ---
@@ -388,13 +457,14 @@ const getTeamFixturesByLeague = async (teamId: string, leagueId: string) => {
   return fixtures;
 };
 
-export default { 
-  createMatch, 
+export default {
+  createMatch,
   editCompletedMatchScore,
-  updateMatch, 
-  getAllMatches, 
-  getSingleMatch, 
-  deleteMatch, 
+  updateMatch,
+  rescheduleMatch,
+  getAllMatches,
+  getSingleMatch,
+  deleteMatch,
   getPlayerNextMatches,
-  getTeamFixturesByLeague 
+  getTeamFixturesByLeague
 };

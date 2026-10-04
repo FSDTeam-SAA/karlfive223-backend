@@ -18,4 +18,8 @@ export interface IMatch extends Document {
     }>;
   };
   standingsApplied: boolean;
+  // Number of times a completed match's score has been corrected via
+  // /match/:id/edit-score. Capped at 2 — once reached, the app hides the
+  // edit control for that match.
+  scoreEditCount: number;
 }

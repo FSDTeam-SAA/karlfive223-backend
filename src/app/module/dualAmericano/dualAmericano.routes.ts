@@ -94,6 +94,13 @@ router.post(
   controller.joinByCode,
 );
 
+// Global single-player join via code only (event id not required/known up front)
+router.post(
+  '/join-by-code',
+  Auth('player'),
+  controller.joinByCodeGlobal,
+);
+
 // Either player in the pair OR manager can unregister the pair
 router.delete(
   '/:id/leave-pair/:pairId',

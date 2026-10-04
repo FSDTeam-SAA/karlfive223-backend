@@ -21,9 +21,9 @@ export const startPushNotificationWorker = async () => {
     if (!msg) return;
 
     try {
-      const data = JSON.parse(msg.content.toString());
+      const payload = JSON.parse(msg.content.toString());
 
-      const { userIds, title, body } = data;
+      const { userIds, title, body, entityType, relatedId } = payload;
 
       const users = await FCM.find({
         user: { $in: userIds },
@@ -54,6 +54,14 @@ export const startPushNotificationWorker = async () => {
             title,
             body,
           },
+          // FCM data payload values must all be strings. The client
+          // (NotificationNavigator) reads these to open the same screen a
+          // tap on the equivalent in-app notification would.
+          ...(entityType && relatedId
+            ? { data: { entityType: String(entityType), relatedId: String(relatedId) } }
+            : {}),
+          android: { priority: "high" as const },
+          apns: { payload: { aps: { sound: "default" } } },
           tokens: chunk,
         };
 

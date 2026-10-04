@@ -47,7 +47,16 @@ export const getMyEvents = async (req: Request, res: Response) => {
 
 export const joinByCode = async (req: Request, res: Response) => {
   const { code } = req.body;
-  const updated = await service.joinByCode(req.params.id, req.user._id.toString(), req.params.id);
+  const updated = await service.joinByCode(req.params.id, req.user._id.toString(), code);
+  return sendResponse(res, { statusCode: 200, success: true, message: 'Joined event', data: updated });
+};
+
+// Global join-by-code: the caller only has the event's joinCode, not its id
+// (mirrors the Single Americano `/americano/join-by-otp` pattern). The service
+// already resolves the event purely from `code`, so no id is required here.
+export const joinByCodeGlobal = async (req: Request, res: Response) => {
+  const { code } = req.body;
+  const updated = await service.joinByCode('', req.user._id.toString(), code);
   return sendResponse(res, { statusCode: 200, success: true, message: 'Joined event', data: updated });
 };
 

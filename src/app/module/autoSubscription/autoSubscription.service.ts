@@ -75,12 +75,18 @@ const createCheckoutSession = async (payload: ICreateAutoSubscriptionPayload) =>
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
+      // Collect the card now, but Stripe must not charge it until the trial ends.
+      payment_method_collection: 'always',
       line_items: [
         {
           price: stripePriceId,
           quantity: 1,
         },
       ],
+      subscription_data: {
+        trial_period_days: 30,
+        metadata: { userId: userId.toString(), plan, type: 'recurring_subscription' },
+      },
       success_url: `${process.env.FRONTEND_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/subscription/cancel`,
       metadata: {
@@ -139,9 +145,9 @@ const confirmPayment = async (sessionId: string) => {
       expand: ['subscription'],
     });
 
-    // Check if payment was successful
-    if (session.payment_status !== 'paid') {
-      throw new AppError(400, `Payment not completed. Current status: ${session.payment_status}`);
+    // Trial Checkout sessions are complete with no immediate payment due.
+    if (session.status !== 'complete') {
+      throw new AppError(400, `Checkout was not completed. Current status: ${session.status}`);
     }
 
     const userId = session.metadata?.userId;
@@ -174,18 +180,19 @@ const confirmPayment = async (sessionId: string) => {
     const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId as string);
     const subscription = subscriptionResponse as unknown as any;
 
-    // Update auto-subscription to active
-    // const updatedSub = await AutoSubscription.findByIdAndUpdate(
-    //   autoSub._id,
-    //   {
-    //     status: 'active',
-    //     stripeSubscriptionId: subscriptionId,
-    //     currentPeriodStart: new Date(subscription.current_period_start * 1000),
-    //     currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-    //     nextBillingDate: new Date(subscription.current_period_end * 1000),
-    //   },
-    //   { new: true }
-    // );
+    const updatedSub = await AutoSubscription.findByIdAndUpdate(
+      autoSub._id,
+      {
+        status: subscription.status === 'trialing' ? 'trialing' : 'active',
+        stripeSubscriptionId: subscriptionId,
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        nextBillingDate: new Date(subscription.current_period_end * 1000),
+        paymentMethodId: typeof subscription.default_payment_method === 'string'
+          ? subscription.default_payment_method : '',
+      },
+      { new: true }
+    );
 
     // Update user
     await User.findByIdAndUpdate(userId, {
@@ -200,8 +207,8 @@ const confirmPayment = async (sessionId: string) => {
       data: {
         subscriptionId,
         plan,
-        status: 'active',
-        // nextBillingDate: updatedSub?.nextBillingDate,
+        status: updatedSub?.status,
+        nextBillingDate: updatedSub?.nextBillingDate,
       },
     };
   } catch (error: any) {
@@ -215,7 +222,7 @@ const confirmPayment = async (sessionId: string) => {
 const cancelAutoSubscription = async (userId: string, reason?: string) => {
   const subscription = await AutoSubscription.findOne({
     userId,
-    status: 'active',
+    status: { $in: ['trialing', 'active'] },
   });
 
   if (!subscription) {
@@ -223,15 +230,18 @@ const cancelAutoSubscription = async (userId: string, reason?: string) => {
   }
 
   try {
-    // Cancel the Stripe subscription
-    await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+    // Preserve access for the current free/paid period while stopping renewal.
+    const stripeSubscription = await stripe.subscriptions.update(
+      subscription.stripeSubscriptionId,
+      { cancel_at_period_end: true }
+    );
 
     // Update database record
     await AutoSubscription.findByIdAndUpdate(subscription._id, {
-      status: 'canceled',
       canceledAt: new Date(),
       cancelReason: reason || 'User requested cancellation',
       autoRenewEnabled: false,
+      nextBillingDate: new Date((stripeSubscription as any).current_period_end * 1000),
     });
 
     // Reset user organizer status if they had Club plan
@@ -253,7 +263,7 @@ const cancelAutoSubscription = async (userId: string, reason?: string) => {
 const getSubscriptionStatus = async (userId: string) => {
   const subscription = await AutoSubscription.findOne({
     userId,
-    status: { $in: ['active', 'suspended', 'failed'] },
+    status: { $in: ['trialing', 'active', 'suspended', 'failed'] },
   }).lean();
 
   if (!subscription) {
@@ -265,7 +275,7 @@ const getSubscriptionStatus = async (userId: string) => {
   return {
     ...subscription,
     planDetails,
-    isActive: subscription.status === 'active',
+    isActive: ['trialing', 'active'].includes(subscription.status),
   };
 };
 

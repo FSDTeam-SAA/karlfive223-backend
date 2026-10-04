@@ -16,7 +16,7 @@ const recurringSubscriptionSchema = new Schema<IRecurringSubscription>(
     },
     status: {
       type: String,
-      enum: ['pending', 'active', 'failed', 'canceled', 'past_due'],
+      enum: ['pending', 'trialing', 'active', 'failed', 'canceled', 'past_due'],
       default: 'pending',
     },
     stripeCustomerId: {
@@ -49,7 +49,7 @@ const recurringSubscriptionSchema = new Schema<IRecurringSubscription>(
       type: Date,
       required: true,
     },
-    initialPaymentIntentId: {
+    initialSetupIntentId: {
       type: String,
       required: true,
       index: true,
@@ -69,6 +69,16 @@ const recurringSubscriptionSchema = new Schema<IRecurringSubscription>(
     },
     cancelReason: {
       type: String,
+    },
+    cancelAtPeriodEnd: {
+      type: Boolean,
+      default: false,
+    },
+    trialStart: {
+      type: Date,
+    },
+    trialEnd: {
+      type: Date,
     },
   },
   {

@@ -1,7 +1,7 @@
 import express from "express";
 import { fileUploader } from "../../helper/fileUploded";
 import auth from "../../middlewares/Auth";
-import { createFCM } from "../fcm/fcm.controller";
+import { registerFcmToken, unregisterFcmToken } from "../fcm/fcm.controller";
 import { userrole } from "./user.constent";
 import { userControllers } from "./user.controller";
 const router = express.Router();
@@ -49,7 +49,12 @@ router.delete(
 
 router.post("/update-fcm-token",
   auth(userrole.admin, userrole.manager, userrole.player),
-  createFCM
+  registerFcmToken
+);
+
+router.delete("/update-fcm-token",
+  auth(userrole.admin, userrole.manager, userrole.player),
+  unregisterFcmToken
 );
 
 export const userRouter = router;

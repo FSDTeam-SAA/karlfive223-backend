@@ -73,9 +73,22 @@ async function notifyUsers(userIds: Types.ObjectId[], title: string, message: st
 }
 const server = async () => {
   try {
+    // Push notifications are an ancillary, best-effort feature. A local/
+    // unreachable RabbitMQ broker must not prevent the API (including
+    // payments/subscriptions) from starting — connectRabbitMQ() already
+    // swallows its own connection error, but startPushNotificationWorker()
+    // calls getChannel() synchronously and throws when that connection
+    // never succeeded, which used to abort the whole server below.
+    try {
       await connectRabbitMQ();
+      await startPushNotificationWorker();
+    } catch (queueError: any) {
+      console.error(
+        "⚠️ Push notification worker did not start (RabbitMQ unavailable):",
+        queueError.message
+      );
+    }
 
-  await startPushNotificationWorker();
     const connectmongodb = await mongoose.connect(config.database_url as string);
     console.log(`✅ Database is connected: ${connectmongodb.connection.host}`);
 

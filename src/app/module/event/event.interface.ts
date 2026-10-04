@@ -13,16 +13,15 @@ export interface IEvent extends Document {
   endDate: Date;
   /** Approval status: pending, approved, declined */
   status: "pending" | "approved" | "declined";
-  /** OTP generated after approval for users to claim free trial */
+  /* Legacy free-subscription OTP fields — disabled.
   otp?: string;
-  /** OTP expiry date (valid for 7 days after approval) */
   otpExpiry?: Date;
+  otpUsedCount?: number;
+  */
   /** Manager who approved/declined the event */
   approvedBy?: ObjectId;
   /** Date when the event was approved/declined */
   approvalDate?: Date;
   /** Reason for declining (optional) */
   declineReason?: string;
-  /** Track how many users have used this OTP */
-  otpUsedCount: number;
 }

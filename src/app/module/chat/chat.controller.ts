@@ -158,9 +158,13 @@ export const sendMessage = catchAsycn(async (req, res) => {
       if (allUserIds.length > 0) {
         const notificationTitle = "New Chat Message";
         const notificationMessage = `💬 New message from ${senderName} in ${teamOne.teamName} vs ${teamTwo.teamName} chat`;
-        
-        // Create notifications in DB and send via Socket.IO
-        await createAndSendNotifications(allUserIds, notificationTitle, notificationMessage, "general");
+
+        // Create notifications in DB, send via Socket.IO, and push (see
+        // createAndSendNotifications — it handles all three now).
+        await createAndSendNotifications(allUserIds, notificationTitle, notificationMessage, "general", {
+          entityType: "chat",
+          relatedId: chatId,
+        });
       }
     }
   }

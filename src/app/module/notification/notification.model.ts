@@ -7,6 +7,12 @@ const NotificationSchema = new Schema<INotification>({
   message: { type: String, required: true },
   type: { type: String, enum: ['success', 'error', 'warning', 'match', 'league', 'event', 'general'], default: 'success' },
   read: { type: Boolean, default: false },
+  entityType: {
+    type: String,
+    enum: ['normalLeague', 'americanoLeague', 'dualAmericanoEvent', 'team', 'chat'],
+    required: false,
+  },
+  relatedId: { type: String, required: false },
 },
 {
     timestamps: true,

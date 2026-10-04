@@ -42,54 +42,14 @@ export const getSubscriptionHistory = catchAsycn(
   }
 );
 
-// ─── POST /subscription/claim-free-trial ──────────────────────────────────────
-// New endpoint: Users claim free 30-day trial using event OTP or coupon code
-export const claimFreeTrialWithOtp = catchAsycn(
-  async (req: Request, res: Response) => {
-    const userId = req.user._id as string;
-    const { code } = req.body;
-
-    if (!code) {
-      sendResponse(res, {
-        statusCode: 400,
-        success: false,
-        message: 'Code (OTP or coupon) is required',
-      });
-      return;
-    }
-
-    const result = await subscriptionService.claimFreeTrialWithOtp(userId, code);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: result.codeType === 'coupon' 
-        ? 'Coupon redeemed successfully - 30-day subscription activated'
-        : '30-day free trial activated successfully using event OTP',
-      data: {
-        subscription: result.freePayment,
-        codeType: result.codeType,
-        event: result.event,
-        coupon: result.coupon,
-      },
-    });
-  }
-);
-
-// ─── POST /subscription/activate-free-trial [DEPRECATED] ──────────────────────
-// This endpoint is deprecated. Users should now use /claim-free-trial with OTP or coupon.
-// Now grants 30-day free trial instead of 24 hours.
-export const activateFreeTrial = catchAsycn(
-  async (req: Request, res: Response) => {
-    const userId = req.user._id as string;
-    const freeTrial = await subscriptionService.assignFreeTrial(userId);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: '[DEPRECATED] 30-day free trial activated. Please use /claim-free-trial with event OTP or coupon instead.',
-      data: freeTrial,
-    });
-  }
-);
+/*
+ * LEGACY OTP / coupon free-subscription handlers — DISABLED.
+ * These old handlers granted a 30-day plan without collecting a Stripe card.
+ * They are preserved in source history in subscription.service.ts but are not
+ * exported or mounted. The active free first month is Stripe trialing status.
+ */
+// export const claimFreeTrialWithOtp = catchAsycn(/* legacy OTP handler */);
+// export const activateFreeTrial = catchAsycn(/* legacy free-trial handler */);
 
 // ─── POST /subscription/expire (admin / cron) ─────────────────────────────────
 export const expireSubscriptions = catchAsycn(

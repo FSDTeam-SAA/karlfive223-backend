@@ -8,12 +8,20 @@ try {
   serviceAccount = require("../../../central.json");
 } catch (e) {
   serviceAccount = null;
+  // Was previously silent, which is exactly how this went unnoticed before:
+  // the file was there but under a different name, so every push
+  // notification call ran with an uninitialized admin SDK and failed
+  // silently downstream instead of here.
+  console.warn(
+    "⚠️ Firebase Admin service account (central.json) not found — push notifications are disabled."
+  );
 }
 
 if (serviceAccount && !admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
   });
+  console.log("✅ Firebase Admin initialized — push notifications enabled");
 }
 
 export default admin;

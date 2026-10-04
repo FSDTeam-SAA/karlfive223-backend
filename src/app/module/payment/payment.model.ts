@@ -20,7 +20,7 @@ const paymentSchema = new Schema<IPayment>({
   subscriptionId: { type: String }, // For Stripe subscription payments
   subscriptionStatus: {
     type: String,
-    enum: ['pending', 'active', 'canceled', 'past_due', 'unpaid', 'past'],
+    enum: ['pending', 'trialing', 'active', 'canceled', 'past_due', 'unpaid', 'past'],
     default: 'pending',
   },
   status: {
