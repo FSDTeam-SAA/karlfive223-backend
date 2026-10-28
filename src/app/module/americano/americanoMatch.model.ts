@@ -6,6 +6,11 @@ const americanoMatchSchema = new Schema<IAmericanoMatch>(
     league: { type: Schema.Types.ObjectId, ref: "AmericanoLeague", required: true },
     playerOne: { type: Schema.Types.ObjectId, ref: "User", required: true },
     playerTwo: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    // Set only for pair matches (free one-day Americano): each side is
+    // playerOne + playerOnePartner vs playerTwo + playerTwoPartner.
+    playerOnePartner: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    playerTwoPartner: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    roundNumber: { type: Number, default: null },
     matchDateTime: { type: Date },
     matchStatus: {
       type: String,

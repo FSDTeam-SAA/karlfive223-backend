@@ -142,53 +142,54 @@ const applyCompletedMatchToStandings = async (match: IAmericanoMatch) => {
     0
   );
 
-  const [s1, s2] = await Promise.all([
+  // A side is one player, or two in a pair match (free one-day Americano);
+  // every player on a side gets that side's result.
+  const sideOne = [match.playerOne, match.playerOnePartner].filter(Boolean);
+  const sideTwo = [match.playerTwo, match.playerTwoPartner].filter(Boolean);
+
+  const standingFor = (player: any) =>
     AmericanoStanding.findOneAndUpdate(
-      { league: leagueId, player: match.playerOne },
-      { $setOnInsert: { league: leagueId, player: match.playerOne } },
+      { league: leagueId, player },
+      { $setOnInsert: { league: leagueId, player } },
       { new: true, upsert: true }
-    ),
-    AmericanoStanding.findOneAndUpdate(
-      { league: leagueId, player: match.playerTwo },
-      { $setOnInsert: { league: leagueId, player: match.playerTwo } },
-      { new: true, upsert: true }
-    ),
+    );
+
+  const [rowsOne, rowsTwo] = await Promise.all([
+    Promise.all(sideOne.map(standingFor)),
+    Promise.all(sideTwo.map(standingFor)),
   ]);
 
-  s1.played += 1;
-  s2.played += 1;
+  const apply = (
+    row: any,
+    goalsFor: number,
+    goalsAgainst: number,
+    setsFor: number,
+    setsAgainst: number
+  ) => {
+    row.played += 1;
+    row.goalsFor += goalsFor;
+    row.goalsAgainst += goalsAgainst;
+    row.setsFor += setsFor;
+    row.setsAgainst += setsAgainst;
 
-  s1.goalsFor += p1Goals;
-  s1.goalsAgainst += p2Goals;
-  s2.goalsFor += p2Goals;
-  s2.goalsAgainst += p1Goals;
+    if (setsFor === setsAgainst) {
+      row.drawn += 1;
+      row.points += POINTS.DRAW;
+    } else if (setsFor > setsAgainst) {
+      row.won += 1;
+      row.points += POINTS.WIN;
+    } else {
+      row.lost += 1;
+    }
 
-  s1.setsFor += p1SetsWon;
-  s1.setsAgainst += p2SetsWon;
-  s2.setsFor += p2SetsWon;
-  s2.setsAgainst += p1SetsWon;
+    row.goalDifference = row.goalsFor - row.goalsAgainst;
+    row.setDifference = row.setsFor - row.setsAgainst;
+  };
 
-  if (p1SetsWon === p2SetsWon) {
-    s1.drawn += 1;
-    s2.drawn += 1;
-    s1.points += POINTS.DRAW;
-    s2.points += POINTS.DRAW;
-  } else if (p1SetsWon > p2SetsWon) {
-    s1.won += 1;
-    s2.lost += 1;
-    s1.points += POINTS.WIN;
-  } else {
-    s2.won += 1;
-    s1.lost += 1;
-    s2.points += POINTS.WIN;
-  }
+  for (const row of rowsOne) apply(row, p1Goals, p2Goals, p1SetsWon, p2SetsWon);
+  for (const row of rowsTwo) apply(row, p2Goals, p1Goals, p2SetsWon, p1SetsWon);
 
-  s1.goalDifference = s1.goalsFor - s1.goalsAgainst;
-  s2.goalDifference = s2.goalsFor - s2.goalsAgainst;
-  s1.setDifference = s1.setsFor - s1.setsAgainst;
-  s2.setDifference = s2.setsFor - s2.setsAgainst;
-
-  await Promise.all([s1.save(), s2.save()]);
+  await Promise.all([...rowsOne, ...rowsTwo].map((row) => row.save()));
 };
 
 const rebuildStandings = async (leagueId: string) => {
@@ -209,7 +210,7 @@ const rebuildStandings = async (leagueId: string) => {
     "matchScore.sets.0": { $exists: true },
   })
     .sort({ matchDateTime: 1, createdAt: 1 })
-    .select("league playerOne playerTwo matchScore");
+    .select("league playerOne playerTwo playerOnePartner playerTwoPartner matchScore");
 
   for (const match of completedMatches) {
     await applyCompletedMatchToStandings(match as IAmericanoMatch);

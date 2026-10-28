@@ -8,9 +8,11 @@ import AmericanoMatch from "../americano/americanoMatch.model";
 import AmericanoStanding from "../americano/americanoStanding.model";
 import { Notification } from "../notification/notification.model";
 import AmericanoGuestPlayer from "./americanoGuestPlayer.model";
+import { generateFreeAmericanoRounds } from "./freeAmericano.pairing";
 
 const FREE = "free";
-export const FREE_AMERICANO_MIN_PLAYERS = 2;
+// Matches are pair vs pair, so a match needs four players.
+export const FREE_AMERICANO_MIN_PLAYERS = 4;
 export const FREE_AMERICANO_MAX_PLAYERS = 24;
 const MAX_NAME_LENGTH = 50;
 
@@ -79,11 +81,54 @@ const populatedEvent = (eventId: any) =>
     .populate("user", "name email")
     .populate(guestPopulate("players"));
 
+const MATCH_PLAYER_PATHS = [
+  "playerOne",
+  "playerOnePartner",
+  "playerTwo",
+  "playerTwoPartner",
+  "winnerPlayer",
+];
+
+const populateMatchPlayers = (query: any) =>
+  MATCH_PLAYER_PATHS.reduce((q, path) => q.populate(guestPopulate(path)), query);
+
 const populatedMatch = (matchId: any) =>
-  AmericanoMatch.findById(matchId)
-    .populate(guestPopulate("playerOne"))
-    .populate(guestPopulate("playerTwo"))
-    .populate(guestPopulate("winnerPlayer"));
+  populateMatchPlayers(AmericanoMatch.findById(matchId));
+
+// Splits the players into rotating partner pairs, round by round, and
+// creates the pair-vs-pair matches (see freeAmericano.pairing.ts).
+const generatePairFixtures = async (league: any) => {
+  const playerIds = league.players.map((player: any) => String(player));
+  const rounds = generateFreeAmericanoRounds(playerIds);
+  if (!rounds.length) {
+    throw new AppError(
+      400,
+      `At least ${FREE_AMERICANO_MIN_PLAYERS} players are needed to create matches`
+    );
+  }
+
+  const matchDateTime = league.startDate ? new Date(league.startDate) : new Date();
+  await AmericanoMatch.insertMany(
+    rounds.flatMap((round) =>
+      round.matches.map((match) => ({
+        league: league._id,
+        playerOne: match.teamOne[0],
+        playerOnePartner: match.teamOne[1],
+        playerTwo: match.teamTwo[0],
+        playerTwoPartner: match.teamTwo[1],
+        roundNumber: round.roundNumber,
+        matchDateTime,
+        matchStatus: "upcoming",
+      }))
+    )
+  );
+
+  league.fixturesGenerated = true;
+  await league.save();
+
+  // Seeds one standings row per player.
+  await americanoService.rebuildStandings(String(league._id));
+};
 
 const parsePlayerNames = (raw: unknown, maxPlayers: number) => {
   if (!Array.isArray(raw)) {
@@ -212,9 +257,7 @@ const createEvent = async (userId: string, payload: any) => {
     league.players = guests.map((guest) => guest._id) as any;
     await league.save();
 
-    // Same round-robin, standings seeding and match creation as a Single
-    // Americano; the free event just runs it straight away.
-    await americanoService.generateFixturesForLeague(league as any);
+    await generatePairFixtures(league);
   } catch (error) {
     await deleteEventData(league._id);
     throw error;
@@ -237,11 +280,10 @@ const getEventById = async (eventId: string, userId: string) => {
 
 const getEventMatches = async (eventId: string, userId: string) => {
   const league = await findOwnedEvent(eventId, userId);
-  return AmericanoMatch.find({ league: league._id })
-    .populate(guestPopulate("playerOne"))
-    .populate(guestPopulate("playerTwo"))
-    .populate(guestPopulate("winnerPlayer"))
-    .sort({ matchDateTime: 1, createdAt: 1 });
+  // _id last: matches in a round share their date, so keep a stable order.
+  return populateMatchPlayers(AmericanoMatch.find({ league: league._id })).sort(
+    { roundNumber: 1, matchDateTime: 1, createdAt: 1, _id: 1 }
+  );
 };
 
 const getEventStandings = async (eventId: string, userId: string) => {
@@ -272,6 +314,8 @@ const submitMatchResult = async (
 
   match.matchScore = { sets } as IAmericanoMatch["matchScore"];
   match.matchStatus = "completed";
+  // In a pair match winnerPlayer marks the winning side by its first player
+  // (playerOne or playerTwo); their partner won too.
   if (p1SetsWon === p2SetsWon) match.winnerPlayer = null;
   else
     match.winnerPlayer = (
