@@ -102,6 +102,20 @@ const assignCourtNumber = catchAsycn(async (req: Request, res: Response) => {
   });
 });
 
+const deleteEvent = catchAsycn(async (req: Request, res: Response) => {
+  await freeAmericanoService.deleteEvent(
+    req.params.eventId,
+    currentUserId(req)
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "One-day Americano deleted successfully",
+    data: null,
+  });
+});
+
 export const freeAmericanoController = {
   createEvent,
   getMyEvents,
@@ -110,4 +124,5 @@ export const freeAmericanoController = {
   getEventStandings,
   submitMatchResult,
   assignCourtNumber,
+  deleteEvent,
 };

@@ -67,6 +67,29 @@ const findOwnedMatch = async (matchId: string, userId: string) => {
   return { match, league };
 };
 
+// A score submitted while the event is being deleted can re-seed standings
+// after they were removed. Once its writes are done, the score request
+// checks the event still exists and clears them if not. deleteEvent sweeps
+// again after removing the event, which covers the opposite ordering.
+const sweepIfDeleted = async (leagueId: any) => {
+  if (await AmericanoLeague.exists({ _id: leagueId })) return;
+  await AmericanoStanding.deleteMany({ league: leagueId });
+  throw new AppError(404, "Americano not found");
+};
+
+// Rows a request loaded may be deleted with their event (manually or by the
+// cleanup job) before it saves them; report that as a 404, not a 500.
+const goneMeansNotFound = async (work: () => Promise<unknown>, label: string) => {
+  try {
+    await work();
+  } catch (error: any) {
+    if (error?.name === "DocumentNotFoundError") {
+      throw new AppError(404, `${label} not found`);
+    }
+    throw error;
+  }
+};
+
 const assertEditable = (league: any) => {
   if (league.completedAt) {
     throw new AppError(
@@ -220,18 +243,8 @@ const createEvent = async (userId: string, payload: any) => {
 
   const playerNames = parsePlayerNames(payload?.playerNames, maxPlayers);
 
-  const active = await AmericanoLeague.exists({
-    user: userId,
-    eventType: FREE,
-    completedAt: null,
-  });
-  if (active) {
-    throw new AppError(
-      400,
-      "You already have a one-day Americano in progress. Finish it before creating a new one."
-    );
-  }
-
+  // A user may run any number of events at once; each one is independent
+  // (its own matches, standings, guests and deleteAt).
   const now = new Date();
   const league = await AmericanoLeague.create({
     user: userId,
@@ -322,9 +335,15 @@ const submitMatchResult = async (
       p1SetsWon > p2SetsWon ? match.playerOne : match.playerTwo
     ) as any;
 
-  await match.save();
-  await americanoService.rebuildStandings(String(league._id));
-  await markCompleteIfAllScored(league._id);
+  await goneMeansNotFound(() => match.save(), "Match");
+  try {
+    await goneMeansNotFound(async () => {
+      await americanoService.rebuildStandings(String(league._id));
+      await markCompleteIfAllScored(league._id);
+    }, "Americano");
+  } finally {
+    await sweepIfDeleted(league._id);
+  }
 
   return populatedMatch(match._id);
 };
@@ -343,7 +362,7 @@ const assignCourtNumber = async (
   }
 
   match.courtNumber = court;
-  await match.save();
+  await goneMeansNotFound(() => match.save(), "Match");
 
   return populatedMatch(match._id);
 };
@@ -358,6 +377,16 @@ const deleteEventData = async (leagueId: any) => {
   await AmericanoGuestPlayer.deleteMany({ league: id });
   await Notification.deleteMany({ entityType: "freeAmericano", relatedId: id });
   await AmericanoLeague.deleteOne({ _id: id, eventType: FREE });
+};
+
+// Manual delete by the creator, live or completed. Removes only this event,
+// the same way the cleanup job does when its deleteAt passes.
+const deleteEvent = async (eventId: string, userId: string) => {
+  const league = await findOwnedEvent(eventId, userId);
+  await deleteEventData(league._id);
+  // Standings a racing score re-seeded before the event row went (see
+  // sweepIfDeleted).
+  await AmericanoStanding.deleteMany({ league: league._id });
 };
 
 const sendDeletionReminders = async (now = new Date()) => {
@@ -424,6 +453,7 @@ export const freeAmericanoService = {
   getEventStandings,
   submitMatchResult,
   assignCourtNumber,
+  deleteEvent,
   sendDeletionReminders,
   deleteExpiredEvents,
 };

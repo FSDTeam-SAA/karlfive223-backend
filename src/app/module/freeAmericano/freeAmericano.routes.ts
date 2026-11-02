@@ -27,6 +27,8 @@ router.patch(
 
 router.get("/:eventId", anyUser, freeAmericanoController.getEventById);
 
+router.delete("/:eventId", anyUser, freeAmericanoController.deleteEvent);
+
 router.get(
   "/:eventId/matches",
   anyUser,
