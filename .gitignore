@@ -189,3 +189,6 @@ temp_interactive_push.bat
 
 # macOS
 .DS_Store
+
+# Editor config (blocks auto-run tasks.json being committed)
+.vscode/
