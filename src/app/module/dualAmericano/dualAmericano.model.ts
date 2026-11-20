@@ -24,6 +24,8 @@ const matchSchema = new Schema({
   winner: { type: Number, enum: [1, 2, null], default: null },
   status: { type: String, enum: Object.values(DualAmericanoMatchStatus), default: DualAmericanoMatchStatus.PENDING },
   matchDateTime: { type: Date, default: null },
+  // See the same field on the Match model.
+  reminderSentFor: { type: Date, default: null },
   startTime: { type: Date, default: null },
   endTime: { type: Date, default: null },
 }, { _id: true });

@@ -12,6 +12,8 @@ const americanoMatchSchema = new Schema<IAmericanoMatch>(
     playerTwoPartner: { type: Schema.Types.ObjectId, ref: "User", default: null },
     roundNumber: { type: Number, default: null },
     matchDateTime: { type: Date },
+    // See the same field on the Match model.
+    reminderSentFor: { type: Date, default: null },
     matchStatus: {
       type: String,
       enum: ["upcoming", "live", "completed", "postponed"],

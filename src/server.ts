@@ -10,6 +10,7 @@ import { setSocketInstance } from "./app/helper/socketHelper";
 import { americanoService } from "./app/module/americano/americano.service";
 import { dualAmericanoCron } from "./app/module/dualAmericano/dualAmericano.cron";
 import { freeAmericanoCron } from "./app/module/freeAmericano/freeAmericano.cron";
+import { matchReminderCron } from "./app/module/match/matchReminder.cron";
 import League from "./app/module/league/league.model";
 import Match from "./app/module/match/match.model";
 import { Notification } from "./app/module/notification/notification.model";
@@ -415,6 +416,7 @@ const server = async () => {
 
     dualAmericanoCron();
     freeAmericanoCron();
+    matchReminderCron();
   } catch (error: any) {
     console.error("❌ MongoDB connection error:", error.message);
     process.exit(1);

@@ -8,6 +8,7 @@ import { contactRouter } from "../module/contact/contact.routes";
 import { couponRouter } from "../module/coupon/coupon.routes";
 import { eventRouter } from "../module/event/event.routes";
 import { freeAmericanoRouter } from "../module/freeAmericano/freeAmericano.routes";
+import { homeRouter } from "../module/home/home.routes";
 import { leagueRouter } from "../module/league/league.routes";
 import { matchRouter } from "../module/match/match.routes";
 import { notificationRouter } from "../module/notification/notification.route";
@@ -29,6 +30,7 @@ const allRouter = [
   { path: "/americano", name: americanoRouter },
   { path: "/dual-americano", name: DualAmericanoRoutes },
   { path: "/free-americano", name: freeAmericanoRouter },
+  { path: "/home", name: homeRouter },
   { path: "/league", name: leagueRouter },
   { path: "/team", name: teamRouter },
   { path: "/match", name: matchRouter },

@@ -140,7 +140,7 @@ const getAllLeagues = async (params: any, options: IOption, userId: any) => {
   // ✅ Query DB
   const result = await League.find(whereCondition)
     .populate("addTeams")
-    .populate("user", "-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp")
+    .populate("user", "name email profileImage role phoneNumber")
     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 } as any)
     .skip(skip)
     .limit(limit);
@@ -204,7 +204,7 @@ const getAllLeaguesfree = async (params: any, options: IOption,)  => {
   // ✅ Query DB
   const result = await League.find(whereCondition)
     .populate("addTeams")
-    .populate("user", "-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp")
+    .populate("user", "name profileImage role")
     .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 } as any)
     .skip(skip)
     .limit(limit);

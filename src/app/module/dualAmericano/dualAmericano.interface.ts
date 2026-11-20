@@ -53,6 +53,7 @@ export interface IDualAmericanoMatch {
   winner?: 1 | 2 | null;
   status: DualAmericanoMatchStatus;
   matchDateTime?: Date | null;
+  reminderSentFor?: Date | null;
   startTime?: Date;
   endTime?: Date;
 }

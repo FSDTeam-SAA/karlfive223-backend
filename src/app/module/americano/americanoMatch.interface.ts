@@ -9,6 +9,7 @@ export interface IAmericanoMatch extends Document {
   playerTwoPartner?: ObjectId | null;
   roundNumber?: number | null;
   matchDateTime?: Date;
+  reminderSentFor?: Date | null;
   matchStatus: "upcoming" | "live" | "completed" | "postponed";
   winnerPlayer?: ObjectId | null;
   courtNumber?: number;

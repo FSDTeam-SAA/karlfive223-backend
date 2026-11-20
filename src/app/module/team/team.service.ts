@@ -131,7 +131,7 @@ const getAllTeams = async (params: any, options: IOption) => {
     .sort({ [sortBy]: sortOrder } as any)
     .skip(skip)
     .limit(limit)
-    .populate("user", "-isVerified -reset_otpExpiry -reset_otp -otpExpiry -otp")
+    .populate("user", "name email profileImage role phoneNumber")
     .populate("league", "leagueName leagueLogo location");
 
   const total = await Team.countDocuments(whereCondition);

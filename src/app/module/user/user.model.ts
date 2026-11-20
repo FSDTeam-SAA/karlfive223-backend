@@ -63,6 +63,26 @@ const userSchema = new mongoose.Schema<IUser>(
   { timestamps: true }
 );
 
+// Never sent to a client, even when a user is populated into another document
+// (league owner, match referee). Code reading these off the document itself,
+// like the password check at login, is unaffected.
+const PRIVATE_FIELDS = [
+  "password",
+  "refreshToken",
+  "otp",
+  "otpExpiry",
+  "reset_otp",
+  "reset_otpExpiry",
+] as const;
+
+const removePrivateFields = (_doc: unknown, ret: Record<string, any>) => {
+  PRIVATE_FIELDS.forEach((field) => delete ret[field]);
+  return ret;
+};
+
+userSchema.set("toJSON", { transform: removePrivateFields });
+userSchema.set("toObject", { transform: removePrivateFields });
+
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(

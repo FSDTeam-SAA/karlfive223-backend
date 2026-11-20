@@ -28,6 +28,9 @@ const matchSchema = new Schema<IMatch>(
     },
     winnerTeam: { type: Schema.Types.ObjectId, ref: "Team", default: null },
     referee: { type: Schema.Types.ObjectId, ref: "User" },
+    // The date a reminder was last sent for. Rescheduling makes this differ
+    // from matchDateTime, which is what re-arms the reminder.
+    reminderSentFor: { type: Date, default: null },
     matchScore: {
       sets: [
         {
