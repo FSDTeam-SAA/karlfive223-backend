@@ -132,8 +132,6 @@ const server = async () => {
     //     }).populate("addTeams");
     //     console.log(`🔍 Found ${leagues} leagues starting in 3 days.`);
 
-
-
     //     for (const league of leagues) {
     //       // console.log(league)
     //       // console.log(`🔍 Processing league: ${league.addTeams?.length}`) ;
@@ -188,7 +186,6 @@ const server = async () => {
     //     console.error("❌ Error in cron job:", err);
     //   }
     // });
-
 
     cron.schedule("* * * * *", async () => {
       console.log("🔄 Cron job started: checking leagues...");
